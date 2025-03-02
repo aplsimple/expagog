@@ -40,6 +40,7 @@ This means that a person avoids bad deeds and stupid behavior, whereas good deed
 
 However, get to the point.
 
+ <img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg1.png" class="media" alt="">
 
  TERMS
 =======
@@ -145,6 +146,8 @@ Click on any row in the list of matches found, and you will be redirected to the
 
 The *Find* dialogue does not need to be closed after opening, it does not affect the operation in the main *EG* window. The dialogue's geometry and options are saved until the next session.
 
+ <img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg3.png" class="media" alt="">
+
 
  CHARTS
 ========
@@ -160,6 +163,8 @@ The **weeks** switch allows you to create charts by weeks and days. After clicki
 The **cumulate** switch allows you to get cumulative charts in which you can see cumulative sums, the latter will be the total sum.
 
 To update the current chart (when the data changes), you can click the **Redraw** button in the chart tools or press F5 key. You can scroll the diagram left and right using the arrow buttons.
+
+ <img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg4.png" class="media" alt="">
 
 
  STATISTICS
@@ -184,6 +189,8 @@ The average values are obtained by dividing the sums by *Count*.
 The *Report* button allows to save the statictics to html file.
 
 The *Statistics* dialogue does not need to be closed after opening, it does not affect the operation in the main *EG* window. The dialogue's geometry and options are saved until the next session.
+
+ <img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg5.png" class="media" alt="">
 
 
  REPORT
@@ -225,6 +232,8 @@ Other settings might also be set, they are shown in the heading of the report:
 
 To create the report, click the **Report** button.
 
+ <img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg6.png" class="media" alt="">
+
 
  CUSTOMIZATION
 ===============
@@ -236,6 +245,8 @@ The main settings are a list of tags and a list of topics.
 The tags can be set in the first tab of the settings. You can define three colors for highlighting cells with color and tagging cells with Red, Yellow, and Green tags.
 
 In the text box of the tags, you can enter them as a list of keywords. The tags will be available in the table from the cell context menu.
+
+ <img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg2.png" class="media" alt="">
 
 The list of topics is in the second tab of the settings. Each topic has:
 
@@ -283,6 +294,8 @@ In *Topics* tab, you can also enter the formula for the "aggregate EG estimate" 
 The *AggrEG* formula can include both names and topic numbers as *$N*, for example:
 
      EG*10 + $1*100 - $9*5
+
+ <img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg22.png" class="media" alt="">
 
 
  SAVING DATA
@@ -391,7 +404,3 @@ Installers:
 Demo video:
 
   - [as .mp4](https://github.com/aplsimple/expagog/releases/tag/Demos_of_EG-1.0)
-
-Screenshots:
-
-  - [as .png](https://github.com/aplsimple/expagog/releases/tag/Screens_of_EG-1.0)
