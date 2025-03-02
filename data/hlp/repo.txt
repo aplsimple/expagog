@@ -1,0 +1,25 @@
+ <r>The report settings are:</r>
+
+ <b>From template file</b> - source file; this is a template that
+                      can be modified to fit your needs;
+                      default - <b>expagog/data/tpl/repo.html</b>
+
+ <b>To resulting .html</b> - resulting file
+
+ <b>Css file</b>  - file of CSS
+ <b>Icon file</b> - icon file of yours
+ _________________________________________________________
+
+ <r>Optionally</r> are also available:
+
+ <b>1st .js file</b> - optional JavaScript file to be included
+ <b>2nd .js file</b> - another optional JavaScript file
+ <b>JS code</b>      - JavaScript code to be executed at opening
+                the report by a browser
+ _________________________________________________________
+
+ To fill <r>Headings</r> the following data can be added:
+
+ <b>Title</b>  - report title
+ <b>Normal</b> - text to be shown as normal
+ <b>Red</b>    - text to be shown as highlighted

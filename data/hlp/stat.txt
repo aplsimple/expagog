@@ -1,0 +1,39 @@
+ <r>The statistics options are:</r>
+
+ <b>Date1</b> - date "since" to collect data
+
+ <b>Date2</b> - date "to" (excluded) to collect data
+
+ <b>AggrEG formula</b> - a formula to calculate "aggregate estimate"
+    for a week; it can endow more weight to some topics against
+    others; the formula can include $NN and topic names, e.g.
+    <b>EG+PG/2+$10*2</b>
+
+ <b>Font size</b> - size of text font
+ ______________________________________________________________
+
+ <r>The statistics data are:</r>
+
+ <b>Count</b>            - all cells to check
+ <b>Count0</b>           - cells non-checked ("?")
+ <b>Total</b>            - total sum of values
+ <b>Average</b>          - Total / Count
+
+ <b>Previous weeks</b>   - total sum for weeks before "Date (-4 week)"
+ <b>Date (-4 week)</b>   - total sum for week "Date1 -4 week"
+ <b>Date (-3 week)</b>   - total sum for week "Date1 -3 week"
+ <b>Date (-2 week)</b>   - total sum for week "Date1 -2 week"
+ <b>Date (-1 week)</b>   - total sum for week "Date1 -1 week"
+ <b>Date1-Date2</b>      - total sum for week "Date1 - Date2"
+ <b>Next weeks</b>       - total sum for weeks after "Date1 - Date2"
+ <b>Average previous</b> - average for "Previous weeks"
+ <b>Average current</b>  - average for "Date1 -4 week" to Date2
+ <b>Average next</b>     - average for "Next weeks"
+ <b>Average total</b>    - average for all weeks
+
+ <b>AggrEG</b>           - aggregate estimate
+
+ The marks <b>"?"</b> stand for cells to be checked on <b>Date1</b>.
+
+ The <r>red / green</r> values mean:
+ - a value is <b>lesser / greater</b> than previous one by <b>2%</b> or more.

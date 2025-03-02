@@ -1,0 +1,73 @@
+ The input fields of settings are as follows:
+
+   - <b>Date long</b> means the current date format
+   - <b>Date short</b> means the status bar date format
+   - <b>Date full</b> means the longest date format
+     (see also the man page of <b>clock</b> command:
+     <link>www.tcl-lang.org/man/tcl8.6/TclCmd/clock.htm</link>)
+
+   - <b>Theme</b>, <b>Color scheme</b> and <b>Hue</b> define the app colors
+
+   - <b>Color of text cell</b> means the color of cell with text
+   - <b>Color messages</b> means the color of status bar messages
+ ____________________________________________________________
+
+ Tags are colors and keywords that can be set in topic cells
+ by means of their <b>context menus</b>. The color tags make cells
+ more visible in week table. In the text box you can write
+ any keywords separated by spaces and linefeeds. Then you may
+ search the tagged cells, using <b>Find</b> action.
+ ____________________________________________________________
+
+ The most important settings are:
+
+   - <b>Path to data file</b>
+
+   - <b>List of topics</b>
+
+ These settings will define the content of data file.
+
+ If you change them, it is strongly recommended to start from
+ scratch the data file. If the data file doesn't exist, it's
+ created by <b>expagog</b> and the application is restarted, as if
+ you take <b>New</b> action.
+
+ Let your old data be stored in old files. You can normally
+ access them with <b>Open...</b> action.
+ ____________________________________________________________
+
+ Formats of topics:
+
+ - <b>99</b> means an integer number
+
+ - <b>9999.99</b> means a float number
+
+ - <b>chk</b> means a check (checked as none, pending, yes, no)
+
+ - <b>time</b> means a time (entered as hh:mm or hh.mm)
+
+ - <b>calc</b> format means calculated value, formulas may include
+   $1, $2.. or topic names for values of current day's cells,
+   e.g. <b>calc:99.9:Dist/Time</b> means calculating <b>Speed</b> as
+   <b>Dist/Time</b> (the same as <b>$1/$2</b>) formatted by 99.9
+
+ - other formats (e.g. <b>xxxxx</b>) mean anything of that length,
+   though only first 10 characters will be seen in the table
+ ____________________________________________________________
+
+ You can move topics in the topic list up and down. Also,
+ topics can be added, renamed and removed.
+
+ To remove an topic, <b>any of its fields</b> may be cleared.
+ However, the removed topic's entries aren't removed from the
+ current data file, becoming just invisible. So, you can
+ restore the visibility by restoring the topic in the list.
+ ____________________________________________________________
+
+ <b>AggrEG</b> is an aggregate estimate calculated by a user-
+ defined formula, setting the <b>weight</b> of topics; it reflects
+ the overall quality of a day / week / month / year.
+
+ The <b>AggrEG formula</b> may include $1, $2.. or topic names for
+ values, for example:
+   EG*10 + Lives_saved*100 - Cigarettes_smoked*5 + $1

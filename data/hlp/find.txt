@@ -1,0 +1,24 @@
+ The <r>Search</r> dialogue is used to find information of
+ cell comments and move to appropriate weeks.
+ _______________________________________________________
+
+ Available are the search options:
+
+   <b>Find</b> entry - what to search
+
+   <b>Tags</b> list  - to add colors and keywords to the entry
+                these are set in <b>Settings</b> dialogue
+
+   <b>As tags</b>    - to search separate words of the entry
+
+   <b>Match case</b> - to switch on/off "case sensitive" search
+ _______________________________________________________
+
+ After search, a list of found matches will be shown.
+
+ Click any of them to move to its appropriate week.
+ _______________________________________________________
+
+ The dialogue's geometry and options are saved to be
+ restored in the next search sessions.
+

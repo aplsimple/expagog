@@ -1,0 +1,20 @@
+ <r>$TITLE $VERSION</r>
+
+  • <linkChi>Chiselapp repository</linkChi>
+  • <linkGit>Github repository</linkGit>
+
+
+  <b>Authors:</b>
+
+  • <linkapl>Alex Plotnikov</linkapl>
+
+
+  <b>License:</b>
+
+  • <linkMIT>MIT</linkMIT>
+
+
+  <r>Tcl/Tk:</r>
+
+  • Version <b>[package require Tk]</b>
+  • Path <b>[info nameofexecutable]</b>

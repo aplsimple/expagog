@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="UTF-8">
+<meta name="author" content="aplsimple">
+<meta name="description" content="expagog, experimenter pedagog">
+<meta name="keywords" content="aplsimple, EG, expagog, experimenter pedagog">
+<link rel="stylesheet" href="{cssRepo+-}">
+<link rel="icon" type="image/jpg" href="{icoRepo+-}">
+<title>aplsimple</title>
+</head>
+<body>
+
+<script>{jsRepo+-}</script>
+<script src="{file1Repo+-}"></script>
+<script src="{file2Repo+-}"></script>
+
+<section id=sec2>
+<div class="level2">
+
+<TABLE  border=1 borderColor=black borderColorDark=black
+borderColorLight=black cellPadding=3 cellSpacing=0 width="100%>
+<TBODY>
+
+<div>
+
+<!-- Starting EG report -->
+
+<font face="Arial Cyr">
+
+<p>
+<FONT size=8><B>{Year+-}</B></FONT>
+<br>
+<br>
+<b>{headRepo+-}</b>
+
+<p>
+{blackComment+-}
+<p><font color=Fuchsia>
+{redComment+-}
+</font>
+</p>
+<pre class="code">
+{statRepo+-}
+</pre>
+<p>
+{commentRepo+-}
+</p>
+
+</font>
+
+</p>
+<TABLE width="100%" border=1>
+<TBODY>
+
+<TR>
+<TD bgcolor=white align="center" width="5%"><i>Week<br>No.</i></TD>
+<TD bgcolor=white align="center" width="5%"><i>Week<br>date</i></TD>
+<TD bgcolor=white align="center" width="90%"><i>Weeks</i></TD>
+</TR>
+
+{Table+}
+{Month+}
+<TR>
+<TD BGcolor=#f9facf colSpan=3 align=center><b><a href="{MonthRef+-}">{MonthFull+-}</a></b></TD>
+</TR>
+{Month-}
+{Week+}
+<TR>
+<TD align="center"><b>{WeekN+-}</b></TD><TD align="center"><b>{WeekDate1+-}</b></TD>
+<TD>
+<TABLE width="100%" border=1>
+<TBODY>
+<tr>
+<td align="center" BGcolor=#d3faef><i>Topic</i></td>
+<td align="center" BGcolor=#d3faef><i>Mon</i></td>
+<td align="center" BGcolor=#d3faef><i>Tue</i></td>
+<td align="center" BGcolor=#d3faef><i>Wed</i></td>
+<td align="center" BGcolor=#d3faef><i>Thu</i></td>
+<td align="center" BGcolor=#d3faef><i>Fri</i></td>
+<td align="center" BGcolor=#d3faef><i>Sat</i></td>
+<td align="center" BGcolor=#d3faef><i>Sun</i></td>
+</tr>
+{Item+}
+<tr>
+<td align="center">{ItemName+-}</td>
+<td align="center">{ItemD0+-}</td>
+<td align="center">{ItemD1+-}</td>
+<td align="center">{ItemD2+-}</td>
+<td align="center">{ItemD3+-}</td>
+<td align="center">{ItemD4+-}</td>
+<td align="center">{ItemD5+-}</td>
+<td align="center">{ItemD6+-}</td>
+</tr>
+{Item-}
+<tr>
+<td colspan=8>
+<pre class="code">
+{CommItem+-}
+</pre>
+</td>
+</tr>
+
+</TBODY></TABLE>
+{BottomComment+-}
+</TD>
+</TR>
+{Week-}
+
+</TBODY></TABLE>
+{Table-}
+
+<!-- Ending EG report -->
+
+</div>
+</div>
+</section>
+</TBODY>
+</TABLE>
+<script>
+  writeFooter('<a href="#" class="wikilink1" title="EG report">aplsimple</a></em> -  EG report');
+</script>
+
+</body>
+</html>
