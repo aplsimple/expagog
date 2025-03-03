@@ -26,7 +26,7 @@ foreach _ {apave baltip bartabs hl_tcl} {
 
 namespace eval EG {
 
-  variable VERSION v0.9
+  variable VERSION v0.9.1
   variable EGICON \
 {iVBORw0KGgoAAAANSUhEUgAAAEgAAABICAMAAABiM0N1AAAABlBMVEUUqHtCxf8p2J+gAAAAAnRS
 TlMA/1uRIrUAAAD7SURBVFjD3dhLEoQgDATQ7vtfejaz0IGEdGhKa7LzU09LAyEA/xiky6GJMUD8
@@ -1023,6 +1023,7 @@ proc EG::SaveRC {} {
   ResourceData NoteOnTop $D(NoteOnTop)
   ResourceData FILEBAK $D(FILEBAK)
   ResourceData AUTOBAK $D(AUTOBAK)
+  SaveAggrEG
 }
 #_______________________
 
@@ -1030,7 +1031,36 @@ proc EG::SaveAggrEG {} {
   # Saves AggrEG value to .rc file.
 
   stat::CheckAggrEG
-  EG::ResourceData StatAggr $::EG::stat::aggregate
+  ResourceData StatAggr $::EG::stat::aggregate
+  CommonData AGGREG $::EG::stat::aggregate
+}
+#_______________________
+
+proc EG::SaveAllData {args} {
+  # Saves all data.
+
+  fetchVars
+  set t [[$EGOBJ Text] get 1.0 end]
+  StoreText $t
+  if {"-openfile" ni $args} {
+    if {"-newfile" in $args} {set newfile yes} {set newfile no}
+    if {[catch {SaveDataFile $newfile} err]} {puts $err}
+  }
+  SaveRC
+  foreach n $NOTESN {
+    set isopen [winfo exists [note::NoteWin $n]]
+    if {$isopen} {note::SaveNoteData $n}
+  }
+}
+#_______________________
+
+proc EG::SaveAll {args} {
+  # Saves all data and shows a message.
+
+  fetchVars
+  FocusedIt
+  SaveAllData {*}$args
+  Message "Data saved to $USERDIR" 5
 }
 
 ## ________________________ Collecting per week/item _________________________ ##
@@ -1679,12 +1709,20 @@ proc EG::FillOpcLists {} {
 }
 #_______________________
 
+proc EG::ResourceFileName {} {
+  # Gets .rc file name.
+
+  fetchVars
+  return [file join $USERDIR $TITLE.rc]
+}
+#_______________________
+
 proc EG::Resource {args} {
   # Sets/gets data of .rc file.
   #   args - list of pairs "name value" to set (if empty, no sets - just gets)
 
   fetchVars
-  set fname [file join $USERDIR $TITLE.rc]
+  set fname [ResourceFileName]
   set ::EG::cont [apave::readTextFile $fname]
   if {[llength $args]} {
     foreach {opt val} $args {
@@ -1771,6 +1809,7 @@ proc EG::OpenDataFile {fname} {
   if {[set _ [CommonData COLORGREEN]] ne {}} {set Colors(Green) $_}
   if {[set _ [CommonData TEXTTAGS]] ne {}} {set D(TextTags) $_}
   if {[set _ [CommonData POLYFLAGS]] ne {}} {set D(poly) $_}
+  if {[set _ [CommonData AGGREG]] ne {}} {set ::EG::stat::aggregate $_}
   readPolyFlags
   set D(MsgFont) "-font {-weight bold -size 9} -foreground {$Colors(fgsel)}"
   for {set iit 1} {$iit<=$D(MAXITEMS)} {incr iit} {
@@ -1824,6 +1863,7 @@ proc EG::SaveDataFile {{newfile no} {fname ""}} {
   savePolyFlags
   CommonData POLYFLAGS $D(poly)
   CommonData TEXTTAGS $D(TextTags)
+  SaveAggrEG
   for {set iit 1} {$iit<=$D(MAXITEMS)} {incr iit} {
     CommonData COLORMY$iit $Colors(my$iit)
   }
@@ -1867,7 +1907,6 @@ proc EG::Actions {} {
   if {[catch {
     set newmenu 1
     menu $pmenu -tearoff 0
-    set mnu_new [apave::iconImage file]
     $pmenu add command -label New... -image mnu_file -compound left \
       -command EG::New -accelerator Ctrl+N
     $pmenu add command -label Open... -image mnu_OpenFile -compound left \
@@ -1884,7 +1923,7 @@ proc EG::Actions {} {
     $pmenu add separator
     $pmenu add command -label Statistics... -image mnu_info -compound left \
       -command EG::stat::_run -accelerator F6
-    $pmenu add command -label Report... -image $::EG::stat::imgprint -compound left \
+    $pmenu add command -label Report... -image mnu_print -compound left \
       -command EG::Report -accelerator F7
     menu $pmenu.notes -tearoff 0
     $pmenu add cascade -label Stickers -menu $pmenu.notes -compound left -image none
@@ -1905,8 +1944,7 @@ proc EG::Actions {} {
   $pmenu entryconfigure 6 -label $locklab
   obj themePopup $pmenu
   foreach n $NOTESN {
-    set opts [list -label "  [note::NoteName $n] " \
-      -command "EG::SaveDataFile; EG::note::_run $n"]
+    set opts [list -label "  [note::NoteName $n] " -command "EG::note::_run $n"]
     if {$newmenu} {$pmenu.notes add command {*}$opts}
     set ncolor [note::NoteColor $n]
     if {$ncolor ne {}} {
@@ -1982,6 +2020,7 @@ proc EG::Backup {{auto no}} {
   #   auto - "no" to run dialogue, "yes" - to check "auto-backup" and backup
 
   fetchVars
+  after idle EG::SaveAllData
   if {$D(FILEBAK) eq {}} {
     set D(FILEBAK) [file join $USERDIR [string map {. _} [file tail $D(FILE)]].bak]
   }
@@ -2008,8 +2047,12 @@ proc EG::Backup {{auto no}} {
     SaveDataFile no $D(FILEBAK)
     # additional save of "week day" version
     set wd [clock format [clock seconds] -format %u]
-    set fname  [file root $D(FILEBAK)]_$wd.bak
+    set bak _$wd.bak
+    set fname  [file root $D(FILEBAK)]$bak
     SaveDataFile no $fname
+    set fname [ResourceFileName]
+    set fback [file root $fname]_rc$bak
+    catch {file copy $fname $fback}
   }
 }
 #_______________________
@@ -2078,7 +2121,7 @@ proc EG::Help {{fhelp EG} args} {
     set fhelp [file join $DIR README.md]
     if {![catch {set loc [lindex [::msgcat::mcpreferences] 0]}]} {
       set loc [string range $loc 0 1]
-      set fhp [file join $DATADIR hlp README_$loc]
+      set fhp [file join $DIR doc README_$loc]
       # try to open localized help
       if {[file exists $fhp.md]} {
         set fhelp $fhp.md
@@ -2099,26 +2142,6 @@ proc EG::Help {{fhelp EG} args} {
 proc EG::About {} {
 
   Help about -title About... -width 28 -height {10 18} -wrap none
-}
-#_______________________
-
-proc EG::SaveAll {args} {
-  # Saves all data
-
-  fetchVars
-  set t [[$EGOBJ Text] get 1.0 end]
-  FocusedIt
-  StoreText $t
-  if {"-openfile" ni $args} {
-    if {"-newfile" in $args} {set newfile yes} {set newfile no}
-    if {[catch {SaveDataFile $newfile} err]} {puts $err}
-  }
-  SaveRC
-  foreach n $NOTESN {
-    set isopen [winfo exists [note::NoteWin $n]]
-    if {$isopen} {note::SaveNoteData $n}
-  }
-  EG::Message "Data saved to $USERDIR" 5
 }
 #_______________________
 
@@ -2143,6 +2166,9 @@ proc EG::Init {} {
 
   global argv argc
   fetchVars
+  Source note
+  Source stat
+  Source diagr
   set fileegd [CurrentYear].egd
   switch $argc {
     0 {
@@ -2199,7 +2225,7 @@ proc EG::Init {} {
     image create photo Tool_$icon -data [::apave::iconData $icon $ICONTYPE]
   }
   foreach icon {none lamp ques yes no -info -color -lock -find -config
-  -help -exit -OpenFile -SaveFile -double -more -file} {
+  -help -exit -OpenFile -SaveFile -double -more -file -print} {
     set img [string map {- mnu_} $icon]
     set ico [string map {- {}} $icon]
     image create photo $img -data [::apave::iconData $ico small]
@@ -2215,9 +2241,6 @@ proc EG::Init {} {
   set D(lockdata) 0
   set D(toformat) {}
   FillOpcLists
-  Source note
-  Source stat
-  Source diagr
 }
 #_______________________
 

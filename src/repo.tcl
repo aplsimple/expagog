@@ -520,7 +520,7 @@ proc repo::_create {} {
     {.ButHelp - - - - {pack -side left} {-text Help -com EG::repo::Help}}
     {.LaBMess + L 1 1 {pack -side left -expand 1 -fill x}}
     {.ButExpo + L 1 1 {pack -side left} {-text Report
-      -image $::EG::stat::imgprint -compound left -com EG::repo::Report}}
+      -image mnu_print -compound left -com EG::repo::Report}}
     {.butCancel + L 1 1 {pack -side left -padx 4} {-text Cancel -com "destroy $win"}}
   }
   bind $win <F1> "[$pobj ButHelp] invoke"
@@ -543,6 +543,7 @@ proc repo::_run {{doit no}} {
     after idle {EG::repo::_run yes}
     return
   }
+  EG::SaveAllData
   ReadSettings
   _create
 }

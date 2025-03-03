@@ -14,7 +14,7 @@ namespace eval stat {
   variable win $::EG::WIN.stat
   variable date1 {}
   variable date2 {}
-  variable aggregate {EG}
+  variable aggregate {}
   variable aggrdata; array set aggrdata {}
   variable maxdiff 0.02
   variable fieldwidth 11  ;# defined by " yyyy/mm/dd" fields
@@ -30,7 +30,6 @@ namespace eval stat {
   variable fontsize 11
   variable tags {}
   variable tagsHtml {}
-  variable imgprint [apave::iconImage print]
 }
 
 # ________________________ Common _________________________ #
@@ -93,7 +92,9 @@ proc stat::AggregateFormula {} {
   # Gets AggrEG formula.
 
   variable aggregate
-  set aggregate [string trim [EG::ResourceData StatAggr] "{}"]
+  if {$aggregate eq {}} {
+    set aggregate [string trim [EG::ResourceData StatAggr] "{}"]
+  }
   CheckAggrEG
   return $aggregate
 }
@@ -804,7 +805,7 @@ proc stat::_create {} {
     {.h_ + L 1 1 {pack -side left -expand 1 -fill x}}
     {.ButOK + L 1 1 {pack -side left} {-text Calculate -com EG::stat::OK}}
     {.ButExpo + L 1 1 {pack -side left} {-text Report -state disabled
-      -image $::EG::stat::imgprint -compound left -com EG::stat::Report}}
+      -image mnu_print -compound left -com EG::stat::Report}}
     {.butCancel + L 1 1 {pack -side left -padx 4} {-text Cancel
       -com EG::stat::Cancel -tabnext *.texAggr}}
   }
@@ -817,7 +818,7 @@ proc stat::_create {} {
   if {$geo ne {}} {set geo "-geometry $geo"}
   after 10 after idle {after 10 after idle {after 10 after idle {
     after 10 after idle EG::stat::OK}}}
-  set res [$pobj showModal $win -modal 0 -parent $::EG::WIN -focus [$pobj Text] \
+  set res [$pobj showModal $win -parent $::EG::WIN -focus [$pobj Text] \
     -minsize {300 300} -onclose EG::stat::Cancel {*}$geo]
   catch {SaveOptions}
   catch {destroy $win}
@@ -832,6 +833,7 @@ proc stat::_run {{doit no}} {
     after idle {EG::stat::_run yes}
     return
   }
+  EG::SaveAllData
   SetDates
   _create
 }

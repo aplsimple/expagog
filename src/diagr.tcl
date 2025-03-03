@@ -357,12 +357,13 @@ proc diagr::DrawColumn {idx x1 colWidth colHeight color colorCol ispoly} {
 }
 #_______________________
 
-proc diagr::Draw {{doscroll no}} {
+proc diagr::Draw {{atStart no}} {
   # Runs drawing diagram.
-  #   doscroll - yes if scroll diagram to current week
+  #   atStart - yes if run at start of EG
 
   initVars
   fetchVars
+  if {!$atStart} EG::SaveAllData
   Title
   Layout
   EG::AllWeekData
@@ -384,7 +385,7 @@ proc diagr::Draw {{doscroll no}} {
     default {set item $::EG::Opcvar}
   }
   DrawDiagram $item
-  if {$doscroll} {
+  if {$atStart} {
     # at start, scroll to current week
     foreach _ {1 2 3 4} {
       lassign [$C xview] fr1 fr2

@@ -251,6 +251,7 @@ proc find::_create {} {
 proc find::_run {args} {
   # Runs Find dialog.
 
+  after idle EG::SaveAllData
   FillOpcLists
   _create
 }

@@ -27,6 +27,7 @@ namespace eval pref {
   variable txtColor {}
   variable msgColor {}
   variable itemOrder [list]
+  variable savedAggrEG
 }
 
 # ________________________ Common procedures _________________________ #
@@ -52,6 +53,7 @@ proc pref::fetchVars {} {
     variable txtColor
     variable msgColor
     variable itemOrder
+    variable savedAggrEG
   }
 }
 #_______________________
@@ -294,6 +296,7 @@ proc pref::Ok {args} {
   } else {
     set args {}
   }
+  EG::SaveAggrEG
   EG::Exit -restart {*}$args
 }
 #_______________________
@@ -303,6 +306,7 @@ proc pref::Cancel {args} {
   #   args - not empty, if called by Esc, Alt+F4 or "X" button
 
   fetchVars
+  set ::EG::stat::aggregate $savedAggrEG
   $obPrf res $win 0
 }
 #_______________________
@@ -590,7 +594,8 @@ proc pref::_run {} {
   # Returns yes, if settings were saved.
 
   fetchVars
-  EG::SaveDataFile
+  EG::SaveAllData
+  set savedAggrEG $::EG::stat::aggregate
   set itemOrder [origItemOrder]
   foreach k $DPars {set DP($k) $::EG::D($k)}
   return [_create]

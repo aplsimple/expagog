@@ -300,6 +300,7 @@ proc note::_run {idx {onlyshow no}} {
   #   idx - note's index
   #   onlyshow - yes, if only show the note
 
+  if {!$onlyshow} {after idle EG::SaveAllData}
   set nobj [NoteObj $idx]
   catch {$nobj destroy}
   CreateObj $idx

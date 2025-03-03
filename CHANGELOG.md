@@ -1,6 +1,25 @@
 # Last changes:
 
 
+Version `v0.9.1 (3 Mar'25)`
+
+  - BUGFIX: saving AggrEG formula from Settings
+  - BUGFIX: Report icon's size
+  - NEW   : backup .rc together with .egd (on week days)
+  - CHANGE: AggrEG saved primarily in .egd, then in .rc (for new .egd)
+  - CHANGE: all dialogs begin with EG::SaveAllData
+  - CHANGE: localized docs moved to ./doc
+
+
+Version `v0.9 (2 Mar'25)`
+
+  - NEW   : move to specific cell from Find dialog
+  - NEW   : "pure text" cells got values and initial +/- may change it
+  - CHANGE: layouts of main window & Settings dialog
+  - CHANGE: formulas: "topic" instead of "$topic"
+  - CHANGE: helps, docs
+
+
 Version `v0.8 (26 Feb'25)`
 
   - CHANGE: TimeDec removed from calc item's formula
