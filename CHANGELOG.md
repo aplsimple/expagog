@@ -1,21 +1,29 @@
 # Last changes:
 
 
-Version `v0.9.1 (3 Mar'25)`
+Version `v0.9.4 (5 Mar'25)`
 
-  - BUGFIX: saving AggrEG formula from Settings
+  - BUGFIX: saving AggrEG formula from Preferences
   - BUGFIX: Report icon's size
   - NEW   : backup .rc together with .egd (on week days)
+  - NEW   : tip on status bar message
+  - NEW   : length limit of item names is 16
+  - NEW   : installers for 4 platforms
+  - CHANGE: calculated "Inf" is cleared
+  - CHANGE: Report's file entries: -initialdir calculated for file chooser
   - CHANGE: AggrEG saved primarily in .egd, then in .rc (for new .egd)
   - CHANGE: all dialogs begin with EG::SaveAllData
   - CHANGE: localized docs moved to ./doc
+  - CHANGE: demo
+  - CHANGE: clearance & tidy-up
 
 
 Version `v0.9 (2 Mar'25)`
 
   - NEW   : move to specific cell from Find dialog
   - NEW   : "pure text" cells got values and initial +/- may change it
-  - CHANGE: layouts of main window & Settings dialog
+  - NEW   : demo
+  - CHANGE: layouts of main window & Preferences dialog
   - CHANGE: formulas: "topic" instead of "$topic"
   - CHANGE: helps, docs
 

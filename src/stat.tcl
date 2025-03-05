@@ -128,7 +128,7 @@ proc stat::CalculateByFormula {formula data {defvalue ""}} {
     set lmap2 [list $ln1 $val \$[incr ln2] $val]
     catch {set formula [string map $lmap2 $formula]}
   }
-  if {[catch {set res [expr $formula]}] || $res<0} {
+  if {[catch {set res [expr $formula]}] || $res<0  || $res==Inf} {
     set res $defvalue
   }
   return $res
@@ -303,7 +303,7 @@ proc stat::StartText {dotext} {
   }
   CheckAggrEG
   set tags [list \
-    [list t "-foreground $hot"] \
+    [list t "-foreground $::EG::Colors(fgit)"] \
     [list a "-background $bga"] \
     [list h "-background $itemHL2"] \
     [list g "-foreground $g"] \

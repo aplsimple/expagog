@@ -67,7 +67,7 @@ proc pref::ItemVars {i} {
 #_______________________
 
 proc pref::Message {msg {wait 0}} {
-  # Message in the Settings.
+  # Message in the Preferences.
   #   msg - message
   #   wait - wait time
 
@@ -226,6 +226,7 @@ proc pref::Ok {args} {
     set $clrvar $clr
     set itm [string trim [set $itmvar]]
     set itm [string map [list { } _] $itm]  ;# no spaces in item names!
+    set itm [string range $itm 0 15]  ;# limit length of item names
     set $itmvar $itm
     lappend ItemsNew $itm
     set frm [string trim [set $frmvar]]
@@ -563,7 +564,7 @@ proc pref::_create {} {
   fetchVars
   set preview 0
   ::apave::APave create $obPrf $win
-  $obPrf makeWindow $win.fra Settings
+  $obPrf makeWindow $win.fra Preferences
   $obPrf paveWindow \
     $win.fra [MainFrame] \
     $win.fra.fraR.nbk.f1 [General_Tab] \

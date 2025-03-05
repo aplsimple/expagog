@@ -3,31 +3,37 @@
 
 I don't really know myself. Sometimes it's easier to do something than to tell you what it is and what it's for.
 
-You can even interpret the name of the *expagog* program in different ways, but there is certainly a pedagogical component in it.
+The name *expagog* may be interpreted in different ways, but there is certainly a pedagogical component in it.
 
 *Ah, pedagogy! How boring it is, Sasha, give us something more interesting!*
 
 And here is an interesting thing for pedagogy - experiment and adventure in the *expagog* style.
 
+---
+
 *Well, the passion for adventure is adventurism, Sasha! The whole world is affected by this today, and a few uncles in particular.*
 
 And here you have a bridle for adventures - *expagog*. To reduce the letters and pathos, we will shorten this name to *EG*.
 
-Adventures are different. For example, Christians are currently in Lent (March 2025). *EG* is perfect for an adventure called *fasting*. The whole point of *EG* is that this pedagogy should not be lean and boring, but interesting, although not without rigor, not without restraint, as pedagogy assumes.
+Adventures are different. For example, Christians are currently in Lent (March 2025) and *EG* is perfect for the adventure called *fasting*. The whole point of *EG* is that this pedagogy should not be lean and boring, but interesting, although not without rigor as pedagogy assumes.
 
 It's *adventure with sense* - that's what *EG* is. I've finally found a passable definition for this program.
 
 Due to some implementation details which is discussed below, *EG* is aimed at good - good enterprises and adventures. Besides, evil is interesting only in theory, but in practice it is contrary to human nature, and if you look at evil closely, it will turn out to be sheer tediousness and depressing stupidity. The devil is primarily stupid and interesting only to fools with his stupid "details".
 
+---
+
 *Aren't you mocking, Sasha? Will you be giving us sermons soon? It smacks of a sect.*
 
-Yes, there is a possibility that this simple *expagog* program will turn into some kind of sectarianism. However, believe me, this was not built into *EG* initially, it is not there now and, hopefully, it will never be.
+Yes, there is a possibility of turning this simple *expagog* program into some kind of sectarianism. However, believe me, this was not built into *EG* initially, it is not there now and, hopefully, it will never be.
 
 If we really get off the ground, then *EG* is not a new religion, but rather a tool for maintaining one's *religiosity*, in the way every thinking person understands it. Christians understand it in their own way, Muslims, Buddhists, Jews etc. - in their own way, but at the root of every religion lies the basic *do not offend anyone, do not act dishonestly.*
 
-Technically, *EG* is similar to a school teacher. And as we all remember, we had different teachers. It was interesting with some, not so much with others, and with others, whatever lesson, it was an adventure for the brain. And this is despite the fact that no one canceled the marks for the lessons learned. *Didn't you learn it? Sit down, poor!*
+Technically, *EG* is similar to a school teacher. And as we all remember, we had different teachers. It was interesting with some, not so much with others, and with others, whatever lesson, it was an adventure for brains. And this is despite the fact that no one canceled the marks for the lessons learned. *Didn't you learn it? Sit down, poor!*
 
 But even not very skilled teachers, by virtue of their profession, force us to do good. *EG* can be used in a similar way - sometimes skillfully, sometimes not so much, but always in the direction of good. And no sectarianism! What kind of sectarianism is there at school?
+
+---
 
 The main goal of *EG* is to direct human activity to experiment and adventure, in a broad sense and in the context of goodness.
 
@@ -36,7 +42,7 @@ Therefore, *EG* makes life not only interesting, but also
   - predictable about evil deeds and stupid situations
   - unpredictable about good deeds and smart situations
 
-This means that a person avoids bad deeds and stupid behavior, whereas good deeds definitely await him thanks to the motives and encouragement from *EG*.
+This means that one avoids bad deeds and stupid behavior, whereas good deeds definitely await one thanks to the motives and encouragement from *EG*.
 
 However, get to the point.
 
@@ -49,7 +55,7 @@ However, get to the point.
 
 **Topic** - an activity type of experiment / adventure, for example: *NO_smoking*, *ECO_quest*, *Feat* (spaces in the names of topics are excluded).
 
-**Calculated topic** is calculated using the formula, for example: *Dist / Time*.
+**Calculated topic** is calculated with the formula, for example: *Dist / Time*.
 
 **Switchable topic** - in this topic, information is not entered from the keyboard, but switches from the *?* icon to the *yes / lamp / no* icons, according to the traffic light principle (*green / yellow / red*).
 
@@ -71,7 +77,7 @@ However, get to the point.
 
 **Tag** is a keyword that can be used to mark a cell; tags are available through the context menu of cells; there are three tags that mark a cell with a color.
 
-**Cell comment** is an arbitrary text for the current cell; it can contain tags; comments can be searched using *Find* function.
+**Cell comment** is an arbitrary text for the current cell; it can contain tags; comments can be searched with *Find* tool.
 
 **General notes** is an arbitrary text under the diagram containing comments and conclusions on the current database, diagram etc.
 
@@ -89,7 +95,7 @@ However, get to the point.
 
 When you start *EG* for the first time, a table with the *default* topics opens. You will most likely want to replace them with your own topics and possibly change other program settings.
 
-To change the settings, click the menu button (*hamburger*) and select *Settings*.
+To change the settings, click the menu button (*hamburger*) and select *Preferences*.
 
 Then, in the *Topics* tab, replace the default topics with your own. Topic formats can also be changed. To delete a topic, it is enough to clear its name.
 
@@ -124,7 +130,7 @@ An example of such a scale:
 
 You can comment on any cell, in the text box below the table. You can also mark cells with colors and tags by selecting them from the cell context menu.
 
-Basically, that's it. Then, at the end of week / month / year you will only have to analyze the data using charts and statistics. They will tell you what has succeeded, what has not been very successful, where failures have occurred, what can be fixed, accelerated or slowed down.
+Basically, that's it. Then, at the end of week / month / year you will only have to analyze the data with charts and statistics. They will tell you what has succeeded, what has not been very successful, where failures have occurred, what can be fixed, accelerated or slowed down.
 
 The value of your data will increase along with the data volume.
 
@@ -144,7 +150,7 @@ The *Match case* mode allows you to search for case-sensitive text.
 
 Click on any row in the list of matches found, and you will be redirected to the corresponding cell in the table.
 
-The *Find* dialogue does not need to be closed after opening, it does not affect the operation in the main *EG* window. The dialogue's geometry and options are saved until the next session.
+The *Find* dialogue does not need to be closed after opening, it does not affect the operation in the main *EG* window. The *Find* dialogue's geometry and options are saved until the next session.
 
  <img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg3.png" class="media" alt="">
 
@@ -162,7 +168,7 @@ The **weeks** switch allows you to create charts by weeks and days. After clicki
 
 The **cumulate** switch allows you to get cumulative charts in which you can see cumulative sums, the latter will be the total sum.
 
-To update the current chart (when the data changes), you can click the **Redraw** button in the chart tools or press F5 key. You can scroll the diagram left and right using the arrow buttons.
+To update the current chart (when the data changes), you can click the **Redraw** button in the chart tools or press F5 key. You can scroll the diagram left and right with the arrow buttons.
 
  <img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg4.png" class="media" alt="">
 
@@ -184,11 +190,11 @@ A data value in the report is marked in color if it has changed by more than 2% 
 
 The *Count*  is the total number of non-empty cells in the schedule. The *Count0* is the total number of non-empty cells with value of 0.
 
-The average values are obtained by dividing the sums by *Count*.
+The average values are obtained with dividing the sums by *Count*.
 
 The *Report* button allows to save the statictics to html file.
 
-The *Statistics* dialogue does not need to be closed after opening, it does not affect the operation in the main *EG* window. The dialogue's geometry and options are saved until the next session.
+The *Statistics* dialogue's geometry and options are saved until the next session.
 
  <img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg5.png" class="media" alt="">
 
@@ -200,17 +206,23 @@ To get a report on the current database, select *Report* in the menu or press *F
 
 The *Report* dialogue with the report settings will open.
 
-If you do not plan to use the report somewhere on some website, you can leave the html settings unchanged.
-
-Otherwise, you can change the html settings as follows.
-
 Main settings:
 
  *From template file* - the source template in html format
 
  *To resulting .html* - the report in html format
 
-Additional settings:
+Preferences of the report heading:
+
+ *Title* - custom name for the report
+
+ *Normal* - plain text
+
+ *Red* - highlighted text
+
+If you do not plan to use the report somewhere on some website, you can leave the html settings unchanged.
+
+Otherwise, you can change the html settings as follows:
 
  *Css file* - a CSS file
 
@@ -222,14 +234,6 @@ Additional settings:
 
  *JS code* - JavaScript code to be executed by a browser
 
-Other settings might also be set, they are shown in the heading of the report:
-
- *Title* - custom name for the report
-
- *Normal* - plain text
-
- *Red* - highlighted text
-
 To create the report, click the **Report** button.
 
  <img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg6.png" class="media" alt="">
@@ -238,7 +242,7 @@ To create the report, click the **Report** button.
  CUSTOMIZATION
 ===============
 
-To change the settings of the current database, choose *Settings* in the menu.
+To change the settings of the current database, choose *Preferences* in the menu.
 
 The main settings are a list of tags and a list of topics.
 
@@ -279,13 +283,13 @@ where *format* is the format of the number obtained as a result of the calculati
 
      calc:99.9:Dist/Time
 
-Topics can be shuffled in the list using the *up* and *down* buttons.
+Topics can be shuffled in the list with the *arrow* buttons.
 
 You can enter new topics in the empty lines.
 
-You can also rename existing topics. It is advisable to give short names to the topics. Spaces in the names are excluded.
+You can also rename existing topics. It is advisable to give short names to the topics. The name length's limit is 16. Spaces in the names are excluded.
 
-You can delete a topic by simply clearing its name. It is important to remember that the data entries of the deleted topic are not deleted from the database, the topic simply becomes *invisible*. You can restore its visibility by adding it to the list of topics again.
+You can delete a topic by simply clearing its name. It is important to remember that the data entries of the deleted topic are not removed from the database, the topic simply becomes *invisible*. You can restore its visibility by adding it to the list of topics again.
 
 In *Topics* tab, you can also enter the formula for the "aggregate EG estimate" - *AggrEG*. By default, it is equal to the value of the topic "EG", but in principle, the formula can either increase or decrease the weight of individual topics. If the values of topic have a negative meaning (for example, *Cigarettes_smoked*), then it should be negative in the *AggrEG* formula, for example:
 
@@ -315,11 +319,9 @@ Consider also the following:
 
  1) If your data is stored on a USB flash drive (like mine, for example), then it's best to archive it to another medium, and vice versa. Then, if you lose one medium, you will at least have an archive on the other.
 
- 2) It is good to turn on the auto-save archive mode on a stationary computer, where the flash drive remains in its socket more or less permanently. Probably, not so with a laptop.
+ 2) To save data while working with *EG*, press *Save* button in the *EG* toolbar, or select *Save* from the menu, or press *Ctrl+S*.
 
- 3) To save data while working with *EG*, press *Save* button in the *EG* toolbar, or select *Save* from the menu, or press *Ctrl+S*.
-
- 4) After entering a value of a cell, confirm it with Enter key.
+ 3) After entering a value of a cell, confirm it with Enter key.
 
 And again: always close *EG* after entering the data! The big red button at the top right corner will help you.
 
@@ -329,13 +331,15 @@ And again: always close *EG* after entering the data! The big red button at the 
 
 **Question**:
 
-Why are there no password and data encryption options?
+Why are there no password nor data encryption options?
 
 **Answer**:
 
 The *expagog* program is about good experiments and adventures, and they have not to be hidden, as Christ commanded us (Matthew 5:15-16).
 
-Moreover, the openness of the *EG* database will scare away those who would want to use this program not for good, but for evil.
+Moreover, the openness of the *EG* database will scare away those wanting to use this program not for good, but for evil.
+
+---
 
 **Question**:
 
@@ -347,9 +351,11 @@ About SQLite. See the answer above.
 
 About JSON. The data in *EG* is stored as *Tcl* dictionary. For greater survivability, the key-value pairs are stored line by line.
 
-I don't see much difference between the *JavaScript* json format and the *Tcl* dictionary format. And the *expagog* program is written in *Tcl*, by the way.
+I don't see much difference between the *JavaScript* json format and the *Tcl* dictionary format. The *expagog* program has been written in *Tcl*, by the way.
 
 Exporting *EG* data to .json file can be implemented if desired, by the questioner. It's an easy exercise in *Tcl* language and an easy adventure in *EG* style.
+
+---
 
 **Question**:
 
@@ -369,9 +375,11 @@ If you really want to have localization in language X, we can do it by the three
 
   3. You translate these messages into X, and I include your translation in the *EG*.
 
-Though, speaking in *Tcl* language,
+Though, expressing it in *Tcl* language,
 
-     if {$X in {Russian Ukranian}} then {# 1st step suffices}
+*if {$X in {Russian Ukranian}} then {# 1st step suffices}*
+
+---
 
 **Question**:
 
@@ -388,14 +396,32 @@ However, nothing prevents you from splitting the year into periods, e.g. 1st sem
 Though the file merging feature has not been implemented yet, its absence also does not bother anyone yet.
 
 
+ WHAT ELSE
+===========
+
+John Steinbeck ("The Leader of the People"):
+
+*"In boats I might, sir." "No place to go, Jody. Every place is taken. But that's not the worst - no, not the worst. Westering has died out of the people. Westering isn't a hunger any more. It's all done. Your father is right. It is finished."*
+
+---
+
+Anton Chekhov ("Gooseberries"):
+
+*Every happy man should have someone with a little hammer at his door to knock and remind him that there are unhappy people, and that, however happy he may be, life will sooner or later show its claws, and some misfortune will befall him—illness, poverty, loss, and then no one will see or hear him, just as he now neither sees nor hears others. But there is no man with a hammer, and the happy go on living, just a little fluttered with the petty cares of every day, like an aspen-tree in the wind—and everything is all right.*
+
+---
+
+*EG* might become kind of *someone with a little hammer* to call one to *westering*. Or *eastering* if one prefers that way.
+
+
  LINKS
 =======
 
 Sources:
 
-  - [on chiselapp](https://chiselapp.com/user/aplsimple/repository/expagog)
+  - [on ChiselApp](https://chiselapp.com/user/aplsimple/repository/expagog)
 
-  - [on github](https://github.com/aplsimple/expagog)
+  - [on GitHub](https://github.com/aplsimple/expagog)
 
 Installers:
 

@@ -26,7 +26,7 @@ namespace eval repo {
   variable fieldVars {jsRepo cssRepo icoRepo file1Repo file2Repo \
     headRepo blackComment redComment Year}
   variable settingVars [list tplRepo outRepo {*}$fieldVars]
-  variable settingsKey RepoSettings
+  variable settingsKey RepoPreferences
   variable Html
   variable Table
   variable Month
@@ -70,7 +70,7 @@ proc repo::fetchVars {} {
 
 #_______________________
 
-proc repo::ReadSettings {} {
+proc repo::ReadPreferences {} {
   # Reads stand-alone fields from .rc file.
 
   fetchVars
@@ -84,7 +84,7 @@ proc repo::ReadSettings {} {
 }
 #_______________________
 
-proc repo::SaveSettings {} {
+proc repo::SavePreferences {} {
   # Saves stand-alone fields to .rc file.
 
   fetchVars
@@ -264,7 +264,7 @@ proc repo::TextContent {val} {
     set pad [string repeat "&nbsp;" [incr ls -1]]
     set val [string map [list $ss \n$pad] $val]
   }
-  string map [list \n <br>] $val
+  string map [list \n <br>] [string trim $val]
 }
 #_______________________
 
@@ -277,6 +277,33 @@ proc repo::Message {msg {wait 0}} {
   set lab [$pobj LaBMess]
   $lab configure -foreground $::EG::Colors(fghot) -font {-weight bold}
   EG::Message $msg $wait $lab
+}
+#_______________________
+
+proc repo::InitialDir {var} {
+  # Gets -initialdir option of file dialog.
+  #   var - variable of chosen file path
+  # The result is taken from *outRepo* variable by trimming ../ parts of $var.
+
+  set res [file dirname $::EG::repo::outRepo]
+  catch {
+    set res2 [file dirname [set ::EG::repo::$var]]
+    set dir1 [file split $res]
+    set dir2 [file split $res2]
+    foreach d1 $dir1 d2 $dir2 {
+      if {$d2 eq {..}} {
+        incr iup
+      } else {
+        if {[info exists iup]} {
+          set res [lrange $dir1 0 end-$iup]
+          lappend res {*}[lrange $dir2 $iup end]
+          set res [file join {*}$res]
+        }
+        break
+      }
+    }
+  }
+  return $res
 }
 
 # ________________________ Processing data _________________________ #
@@ -450,7 +477,7 @@ proc repo::Report {} {
     }
   }
   EG::stat::CheckAggrEG
-  SaveSettings
+  SavePreferences
   set Html [apave::readTextFile $tplRepo]
   if {$Html eq {}} {
     bell
@@ -494,15 +521,19 @@ proc repo::_create {} {
     {.fisOut + L 1 1 {-st swe} {-w 63 -tvar ::EG::repo::outRepo}}
     {.v_2 .lab2 T 1 1 {-pady 8}}
     {.lab3 + T 1 1 {-st es -padx 4} {-t {Css file:} -anchor e}}
-    {.filCss + L 1 1 {-st swe} {-w 63 -tvar ::EG::repo::cssRepo}}
+    {.filCss + L 1 1 {-st swe} {-w 63 -tvar ::EG::repo::cssRepo
+      -initialdir {::EG::repo::InitialDir cssRepo}}}
     {.lab4 .lab3 T 1 1 {-st es -padx 4} {-t {Icon file:} -anchor e}}
-    {.filIco + L 1 1 {-st swe} {-w 63 -tvar ::EG::repo::icoRepo}}
+    {.filIco + L 1 1 {-st swe} {-w 63 -tvar ::EG::repo::icoRepo
+      -initialdir {::EG::repo::InitialDir icoRepo}}}
     {.v_3 .lab4 T 1 1 {-pady 8}}
     {lfr + T 1 2 {-st nswe} {-t Optional}}
     {.lab5 + T 1 1 {-st es -padx 4} {-t {1st .js file:} -anchor e}}
-    {.filJS1 + L 1 1 {-st swe} {-w 70 -tvar ::EG::repo::file1Repo}}
+    {.filJS1 + L 1 1 {-st swe} {-w 70 -tvar ::EG::repo::file1Repo
+      -initialdir {::EG::repo::InitialDir file1Repo}}}
     {.lab6 .lab5 T 1 1 {-st es -padx 4} {-t {2nd .js file:} -anchor e}}
-    {.filJS2 + L 1 1 {-st swe} {-w 70 -tvar ::EG::repo::file2Repo}}
+    {.filJS2 + L 1 1 {-st swe} {-w 70 -tvar ::EG::repo::file2Repo
+      -initialdir {::EG::repo::InitialDir file2Repo}}}
     {.v_4 .lab6 T 1 1 {-pady 8}}
     {.lab7 + T 1 1 {-st en} {-t {JS code:} -anchor e}}
     {.TexJS + L 2 99 {-st nswe} {-w 70 -h 4 -tabnext *.texBlack}}
@@ -544,6 +575,6 @@ proc repo::_run {{doit no}} {
     return
   }
   EG::SaveAllData
-  ReadSettings
+  ReadPreferences
   _create
 }

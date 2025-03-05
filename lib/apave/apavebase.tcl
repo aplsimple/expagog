@@ -1708,6 +1708,8 @@ oo::class create ::apave::APaveBase {
         set rootname 1
         set dn [string range $dn 1 end]
       }
+      set com [lindex [split $dn] 0] ;# command for initialdir
+      if {[llength [info commands $com]]} {set dn [eval $dn]}
       set args [list -initialfile $fn -initialdir $dn {*}$parent {*}$args]
       incr isfilename
     } elseif {$nchooser eq {tk_chooseDirectory}} {

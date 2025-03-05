@@ -26,7 +26,7 @@ foreach _ {apave baltip bartabs hl_tcl} {
 
 namespace eval EG {
 
-  variable VERSION v0.9.1
+  variable VERSION v0.9.4
   variable EGICON \
 {iVBORw0KGgoAAAANSUhEUgAAAEgAAABICAMAAABiM0N1AAAABlBMVEUUqHtCxf8p2J+gAAAAAnRS
 TlMA/1uRIrUAAAD7SURBVFjD3dhLEoQgDATQ7vtfejaz0IGEdGhKa7LzU09LAyEA/xiky6GJMUD8
@@ -396,6 +396,17 @@ proc EG::fromEOL {line} {
   #   line - line to be transformed
 
   string map [list $::EG::D(EOL) \n] $line
+}
+#_______________________
+
+proc EG::InitThemeEG {} {
+  # Initializes EG theme.
+
+  fetchVars
+  catch {
+    apave::InitTheme $D(Theme) $LIBDIR
+    apave::initWM -theme $D(Theme) -cs $D(CS) -cursorwidth 2 -labelborder 2
+  }
 }
 
 # ________________________ Items _________________________ #
@@ -1568,7 +1579,7 @@ proc EG::ConfigLock {} {
 
 # ________________________ Messages _________________________ #
 
-proc EG::Message {msg {wait 0} {lab ""} {doit no}} {
+proc EG::Message {msg {wait 0} {lab ""} {doit 0}} {
   # Shows a message.
   #   msg - message's text
   #   wait - time to wait in sec.
@@ -1579,10 +1590,11 @@ proc EG::Message {msg {wait 0} {lab ""} {doit no}} {
   if {$lab eq {}} {set lab [$EGOBJ Labstat3]}
   catch {  ;# the method can be called after destroying Puzzle object => catch
     catch {after cancel $D(idafter)}
-    if {!$doit} {
+    if {$doit<=0} {
       set D(msg) {}
       $lab configure -text {}
-      after idle [list EG::Message $msg $wait $lab yes]
+      after idle [list EG::Message $msg $wait $lab [incr doit]]
+      if {$doit==1 && $wait==0} {::baltip tip $lab $msg -font {-weight bold}}
       return
     }
     set D(msg) $msg
@@ -1601,7 +1613,7 @@ proc EG::CheckMessage {lab} {
   catch {  ;# the method can be called after destroying Puzzle object => catch
     if {[set len [string length $D(msg)]]} {
       set D(msg) [string range $D(msg) 0 $len-2]
-      EG::Message $D(msg) 0 $lab
+      EG::Message $D(msg) -1 $lab
       after 30 "EG::CheckMessage $lab"
     }
   }
@@ -1674,8 +1686,8 @@ proc EG::msg {type icon message {defb ""} args} {
   } elseif {$defb eq {}} {
     set defb YES
   }
-  lappend defb -centerme [::apave::rootModalWindow $WIN]
-  lassign [::apave::extractOptions args -title {} -noesc 0] title noesc
+  lappend defb -centerme [apave::rootModalWindow $WIN]
+  lassign [apave::extractOptions args -title {} -noesc 0] title noesc
   if {$title eq {}} {
     switch $icon {
       warn {set title Warning}
@@ -1769,11 +1781,20 @@ proc EG::OpenDataFile {fname} {
     set fname [file join $USERDIR [file tail $fname]]
   }
   if {![file exists $fname]} {
+    if {[obj csDark]} {
+      set D(Theme) darkbrown
+      set D(CS) 29
+    } else {
+      set D(Theme) lightbrown
+      set D(CS) 4
+    }
+    obj basicFontSize 11
+    InitThemeEG
     set dir [file dirname $fname]
-    set res [obj okcancel info {Creating data file} "File\
-      \n    $fname\ndoesn't exist.\
-      \n\nCreate it in\
-      \n    $dir?"]
+    set res [obj okcancel info {Creating data file} "\n File\
+      \n   $fname\n doesn't exist.\
+      \n\n Create it in\
+      \n   $dir?\n" OK -text 1]
     if {!$res} exit
     catch {file mkdir $dir}
     close [open $fname w]
@@ -1875,7 +1896,7 @@ proc EG::SaveDataFile {{newfile no} {fname ""}} {
   }
   if {$fname eq {}} {set fname $D(FILE)}
   if {[catch {
-    ::apave::textChanConfigure [set chan [open $fname w]]
+    apave::textChanConfigure [set chan [open $fname w]]
     foreach key [lsort -decreasing [dict keys $EGD]] {
       if {$newfile && [string match */*/* $key]} continue
       set line [dict get $EGD $key]
@@ -1928,8 +1949,8 @@ proc EG::Actions {} {
     menu $pmenu.notes -tearoff 0
     $pmenu add cascade -label Stickers -menu $pmenu.notes -compound left -image none
     $pmenu add separator
-    $pmenu add command -label Settings... -image mnu_config -compound left \
-      -command EG::Settings
+    $pmenu add command -label Preferences... -image mnu_config -compound left \
+      -command EG::Preferences
     $pmenu add separator
     $pmenu add command -label Help -image mnu_help -compound left \
       -command EG::Help -accelerator F1
@@ -1966,7 +1987,7 @@ proc EG::Actions {} {
 }
 #_______________________
 
-proc EG::Settings {} {
+proc EG::Preferences {} {
 
   Source pref
   pref::_run
@@ -2175,6 +2196,8 @@ proc EG::Init {} {
       set rc [Resource]
       if {[catch {set fname [dict get $rc FILE]}] || $fname eq {}} {
         set fname [file join $USERDIR $fileegd]
+      } elseif {[file exists $fname]} {
+        set USERDIR [file dirname $fname]
       }
     }
     1 {
@@ -2199,19 +2222,17 @@ proc EG::Init {} {
   OpenDataFile $fname
   FileToResource $fname
   set D(Zoom) [ResourceData Zoom]
-  if {$D(Zoom)<0 || $D(Zoom)>16} {set D(Zoom) 2}
+  if {$D(Zoom)<0 || $D(Zoom)>16} {set D(Zoom) 3}
   set D(FILEBAK) [ResourceData FILEBAK]
   set D(AUTOBAK) [string is true -strict [ResourceData AUTOBAK]]
   set D(NoteOnTop) [string is true -strict [ResourceData NoteOnTop]]
-
   set fs [expr {8+$D(Zoom)}]
   obj basicFontSize $fs
   obj basicDefFont [list {*}[obj basicDefFont] -size $fs]
-  ::apave::initBaltip
-  ::apave::InitTheme $D(Theme) $LIBDIR
-  ::apave::initWM -cursorwidth 2 -theme $D(Theme) -cs $D(CS) -labelborder 2
+  apave::initBaltip
+  InitThemeEG
   if {$D(Hue)} {obj csToned $D(CS) $D(Hue) yes}
-  ::apave::iconImage -init $ICONTYPE yes
+  apave::iconImage -init $ICONTYPE yes
   set ::EG::img_arrleft [apave::iconImage previous]
   set ::EG::img_arrright [apave::iconImage next]
   set ::EG::img_diagram [apave::iconImage diagram]
@@ -2222,13 +2243,13 @@ proc EG::Init {} {
   lassign [obj csGet] 1 Colors(fg) Colors(bg2) Colors(bg) Colors(fgit) 6 7 8 \
     Colors(grey) Colors(fghot) 11 12 13 Colors(bg3)
   foreach icon $D(Icons) {
-    image create photo Tool_$icon -data [::apave::iconData $icon $ICONTYPE]
+    image create photo Tool_$icon -data [apave::iconData $icon $ICONTYPE]
   }
   foreach icon {none lamp ques yes no -info -color -lock -find -config
   -help -exit -OpenFile -SaveFile -double -more -file -print} {
     set img [string map {- mnu_} $icon]
     set ico [string map {- {}} $icon]
-    image create photo $img -data [::apave::iconData $ico small]
+    image create photo $img -data [apave::iconData $ico small]
   }
   obj basicSmallFont [list {*}[obj basicSmallFont] -size 9]
   set D(Date1) [FormatDate]
@@ -2386,7 +2407,7 @@ proc EG::_create {} {
       {"" $::EG::D(MsgFont) -padding {0 0} -anchor w -expand 1} 1
     }}}
   }
-  ::apave::setAppIcon $WIN $::EG::EGICON
+  apave::setAppIcon $WIN $::EG::EGICON
   set wtxtR [$EGOBJ TextR]
   ::baltip tip [$EGOBJ Text] Comments -command EG::TextTip
   ColorItemLabels
@@ -2418,8 +2439,8 @@ proc EG::_run {} {
 
   if {[set _ [lsearch -glob $::argv LOG=*]]>-1} {
     set ::EG::LOG [string range [lindex $::argv $_] 4 end]
-    ::apave::logName $::EG::LOG
-    ::apave::logMessage "START ------------"
+    apave::logName $::EG::LOG
+    apave::logMessage "START ------------"
     set ::argv [lreplace $::argv $_ $_]
     set ::argc [llength $::argv]
   }
@@ -2430,7 +2451,7 @@ proc EG::_run {} {
 
 # ________________________ Run this _________________________ #
 
-# source [::apave::HomeDir]/PG/github/DEMO/expagog/demo.tcl ;#! for demo: COMMENT OUT
+# source [apave::HomeDir]/PG/github/DEMO/expagog/demo.tcl ;#! for demo: COMMENT OUT
 
 EG::_run
 
