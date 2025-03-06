@@ -26,7 +26,7 @@ foreach _ {apave baltip bartabs hl_tcl} {
 
 namespace eval EG {
 
-  variable VERSION v0.9.4
+  variable VERSION v0.9.5
   variable EGICON \
 {iVBORw0KGgoAAAANSUhEUgAAAEgAAABICAMAAABiM0N1AAAABlBMVEUUqHtCxf8p2J+gAAAAAnRS
 TlMA/1uRIrUAAAD7SURBVFjD3dhLEoQgDATQ7vtfejaz0IGEdGhKa7LzU09LAyEA/xiky6GJMUD8
@@ -535,7 +535,7 @@ proc EG::FocusedIt {{item ""} {wday ""} {dt ""}} {
     lassign $D(previtem) previtem prevttl prevfg prevfgttl
     set font [[$EGOBJ LaBIh] cget -font]
     if {[string match -nocase *LaBIEG $previtem]} {
-      HighlightTitles
+      HighlightEG
     } elseif {$previtem ne {}} {
       $previtem configure -fg $prevfg -font $font
     }
@@ -1480,7 +1480,7 @@ proc EG::EntryTip {item {wday ""}} {
 }
 #_______________________
 
-proc EG::HighlightTitles {} {
+proc EG::HighlightEG {} {
   # Highlights some titles.
 
   fetchVars
@@ -1526,15 +1526,17 @@ proc EG::ColorItemLabels {{ispoly 0}} {
 proc EG::opcPre {args} {
 
   fetchVars
-  set item [lindex $args 0]
-  if {$item ne {EG}} {
+  set item [lindex [split $args] 0]
+  if {$item ni [list EG \{EG]} {
     set i [ItemIndex $item]
     if {[incr i]>0} {
       lassign [apave::InvertBg $Colors(my$i)] fg bg
-      return "-background $bg -foreground $fg"
+      return [list -background $bg -foreground $fg]
     }
+  } else {
+    return [list -foreground $::EG::Colors(fgsel) -font [$EGOBJ boldDefFont]]
   }
-  return ""
+  return [list]
 }
 #_______________________
 
@@ -1590,16 +1592,20 @@ proc EG::Message {msg {wait 0} {lab ""} {doit 0}} {
   if {$lab eq {}} {set lab [$EGOBJ Labstat3]}
   catch {  ;# the method can be called after destroying Puzzle object => catch
     catch {after cancel $D(idafter)}
-    if {$doit<=0} {
+    if {!$doit} {
       set D(msg) {}
       $lab configure -text {}
       after idle [list EG::Message $msg $wait $lab [incr doit]]
-      if {$doit==1 && $wait==0} {::baltip tip $lab $msg -font {-weight bold}}
+      if {$wait>=0} {
+        ::baltip tip $lab $msg -font {-weight bold}
+        bind $lab <Button> [list EG::Message $msg $wait $lab]
+        bind $lab <Enter> [list $lab configure -text {}]
+      }
       return
     }
     set D(msg) $msg
     $lab configure -text $msg
-    if {!$wait} {set wait [expr {[string length $msg]/4}]}
+    if {$wait<=0} {set wait [expr {[string length $msg]/4}]}
     set D(idafter) [after [expr {$wait*1000}] "EG::CheckMessage $lab"]
   }
 }
@@ -2387,7 +2393,6 @@ proc EG::_create {} {
     {.frar2.btT2 + L 1 1 {-st w} {-image $::EG::img_arrright
       -com {EG::diagr::Scroll 4} -tip "Move right"}}
     {.frar2.opc1 + L 1 1 {-st w -padx 20} {::EG::Opcvar ::EG::OpcItems {-width -4
-      -tip {-indexedtips 2 "-BALTIP {Formula for AggrEG\nis set in \"Statistics\"}"}
       -takefocus 0} {EG::opcPre {%a}} -command EG::opcPost}}
     {.frar2.chbW + L 1 1 {-st w} {-t weeks -var ::EG::byWeek
       -com EG::diagr::Draw -takefocus 0}}
@@ -2416,7 +2421,7 @@ proc EG::_create {} {
   set C [$EGOBJ Can]
   set W [winfo reqwidth $WIN]
   set H [winfo reqheight $WIN]
-  after idle after 100 "wm minsize $WIN $W $H; EG::HighlightTitles"
+  after idle after 100 "wm minsize $WIN $W $H; EG::HighlightEG"
   after idle after 400 \
     "EG::FocusedIt; EG::CheckCurrentWeek; EG::diagr::Title;\
     EG::ShowTable; after 300 {EG::diagr::Draw 1}"

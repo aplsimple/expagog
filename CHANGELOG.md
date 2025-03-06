@@ -1,7 +1,7 @@
 # Last changes:
 
 
-Version `v0.9.4 (5 Mar'25)`
+Version `v0.9.5 (6 Mar'25)`
 
   - BUGFIX: saving AggrEG formula from Preferences
   - BUGFIX: Report icon's size
@@ -9,6 +9,8 @@ Version `v0.9.4 (5 Mar'25)`
   - NEW   : tip on status bar message
   - NEW   : length limit of item names is 16
   - NEW   : installers for 4 platforms
+  - CHANGE: statusbar messages a-la alited
+  - CHANGE: EG highlighted in diagram lists
   - CHANGE: calculated "Inf" is cleared
   - CHANGE: Report's file entries: -initialdir calculated for file chooser
   - CHANGE: AggrEG saved primarily in .egd, then in .rc (for new .egd)
@@ -73,4 +75,3 @@ Version `v0.2 (13 Jan'25)`
 Version `v0.1 (7 Jan'25)`
 
   - CHANGE: not usable yet, all's too green
-

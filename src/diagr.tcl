@@ -256,7 +256,7 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
         set emptywidth [expr {$x1 - $x1prev - $colWidth}]
         if {$x1prev && $emptywidth>0} { ;# fill previous empty column(s)
           incr x1prev $colWidth
-          if {$item eq {EG} && $ispoly} {
+          if {$item eq {EG}} {
             set color2 $::EG::Colors(fgsel)
           } elseif {$ispoly} {
             set color2 $colorCol
