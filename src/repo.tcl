@@ -374,6 +374,7 @@ proc repo::PutItemData {date1 tplweek itemdata} {
     }
     set lp [string length $item]
     set pad [string repeat "&nbsp;" [incr lp 3]]
+    set val [string map [list \n \n$pad] $val]
     set val [string map [list $::EG::D(EOL) \n$pad] $val]
     append textval "\n <i>$item</i>: $val"
     set curdd $dd
