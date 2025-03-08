@@ -132,6 +132,8 @@ You can comment on any cell, in the text box below the table. You can also mark 
 
 Basically, that's it. Then, at the end of week / month / year you will only have to analyze the data with charts and statistics. They will tell you what has succeeded, what has not been very successful, where failures have occurred, what can be fixed, accelerated or slowed down.
 
+To reflect for 5 minutes at the end of the day on what was successful and what was not - isn't it great?
+
 The value of your data will increase along with the data volume.
 
 
@@ -162,7 +164,7 @@ At the start of *EG*, a histogram for the *AggrEG*  is displayed, its formula is
 
 To select another chart topic, click the drop-down list in the chart toolbar. In this list, you can select individual histogram topics or selected topics. After marking the selected topics in *Polygons* list, charts are created for them when selecting *Polygon*.
 
-The *Totals* means the sum of all the values of all topics, regardless of their *weight* expressed in the *AggrEG* formula.
+The *Totals* means the sum of all the values of all topics, regardless of their *weight* expressed in the *AggrEG* formula. Thus, *Totals* reflects your general activity in *expagog*.
 
 The **weeks** switch allows you to create charts by weeks and days. After clicking a week or a day, the corresponding table is displayed.
 
@@ -208,31 +210,31 @@ The *Report* dialogue with the report settings will open.
 
 Main settings:
 
- *From template file* - the source template in html format
+   - *From template file* - the source template in html format
 
- *To resulting .html* - the report in html format
+   - *To resulting .html* - the report in html format
 
 Preferences of the report heading:
 
- *Title* - custom name for the report
+   - *Title* - custom name for the report
 
- *Normal* - plain text
+   - *Normal* - plain text
 
- *Red* - highlighted text
+   - *Red* - highlighted text
 
 If you do not plan to use the report somewhere on some website, you can leave the html settings unchanged.
 
 Otherwise, you can change the html settings as follows:
 
- *Css file* - a CSS file
+   - *Css file* - a CSS file
 
- *Icon file* - an icon file
+   - *Icon file* - an icon file
 
- *1st .js file* - the 1st JavaScript file to be executed by the browser
+   - *1st .js file* - the 1st JavaScript file to be executed by the browser
 
- *2nd .js file* - the 2nd JavaScript file
+   - *2nd .js file* - the 2nd JavaScript file
 
- *JS code* - JavaScript code to be executed by a browser
+   - *JS code* - JavaScript code to be executed by a browser
 
 To create the report, click the **Report** button.
 
@@ -244,7 +246,7 @@ To create the report, click the **Report** button.
 
 To change the settings of the current database, choose *Preferences* in the menu.
 
-The main settings are a list of tags and a list of topics.
+As for data contents, the main settings are a list of tags and a list of topics.
 
 The tags can be set in the first tab of the settings. You can define three colors for highlighting cells with color and tagging cells with Red, Yellow, and Green tags.
 
