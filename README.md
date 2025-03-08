@@ -371,7 +371,7 @@ Knowing a few English words hasn't hurt anyone yet.
 
 If you really want to have localization in language X, we can do it by the three steps:
 
-  1. In [expagog repository](https://github.com/aplsimple/expagog), *Issues* section, you submit a request for localization of the X language.
+  1. In [expagog repository](https://github.com/aplsimple/expagog), section [Issues](https://github.com/aplsimple/expagog/issues), you submit a request for localization of the X language.
 
   2. I give you a template of English *EG* messages, with an explanation of what and how.
 
