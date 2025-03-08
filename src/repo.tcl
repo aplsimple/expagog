@@ -259,11 +259,6 @@ proc repo::TextContent {val} {
 
   set val [EG::fromEOL $val]
   set mlist [list]
-  foreach ss [lsort -decreasing [regexp -all -inline {\n\s+} $val]] {
-    set ls [string length $ss]
-    set pad [string repeat "&nbsp;" [incr ls -1]]
-    set val [string map [list $ss \n$pad] $val]
-  }
   string map [list \n <br>] [string trim $val]
 }
 #_______________________
@@ -370,15 +365,18 @@ proc repo::PutItemData {date1 tplweek itemdata} {
     }
     append outitems \n $tplitem
   }
-  set curdate {}
+  set curdd {}
   set lsttext [lsort -stride 3 $lsttext]
-  foreach {d item val} $lsttext {
-    if {$d ne $curdate} {
-      set dat [string trimleft [EG::FormatDateUser [clock add $dt1 $d days]]]
+  foreach {dd item val} $lsttext {
+    if {$dd ne $curdd} {
+      set dat [string trimleft [EG::FormatDateUser [clock add $dt1 $dd days]]]
       append textval "\n\n<b>$dat</b>"
     }
+    set lp [string length $item]
+    set pad [string repeat "&nbsp;" [incr lp 3]]
+    set val [string map [list $::EG::D(EOL) \n$pad] $val]
     append textval "\n <i>$item</i>: $val"
-    set curdate $d
+    set curdd $dd
   }
   set outweek [PutRange $tplweek Item $outitems]
   set outweek [PutValue $outweek CommItem [TextContent $textval]]

@@ -26,7 +26,7 @@ foreach _ {apave baltip bartabs hl_tcl} {
 
 namespace eval EG {
 
-  variable VERSION v0.9.5
+  variable VERSION v0.9.6
   variable EGICON \
 {iVBORw0KGgoAAAANSUhEUgAAAEgAAABICAMAAABiM0N1AAAABlBMVEUUqHtCxf8p2J+gAAAAAnRS
 TlMA/1uRIrUAAAD7SURBVFjD3dhLEoQgDATQ7vtfejaz0IGEdGhKa7LzU09LAyEA/xiky6GJMUD8
