@@ -85,7 +85,7 @@ However, get to the point.
 
 **Statistics** - summary data on the current database; contains two sections of data - *Current week and plan for the next* and *Previous, current and subsequent weeks*.
 
-**Count / Count0 counters** - in statistics, they mean the total number of non-empty cells and the number of non-empty cells with a value of 0.
+**Count / Count0** - in statistics, they mean the total number of non-empty cells and the number of non-empty cells with a value of 0.
 
 **Report** is an html file that contains data from the current database, including statistics; it can be used for *external use.*
 
