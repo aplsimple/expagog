@@ -218,7 +218,7 @@ proc ::klnd::my::fgMayHL {fg1 y m d} {
       set day2 $y2/$m2/$d2
       if {$p(hlweeks)} {
         set week2 [clock format [clock scan $day2 -format $fmt] -format %V]
-        if {$week1 eq $week2} {
+        if {$week1 eq $week2 && $y==$y2} {
           set fgw $red
           break
         }

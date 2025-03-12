@@ -389,13 +389,17 @@ Why does the *EG* table start on January 1? Is it possible to start, say, on Sep
 
 **Answer**:
 
-This is one of two future improvements that will move *EG* from version 0.9 to version 1.0.
+Yes, it is possible. The appropriate setting is Preferences' *Week range*.
 
-The second improvement would be merging data files into a single file.
+*Week range*'s first date is included in data and *Week range*'s second date is excluded from data which is shown as *[Date1 - Date2)*.
 
-However, nothing prevents you from splitting the year into periods, e.g. 1st semester, 2nd semester, summer etc., and creating separate data files for this purpose.
+To select *Date1* or *Date2*, just click its field and choose a date from the calendar.
 
-Though the file merging feature has not been implemented yet, its absence also does not bother anyone yet.
+*Date2* cannot be greater than *Date1 + 53 weeks* which means maximum *Week range* is one year.
+
+That said, nothing prevents you from splitting the year into periods, e.g. 1st semester, 2nd semester, summer etc., and creating separate data files for this purpose.
+
+The *Merge* menu item can be used to merge those separate data files into one file.
 
 
  WHAT ELSE
@@ -403,17 +407,29 @@ Though the file merging feature has not been implemented yet, its absence also d
 
 John Steinbeck ("The Leader of the People"):
 
-*"In boats I might, sir." "No place to go, Jody. Every place is taken. But that's not the worst - no, not the worst. Westering has died out of the people. Westering isn't a hunger any more. It's all done. Your father is right. It is finished."*
+*"In boats I might, sir."*
+
+*"No place to go, Jody. Every place is taken. But that's not the worst - no, not the worst. Westering has died out of the people. Westering isn't a hunger any more. It's all done. Your father is right. It is finished."*
 
 ---
 
 Anton Chekhov ("Gooseberries"):
 
-*Every happy man should have someone with a little hammer at his door to knock and remind him that there are unhappy people, and that, however happy he may be, life will sooner or later show its claws, and some misfortune will befall him—illness, poverty, loss, and then no one will see or hear him, just as he now neither sees nor hears others. But there is no man with a hammer, and the happy go on living, just a little fluttered with the petty cares of every day, like an aspen-tree in the wind—and everything is all right.*
+*Every happy man should have someone with a little hammer at his door to knock and remind him that there are unhappy people, and that, however happy he may be, life will sooner or later show its claws, and some misfortune will befall him — illness, poverty, loss, and then no one will see or hear him, just as he now neither sees nor hears others. But there is no man with a hammer, and the happy go on living, just a little fluttered with the petty cares of every day, like an aspen-tree in the wind — and everything is all right.*
 
 ---
 
-*EG* might become kind of *someone with a little hammer* to call one to *westering*. Or *eastering* if one prefers that way.
+Grigoriy Gorin ([The Very Same Munchhausen](https://en.wikipedia.org/wiki/The_Very_Same_Munchhausen)):
+
+*Ramkopf (reads): “From eight to ten is A FEAT"!*
+
+*The Mayor: What does it mean?*
+
+*The Baroness: This means that he has a feat planned from eight to ten in the morning... What would you say about a man who goes to a feat every day, just for service?!*
+
+---
+
+*EG* might become kind of *someone with a little hammer* to call one to *westering*, to *eastering*, to *feat*... whatever one prefers.
 
 
  LINKS

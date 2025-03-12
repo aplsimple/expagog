@@ -2063,6 +2063,7 @@ oo::class create ::apave::APaveBase {
         return $args
       }
     }
+    set orvert 0
     set attcur [list]
     set namvar [list]
     # get array of pairs (e.g. image-command for toolbar)
@@ -2076,6 +2077,8 @@ oo::class create ::apave::APaveBase {
           if {$name eq {menu}} {set v2 [list [my MC $v2]]}
           lappend namvar [namespace current]::$typ[incr ind] $v1 $v2
         }
+      } elseif {$nam eq {-orient}} {
+        set orvert [string match vert* $val]
       } else {
         lappend attcur $nam $val
       }
@@ -2105,11 +2108,19 @@ oo::class create ::apave::APaveBase {
     set k [set j [set j2 [set wasmenu 0]]]
     foreach {nam v1 v2} $namvar {
       if {[string first # $v1]==0} continue
-      if {$v1 eq {h_}} {  ;# horisontal space
+      if {$v1 eq {h_}} {
         set ntmp [my Transname fra ${name}[incr j2]]
         set wid1 [list $ntmp - - - - "pack -side left -in $w.$name -fill y"]
         set wid2 [list $ntmp.[my ownWName [my Transname h_ $name$j]] - - - - "pack -fill y -expand 1 -padx $v2"]
-      } elseif {$v1 eq {sev}} {   ;# vertical separator
+      } elseif {$v1 eq {v_}} {
+        set ntmp [my Transname fra ${name}[incr j2]]
+        set wid1 [list $ntmp - - - - "pack -in $w.$name -fill x"]
+        set wid2 [list $ntmp.[my ownWName [my Transname h_ $name$j]] - - - - "pack -fill x -expand 1 -pady $v2"]
+      } elseif {$v1 eq {seh}} {
+        set ntmp [my Transname fra ${name}[incr j2]]
+        set wid1 [list $ntmp - - - - "pack -in $w.$name -fill x"]
+        set wid2 [list $ntmp.[my ownWName [my Transname seh $name$j]] - - - - "pack -fill x -expand 1 -pady $v2"]
+      } elseif {$v1 eq {sev}} {
         set ntmp [my Transname fra ${name}[incr j2]]
         set wid1 [list $ntmp - - - - "pack -side left -in $w.$name -fill y"]
         set wid2 [list $ntmp.[my ownWName [my Transname sev $name$j]] - - - - "pack -fill y -expand 1 -padx $v2"]
@@ -2157,15 +2168,10 @@ oo::class create ::apave::APaveBase {
             }
           }
         }
-        set wid1 [list $name.$v1 - - - - "pack -side left $packreq" $v2]
-        if {[incr wasseh]==1} {
-          ;# horiz.separator for multiline toolbar
-          set wid2 [list [my Transname seh $name$j] - - - - "pack -side top -fill x"]
-        } else {
-          ;# 1st line of toolbar
-          set lwidgets [linsert $lwidgets [incr itmp] $wid1]
-          continue
-        }
+        if {$orvert} {set side {}} {set side {-side left}}
+        set wid1 [list $name.$v1 - - - - "pack $side $packreq" $v2]
+        set lwidgets [linsert $lwidgets [incr itmp] $wid1]
+        continue
       } elseif {$typ eq {menuBar}} {
         ;# menubar: making it here; filling it outside of 'pave window'
         if {[incr wasmenu]==1} {

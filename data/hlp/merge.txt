@@ -1,0 +1,26 @@
+ The <r>Merge</r> dialogue is used to merge data from another
+ .egd file to the current database.
+ ______________________________________________________
+
+ Available are the merge options:
+
+   <b>File to merge</b> - name of .egd file to merge; select
+                   it with <b>Open</b> button or <b>F2</b> key
+
+   <b>Rewrite data</b>  - if ON, the data of <b>file(s) to merge</b>
+                   will rewrite all existing data with
+                   coincident keys
+ ______________________________________________________
+
+ After selecting file(s) to merge, press <r>Merge</r> button
+ to start merging.
+ ______________________________________________________
+
+ If the merging occurs to be <b>bad</b> in your opinion,
+ discard all changes with <r>Undo</r> button.
+
+ Otherwise just close the dialogue.
+
+ <r>Note</r>: the current data file is saved before any merge
+ actions to <b>"file-name-beforeMerge"</b> file.
+

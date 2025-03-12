@@ -1,8 +1,8 @@
  The input fields of settings are as follows:
 
-   - <b>Date long</b> means the current date format
-   - <b>Date short</b> means the status bar date format
-   - <b>Date full</b> means the longest date format
+   - <b>Date format long</b> means the current date format
+   - <b>Date format short</b> means the status bar date format
+   - <b>Date format full</b> means the longest date format
      (see also the man page of <b>clock</b> command:
      <link>www.tcl-lang.org/man/tcl8.6/TclCmd/clock.htm</link>)
 
@@ -22,6 +22,9 @@
  The most important settings are:
 
    - <b>Path to data file</b>
+
+   - <b>Week range</b> is from Date1 to Date2; "[" means "included",
+     ")" means "excluded"; Date1 < Date2 <= Date1 + 53 weeks
 
    - <b>List of topics</b>
 

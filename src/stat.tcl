@@ -801,7 +801,8 @@ proc stat::_create {} {
     {.sbh .text T 1 1 {pack -side left -before %w}}
     {seh lfrtex T 1 5 {-pady 8 -st ew -cw 1}}
     {frabot + T 1 5 {-st ew} {}}
-    {.ButHelp - - - - {pack -side left} {-text Help -com EG::stat::Help}}
+    {.ButHelp - - - - {pack -side left}
+      {-text Help -com EG::stat::Help -takefocus 0}}
     {.h_ + L 1 1 {pack -side left -expand 1 -fill x}}
     {.ButOK + L 1 1 {pack -side left} {-text Calculate -com EG::stat::OK}}
     {.ButExpo + L 1 1 {pack -side left} {-text Report -state disabled

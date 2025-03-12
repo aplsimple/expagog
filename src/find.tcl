@@ -232,7 +232,8 @@ proc find::_create {} {
     {.sbv + L - - pack}
     {seh fra2 T 1 4 {-st ew -pady 4}}
     {frabot + T 1 4 {-st ew} {}}
-    {.ButHelp - - - - {pack -side left} {-text Help -com EG::find::Help}}
+    {.ButHelp - - - - {pack -side left}
+      {-text Help -com EG::find::Help -takefocus 0}}
     {.LaBMess + L 1 1 {pack -side left -expand 1 -fill x}}
     {.ButOK + L 1 1 {pack -side left} {-text Find -com EG::find::OK}}
     {.butCancel + L 1 1 {pack -side left -padx 4} {-text Cancel

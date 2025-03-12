@@ -411,10 +411,11 @@ proc repo::FillTable {} {
   lassign {} outtable currweek currmonth outmonth outweek itemdata date1 date2
   EG::ForEach {} [EG::DatesKeys] {
     set dt [EG::ScanDatePG %d]
+    set y [clock format $dt -format %%Y]
     set d [clock format $dt -format %%d]
     set m [clock format $dt -format %%N]
     set w [clock format $dt -format %%V]
-    set month [EG::MonthFull $m]\ [EG::CurrentYear yes]
+    set month [EG::MonthFull $m]\ $y
     set date1 %d
     if {$currweek ne $w} {
       if {$date2 ne {}} {
@@ -547,7 +548,8 @@ proc repo::_create {} {
     {seh lfr2 T 1 2 {-pady 8 -st ew}}
     {frabot + T 1 2 {-st ew} {}}
     {.TexTmp - - - - {pack forget -side left}}
-    {.ButHelp - - - - {pack -side left} {-text Help -com EG::repo::Help}}
+    {.ButHelp - - - - {pack -side left}
+      {-text Help -com EG::repo::Help -takefocus 0}}
     {.LaBMess + L 1 1 {pack -side left -expand 1 -fill x}}
     {.ButExpo + L 1 1 {pack -side left} {-text Report
       -image mnu_print -compound left -com EG::repo::Report}}

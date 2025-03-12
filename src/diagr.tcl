@@ -31,8 +31,8 @@ namespace eval diagr {
   variable DS     ;# dictionary of item data
   variable TAGS   ;# text tags of items
   variable EOL    ;# eol of item's texts
-  variable ydate1 ;# date of 1 Jan of year
-  variable ywday1 ;# date of 1st day of the week having 1 Jan of year
+  variable ydate1 ;# date of 1st week of Preferences' range
+  variable ywday1 ;# date of 1st day of the week having ydate1
   variable xPREV  ;# used in DrawColumn
   variable yPREV  ;# used in DrawColumn
   variable DayColWidth 3  ;# width of day column
@@ -96,9 +96,8 @@ proc diagr::initVars {} {
   set BodyHeight [expr {[ScrollSize h] - $BarHeight - $MnsHeight}]
   set Y1 $BodyHeight
   set Y2 [expr {$Y1 + $BarHeight}]
-  set year [EG::CurrentYear]
-  set ydate1 [EG::ScanDatePG $year/01/01]
-  set ywday1 [EG::FirstWDay $ydate1]
+  set ywday1 [EG::ScanDatePG $::EG::D(egdDate1)]
+  set ydate1 [clock add $ywday1 6 days]
   foreach id $idlist {$C delete $id}
 }
 
@@ -131,7 +130,7 @@ proc diagr::Layout {} {
     set m [clock format $dt -format %N]
     if {$m != $month} {
       lappend idlist [$C create text [expr {$x1 + $dx}] $dy \
-        -text [EG::MonthShort $month+1] -fill $HotColor -font $::apave::FONTMAIN]
+        -text [EG::MonthShort $m] -fill $HotColor -font $::apave::FONTMAIN]
       set month $m
     }
   }

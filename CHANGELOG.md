@@ -1,6 +1,15 @@
 # Last changes:
 
 
+Version `v1.0a (12 Mar'25)`
+
+  - BUGFIX: switching "weeks" => \n added to comments
+  - BUGFIX: calendar: highlighthing weeks with data (on other years)
+  - NEW   : Preferences: week range
+  - NEW   : Merge
+  - CHANGE: tips with comments of calc/chk cells
+
+
 Version `v0.9.6 (8 Mar'25)`
 
   - BUGFIX: saving AggrEG formula from Preferences

@@ -21,13 +21,15 @@ namespace eval pref {
   variable tagColorGreen  $::EG::Colors(Green)
   variable DP; array set DP [list]
   variable DPars {FILE Theme CS Items ItemsTypes Hue Zoom NoteOnTop \
-    DateUser DateUser2 DateUser3}
+    DateUser DateUser2 DateUser3 egdDate1 egdDate2}
   variable currTab {}
   variable currFoc {}
   variable txtColor {}
   variable msgColor {}
   variable itemOrder [list]
   variable savedAggrEG
+  variable savedEgdDate1
+  variable savedEgdDate2
 }
 
 # ________________________ Common procedures _________________________ #
@@ -54,6 +56,8 @@ proc pref::fetchVars {} {
     variable msgColor
     variable itemOrder
     variable savedAggrEG
+    variable savedEgdDate1
+    variable savedEgdDate2
   }
 }
 #_______________________
@@ -190,7 +194,8 @@ proc pref::MainFrame {} {
     }}
     {seh fraR T 1 2 {-st nsew -pady 2}}
     {fraB + T 1 2 {-st nsew} {-padding {2 2}}}
-    {.ButHelp - - - - {pack -side left} {-t Help -tip F1 -com ::EG::pref::Help}}
+    {.ButHelp - - - - {pack -side left}
+      {-t Help -tip F1 -com ::EG::pref::Help -takefocus 0}}
     {.LabMess - - - - {pack -side left -expand 1 -fill both -padx 8}
       {$::EG::D(MsgFont)}}
     {.ButOK - - - - {pack -side left -anchor s -padx 2} {-t Save -com ::EG::pref::Ok}}
@@ -349,21 +354,32 @@ proc pref::General_Tab {} {
   return {
     {fra1 - - - - {-st nsew}}
     {.h_a - - - - {-pady 8}}
-    {.labFL + T - - {-st se -padx 3} {-t {Data file:}}}
+    {.labFL + T 1 1 {-st se -padx 3} {-t {Data file:}}}
     {.fil + L 1 2 {-st sw} {-tvar ::EG::pref::DP(FILE) -w 60
       -afteridle {EG::pref::focusFirst %w}}}
-    {.h_b .labFL T - - {-pady 8}}
-    {.labD1 + T 1 1 {-st e -pady 1 -padx 3} {-t {Date long:}}}
+    {.h_b .labFL T 1 1 {-pady 8}}
+    {.fraegdD + L 1 2 {-st w}}
+    {.fraegdD.labegdD1 - - - - {-st se} {-t "Week range:   \["}}
+    {.fraegdD.EntegdD1 + L 1 1 {-st sw -padx 0} {-tvar ::EG::pref::DP(egdDate1)
+      -w 11 -justify center -tip "Included for data\n(click to choose)"
+      -state disabled -onevent {<Button> {::EG::pref::SelEgdDate 1}}}}
+    {.fraegdD.labspc + L 1 1 {} {-t {  -  }}}
+    {.fraegdD.EntegdD2 + L 1 1 {-st sw -padx 0} {-tvar ::EG::pref::DP(egdDate2)
+      -w 11 -justify center -tip "Excluded for data\n(click to choose)"
+      -state disabled -onevent {<Button> {::EG::pref::SelEgdDate 2}}}}
+    {.fraegdD.labspc2 + L 1 1 {-st sw} {-t \)}}
+    {.h_c .h_b T 1 1 {-pady 8}}
+    {.labD1 + T 1 1 {-st e -pady 1 -padx 3} {-t {Date format long:}}}
     {.entD1 + L 1 1 {-st sw -pady 1} {-tvar ::EG::pref::DP(DateUser) -w 30
-      -validate all -validatecommand {EG::pref::ValidateDate %P LabVD1}}}
+      -validate all -validatecommand {EG::pref::ValidateDateFormat %P LabVD1}}}
     {.LabVD1 + L 1 1 {-st w -pady 1}}
-    {.labD2 .labD1 T 1 1 {-st e -pady 1 -padx 3} {-t {Date short:}}}
+    {.labD2 .labD1 T 1 1 {-st e -pady 1 -padx 3} {-t {Date format short:}}}
     {.entD2 + L 1 1 {-st sw -pady 1} {-tvar ::EG::pref::DP(DateUser2) -w 30
-      -validate all -validatecommand {EG::pref::ValidateDate %P LabVD2}}}
+      -validate all -validatecommand {EG::pref::ValidateDateFormat %P LabVD2}}}
     {.LabVD2 + L 1 1 {-st w -pady 1}}
-    {.labD3 .labD2 T 1 1 {-st e -pady 1 -padx 3} {-t {Date full:}}}
+    {.labD3 .labD2 T 1 1 {-st e -pady 1 -padx 3} {-t {Date format full:}}}
     {.entD3 + L 1 1 {-st sw -pady 1} {-tvar ::EG::pref::DP(DateUser3) -w 30
-      -validate all -validatecommand {EG::pref::ValidateDate %P LabVD3}}}
+      -validate all -validatecommand {EG::pref::ValidateDateFormat %P LabVD3}}}
     {.LabVD3 + L 1 1 {-st w -pady 1} {-w 30}}
     {.h_0 .labD3 T - - {-pady 8}}
     {.labTheme + T 1 1 {-st e -pady 1 -padx 3} {-t {Ttk theme:}}}
@@ -542,7 +558,7 @@ proc pref::FocusColor {ic} {
 }
 #_______________________
 
-proc pref::ValidateDate {val lab} {
+proc pref::ValidateDateFormat {val lab} {
   # Validates date format (in fact shows it).
   #   val - date format
   #   lab - date label
@@ -554,6 +570,74 @@ proc pref::ValidateDate {val lab} {
   }
   [$obPrf $lab] configure -text $val
   return 1
+}
+#_______________________
+
+proc pref::CheckEgdDate1 {} {
+  # Checks 1st .egd date against the last.
+
+  fetchVars
+  set dt [EG::FirstWDay [EG::ScanDatePG $DP(egdDate1)]]
+  set DP(egdDate1) [EG::FormatDatePG $dt]
+  set dt [clock add $dt $::EG::diagr::NDays days]
+  set egdDate2 [EG::FormatDatePG $dt]
+  if {$DP(egdDate1)>$DP(egdDate2) || $DP(egdDate2)>$egdDate2} {
+    set DP(egdDate2) $egdDate2
+    Message "Week range's Date2 is set to $egdDate2"
+  } elseif {$DP(egdDate2) != $egdDate2} {
+    Message "Week range's Date2 is advised to be $egdDate2"
+  }
+  CheckEgdDates
+}
+#_______________________
+
+proc pref::CheckEgdDate2 {} {
+  # Checks last .egd date against the first.
+
+  fetchVars
+  set dt [EG::FirstWDay [EG::ScanDatePG $DP(egdDate2)]]
+  set DP(egdDate2) [EG::FormatDatePG $dt]
+  set dt [clock add $dt -$::EG::diagr::NDays days]
+  set egdDate1 [EG::FormatDatePG $dt]
+  if {$DP(egdDate1)>$DP(egdDate2) || $DP(egdDate1)<$egdDate1} {
+    set DP(egdDate1) $egdDate1
+    Message "Week range's Date1 is set to $egdDate1"
+  } elseif {$DP(egdDate1) != $egdDate1} {
+    Message "Week range's Date1 is advised to be $egdDate1"
+  }
+  CheckEgdDates
+}
+#_______________________
+
+proc pref::CheckEgdDates {} {
+  # Checks 1st & last .egd dates against the curren data.
+
+  fetchVars
+  set dkeys [EG::DatesKeys]
+  set D1 [lindex $dkeys 0]
+  set D2 [lindex $dkeys end]
+  if {$D1 ne {} && $DP(egdDate2)<$D1 || $D2 ne {} && $DP(egdDate1)>$D2} {
+    EG::msg ok warn "\n\
+      No data in the range $DP(egdDate1) - $DP(egdDate2)!\n\n\
+      The data's range is $D1 - $D2.\n\
+      _____________________________________________\n\n\
+      The original range will be restored.\n"
+    set DP(egdDate1) $savedEgdDate1
+    set DP(egdDate2) $savedEgdDate2
+  }
+}
+#_______________________
+
+proc pref::SelEgdDate {ndate} {
+  # Chooses egdDate (1 or 2).
+  #   ndate - date number (1 or 2)
+
+  fetchVars
+  set dtvar ::EG::pref::DP(egdDate$ndate)
+  if {$ndate==1} {set ttl {Week first}} {set ttl {Week last}}
+  set ent [$obPrf EntegdD$ndate]
+  EG::ChooseDay $dtvar -entry $ent -title $ttl -dateformat $::EG::D(DatePG)
+  if {$ndate==1} CheckEgdDate1 CheckEgdDate2
 }
 
 # ________________________ GUI procs _________________________ #
@@ -574,7 +658,7 @@ proc pref::_create {} {
     after idle after 300 "focus $currFoc"
   }
   foreach k {DateUser DateUser2 DateUser3} lab {LabVD1 LabVD2 LabVD3} {
-    ValidateDate $DP($k) $lab
+    ValidateDateFormat $DP($k) $lab
   }
   $obPrf displayText [$obPrf Textags] $::EG::D(TextTags)
   bind $win <F1> "[$obPrf ButHelp] invoke"
@@ -599,6 +683,8 @@ proc pref::_run {} {
   set savedAggrEG $::EG::stat::aggregate
   set itemOrder [origItemOrder]
   foreach k $DPars {set DP($k) $::EG::D($k)}
+  set savedEgdDate1 $DP(egdDate1)
+  set savedEgdDate2 $DP(egdDate2)
   return [_create]
 }
 

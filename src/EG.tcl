@@ -26,7 +26,7 @@ foreach _ {apave baltip bartabs hl_tcl} {
 
 namespace eval EG {
 
-  variable VERSION v0.9.6
+  variable VERSION v1.0a
   variable EGICON \
 {iVBORw0KGgoAAAANSUhEUgAAAEgAAABICAMAAABiM0N1AAAABlBMVEUUqHtCxf8p2J+gAAAAAnRS
 TlMA/1uRIrUAAAD7SURBVFjD3dhLEoQgDATQ7vtfejaz0IGEdGhKa7LzU09LAyEA/xiky6GJMUD8
@@ -110,7 +110,9 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   set D(Zoom) 3       ;# "zoom" (affects font size)
   set D(MsgFont) {}   ;# font of messages
   set D(TextTags) {}  ;# text tags
-  set D(Date1) {}     ;# current date
+  set D(Date1) {}     ;# current date (of EG main window)
+  set D(egdDate1) {}  ;# Date1 (included) of current .egd data
+  set D(egdDate2) {}  ;# Date2 (excluded) of current .egd data
   set D(previtem) ""  ;# previous choosen item
   set D(curritem) ""  ;# current choosen item
   set D(currwday) ""  ;# current week day
@@ -131,8 +133,8 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
 
   variable SCRIPT [info script]
   variable SCRIPTNORMAL [file normalize $SCRIPT]
-  variable FILEDIR [file dirname $SCRIPTNORMAL]
-  variable DIR [file dirname $FILEDIR]
+  variable SCRDIR [file dirname $SCRIPTNORMAL]
+  variable DIR [file dirname $SCRDIR]
   variable LIBDIR [file join $DIR lib]
   variable DATADIR [file join $DIR data]
   variable DATATPL [file join $DATADIR tpl]
@@ -159,6 +161,11 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
 
 source [file join $::EG::PAVEDIR apave.tcl]
 namespace import ::apave::*
+namespace eval EG {
+  source [file join $::EG::SCRDIR note.tcl]
+  source [file join $::EG::SCRDIR stat.tcl]
+  source [file join $::EG::SCRDIR diagr.tcl]
+}
 
 #_______________________
 
@@ -186,7 +193,7 @@ proc EG::fetchVars {} {
     variable LS
     variable SCRIPT
     variable SCRIPTNORMAL
-    variable FILEDIR
+    variable SCRDIR
     variable DIR
     variable LIBDIR
     variable DATADIR
@@ -206,7 +213,7 @@ proc EG::Source {scriptname} {
 
   fetchVars
   if {![namespace exists $scriptname]} {
-    source [file join $FILEDIR $scriptname.tcl]
+    source [file join $SCRDIR $scriptname.tcl]
   }
 }
 
@@ -407,6 +414,15 @@ proc EG::InitThemeEG {} {
     apave::InitTheme $D(Theme) $LIBDIR
     apave::initWM -theme $D(Theme) -cs $D(CS) -cursorwidth 2 -labelborder 2
   }
+}
+#_______________________
+
+proc EG::GeItemsNumber {} {
+  # Gets number of items.
+
+  variable D
+  set D(Curritems) [expr {min( $D(MAXITEMS), \
+    [llength $D(Items)], [llength $D(ItemsTypes)])}]
 }
 
 # ________________________ Items _________________________ #
@@ -1217,9 +1233,12 @@ proc EG::ChooseDay {dtvar args} {
   set hllist [lsort [dict keys $EGD */*/*]]
   set dt [obj chooser dateChooser $dtvar -title {Choose a week} \
     -locale en -dateformat $D(DateUser) -weeks 1 \
-    -hllist $hllist -hlweeks 1 -parent [$EGOBJ Fral] {*}$args]
+    -hllist $hllist -hlweeks 1 -entry [$EGOBJ EntDate] {*}$args]
   if {$dt ne {}} {
-    set dt [clock scan $dt -format $D(DateUser)]
+    if {[catch {set fmt [dict get $args -dateformat]}]} {
+      set fmt $D(DateUser)
+    }
+    set dt [clock scan $dt -format $fmt]
   }
   return $dt
 }
@@ -1311,22 +1330,14 @@ proc EG::AfterWeekSwitch {} {
 proc EG::IsMoveWeek {} {
   # Checks if a move week is correct. If not, moves to current week of year.
 
-  set d1 [FirstWDay [ScanDate]]
-  set d2 [clock add $d1 6 days]
-  set year1 [clock format $d1 -format %Y]
-  set year2 [clock format $d2 -format %Y]
-  set year [CurrentYear]
-  if {$year ni [list $year1 $year2]} {
-    if {$year > $year1} {
-      set myear $year1
-      set dt [FirstWDay [ScanDatePG $year/01/01]]
-    } else {
-      set myear $year2
-      set dt [FirstWDay [ScanDatePG $year/12/31]]
-    }
-    bell
-    Message "Can't move to $myear year"
-    after idle "EG::MoveToWeek 0 $dt yes"
+  fetchVars
+  update
+  set D1 [FormatDatePG [FirstWDay [ScanDate]]]
+  if {$D1<$D(egdDate1) || $D1>=$D(egdDate2)} {
+    EG::msg ok warn "\n\
+      Cannot move to [string trim $D(Date1)]!\n\n\
+      In \"Preferences\", the week range is \[$D(egdDate1) - $D(egdDate2)\).\n"
+    after idle [list EG::MoveToWeek 0 {} yes]
     return no
   }
   return yes
@@ -1442,8 +1453,9 @@ proc EG::StoreText {{t ?@-*}} {
   fetchVars
   set wtxt [$EGOBJ Text]
   if {$t eq {?@-*}} {
-    set t [$wtxt get 1.0 end]
+    set t [string trimright [$wtxt get 1.0 end]]
   } else {
+    set t [string trimright $t]
     $EGOBJ displayText $wtxt $t
   }
   StoreValue t $t
@@ -1462,19 +1474,14 @@ proc EG::TextTip {} {
 }
 #_______________________
 
-proc EG::EntryTip {item {wday ""}} {
+proc EG::CellTip {item {wday ""}} {
   # Gets a tip for cell.
   #   item - item
   #   wday - week day
 
-  switch -glob [ItemType $item] {
-    calc* - chk {set val {}}
-    default {
-      set val [DataValue t $item $wday]
-      if {$val eq {} && [incr ::EG::_MAXTIP]<333} {  ;# soon, pointer moves
-        set val "After change\npress Enter to save"  ;# will disable these tips
-      }
-    }
+  set val [DataValue t $item $wday]
+  if {$val eq {} && [incr ::EG::_MAXTIP]<333} {  ;# soon, pointer moves will
+    set val "After change\npress Enter to save"  ;# disable the annoying tips
   }
   fromEOL $val
 }
@@ -1496,24 +1503,25 @@ proc EG::ColorItemLabels {{ispoly 0}} {
   foreach item $D(Items) {
     incr iit
     set ip [expr {$iit-1}]
-    if {$ispoly && !$D(poly,$ip)} continue
     set fg $Colors(fg)
     set bg $Colors(bg)
-    switch -- $Opcvar {
-      Totals - EG {}
-      Polygon {
-        lassign [apave::InvertBg $Colors(my$iit)] fg bg
-      }
-      default {
-        if {$item eq $Opcvar} {
-          set iit [ItemIndex $Opcvar]
-          lassign [apave::InvertBg $Colors(my[incr iit])] fg bg
+    if {!$ispoly || $D(poly,$ip)} {
+      switch -- $Opcvar {
+        Totals - EG {}
+        Polygon {
+          lassign [apave::InvertBg $Colors(my$iit)] fg bg
+        }
+        default {
+          if {$item eq $Opcvar} {
+            set iit [ItemIndex $Opcvar]
+            lassign [apave::InvertBg $Colors(my[incr iit])] fg bg
+          }
         }
       }
-    }
-    if {$item eq {EG}} {
-      set fg $Colors(fghot)
-      set bg $Colors(bg)
+      if {$item eq {EG}} {
+        set fg $Colors(fghot)
+        set bg $Colors(bg)
+      }
     }
     set it [EG::NormItem $item]
     [$EGOBJ LaBI$it] configure -fg $fg -bg $bg
@@ -1778,6 +1786,28 @@ proc EG::ResourceData {key args} {
 }
 #_______________________
 
+proc EG::ReadEGDFile {fname egdvar} {
+  # Reads data of .egd file
+  #   fname - file name
+  #   egdvar - EGD variable name
+
+  set fcont [apave::readTextFile $fname]
+  set err [set errline {}]
+  set $egdvar [list]
+  foreach line [split $fcont \n] {
+    if {[string trimleft $line] eq {}} continue
+    if {[catch {dict set $egdvar {*}$line} e] && $err eq {}} {
+      set err $e
+      set errline $line
+    }
+  }
+  if {$err ne {}} {
+    obj ok warn Error "Problems with the data file\
+      \n    $fname\nin line\n    $errline\n\n$err"
+  }
+}
+#_______________________
+
 proc EG::OpenDataFile {fname} {
   # Opens data file.
   #   fname - file name
@@ -1806,19 +1836,7 @@ proc EG::OpenDataFile {fname} {
     close [open $fname w]
   }
   set D(FILE) $fname
-  set fcont [apave::readTextFile $fname]
-  set err [set errline {}]
-  foreach line [split $fcont \n] {
-    if {[string trimleft $line] eq {}} continue
-    if {[catch {dict set EGD {*}$line} e] && $err eq {}} {
-      set err $e
-      set errline $line
-    }
-  }
-  if {$err ne {}} {
-    obj ok warn Error "Problems with the data file\
-      \n    $fname\nin line\n    $errline\n\n$err"
-  }
+  ReadEGDFile $fname ::EG::EGD
   # Filling main settings
   if {[set _ [CommonData BYWEEK]] in {0 1}} {set byWeek $_}
   if {[set _ [CommonData CUMULATE]] in {0 1}} {set cumulate $_}
@@ -1837,6 +1855,9 @@ proc EG::OpenDataFile {fname} {
   if {[set _ [CommonData TEXTTAGS]] ne {}} {set D(TextTags) $_}
   if {[set _ [CommonData POLYFLAGS]] ne {}} {set D(poly) $_}
   if {[set _ [CommonData AGGREG]] ne {}} {set ::EG::stat::aggregate $_}
+  set D(egdDate1) [CommonData EGDDATE1]
+  set D(egdDate2) [CommonData EGDDATE2]
+  CheckEgdDates
   readPolyFlags
   set D(MsgFont) "-font {-weight bold -size 9} -foreground {$Colors(fgsel)}"
   for {set iit 1} {$iit<=$D(MAXITEMS)} {incr iit} {
@@ -1860,7 +1881,7 @@ proc EG::OpenDataFile {fname} {
     set itw [expr min(16,[string length $it]+2)] ;# +2 for bold font
     if {$ITW<$itw} {set ITW $itw}
   }
-  set D(Curritems)  [expr {min([llength $D(Items)],[llength $D(ItemsTypes)])}]
+  GeItemsNumber
 }
 #_______________________
 
@@ -1890,6 +1911,8 @@ proc EG::SaveDataFile {{newfile no} {fname ""}} {
   savePolyFlags
   CommonData POLYFLAGS $D(poly)
   CommonData TEXTTAGS $D(TextTags)
+  CommonData EGDDATE1 $D(egdDate1)
+  CommonData EGDDATE2 $D(egdDate2)
   SaveAggrEG
   for {set iit 1} {$iit<=$D(MAXITEMS)} {incr iit} {
     CommonData COLORMY$iit $Colors(my$iit)
@@ -1901,19 +1924,14 @@ proc EG::SaveDataFile {{newfile no} {fname ""}} {
     CommonData TEXTR [string trimright $textr]
   }
   if {$fname eq {}} {set fname $D(FILE)}
-  if {[catch {
-    apave::textChanConfigure [set chan [open $fname w]]
-    foreach key [lsort -decreasing [dict keys $EGD]] {
-      if {$newfile && [string match */*/* $key]} continue
-      set line [dict get $EGD $key]
-      set line [toEOL $line]
-      puts $chan $key\ [list $line]
-    }
-    close $chan
-  } err]} then {
-    bell
-    Message $err
+  set output {}
+  foreach key [lsort -decreasing [dict keys $EGD]] {
+    if {$newfile && [string match */*/* $key]} continue
+    set line [dict get $EGD $key]
+    set line [toEOL $line]
+    append output $key\ [list $line]\n
   }
+  apave::writeTextFile $fname output
 }
 #_______________________
 
@@ -1921,6 +1939,25 @@ proc EG::FileToResource {fname} {
   # Saves file name in .rc file
 
   Resource FILE $fname
+}
+#_______________________
+
+proc EG::CheckEgdDates {} {
+  # Checks date range of .egd data.
+
+  fetchVars
+  if {$D(egdDate1) eq {}} {
+    set year [CurrentYear]
+    set date1 [lindex [DatesKeys] 0]
+    catch {set year [clock format [EG::ScanDatePG $date1] -format %Y]}
+    set dt [FirstWDay [ScanDatePG $year/01/01]]
+    set D(egdDate1) [FormatDatePG $dt]
+  }
+  if {$D(egdDate2) eq {}} {
+    set dt [ScanDatePG $D(egdDate1)]
+    set dt [clock add $dt $::EG::diagr::NDays days]
+    set D(egdDate2) [FormatDatePG $dt]
+  }
 }
 
 # ________________________ Menu _________________________ #
@@ -1942,6 +1979,8 @@ proc EG::Actions {} {
       -command EG::Save -accelerator Ctrl+S
     $pmenu add command -label Backup... -image mnu_double -compound left \
       -command EG::Backup
+    $pmenu add command -label Merge... -image mnu_download -compound left \
+      -command EG::Merge
     $pmenu add separator
     $pmenu add command -label Find... -image mnu_find -compound left \
       -command EG::Find -accelerator Ctrl+F
@@ -1968,7 +2007,7 @@ proc EG::Actions {} {
   }]} then {
     set newmenu 0
   }
-  $pmenu entryconfigure 6 -label $locklab
+  $pmenu entryconfigure 7 -label $locklab
   obj themePopup $pmenu
   foreach n $NOTESN {
     set opts [list -label "  [note::NoteName $n] " -command "EG::note::_run $n"]
@@ -2166,6 +2205,14 @@ proc EG::Help {{fhelp EG} args} {
 }
 #_______________________
 
+proc EG::Merge {} {
+  # Merging data files.
+
+  Source merge
+  merge::_run
+}
+#_______________________
+
 proc EG::About {} {
 
   Help about -title About... -width 28 -height {10 18} -wrap none
@@ -2193,9 +2240,6 @@ proc EG::Init {} {
 
   global argv argc
   fetchVars
-  Source note
-  Source stat
-  Source diagr
   set fileegd [CurrentYear].egd
   switch $argc {
     0 {
@@ -2252,7 +2296,7 @@ proc EG::Init {} {
     image create photo Tool_$icon -data [apave::iconData $icon $ICONTYPE]
   }
   foreach icon {none lamp ques yes no -info -color -lock -find -config
-  -help -exit -OpenFile -SaveFile -double -more -file -print} {
+  -help -exit -OpenFile -SaveFile -double -more -file -print -download -undo} {
     set img [string map {- mnu_} $icon]
     set ico [string map {- {}} $icon]
     image create photo $img -data [apave::iconData $ico small]
@@ -2301,6 +2345,7 @@ proc EG::_create {} {
   $EGOBJ paveWindow $WIN.fra {
     {frat - - 1 3 {-st we} }
     #####-tool-bar
+    {.seh - - - - {pack -side bottom -fill x}}
     {.tool - - - - {pack -side top} {-relief flat -borderwidth 0 -array {
       Tool_hamburger {EG::Actions -tip "Actions\nF10@@ -under 5"}
       sev 8
@@ -2361,7 +2406,7 @@ proc EG::_create {} {
           <FocusOut> {EG::StoreItem; EG::SelIt -1}\
           <KeyPress> {EG::KeyPress %K %s {$item} $i}\
           <ButtonPress-3> {EG::PopupOnItem %W %X %Y}} -tip {-BALTIP ! -COMMAND\
-          {EG::EntryTip $it $i} -UNDER 2 -PER10 999999}}"
+          {EG::CellTip $it $i} -UNDER 2 -PER10 999999}}"
         %C $lwid
       }
       set n .LaBI$it
