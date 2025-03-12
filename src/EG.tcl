@@ -2345,7 +2345,6 @@ proc EG::_create {} {
   $EGOBJ paveWindow $WIN.fra {
     {frat - - 1 3 {-st we} }
     #####-tool-bar
-    {.seh - - - - {pack -side bottom -fill x}}
     {.tool - - - - {pack -side top} {-relief flat -borderwidth 0 -array {
       Tool_hamburger {EG::Actions -tip "Actions\nF10@@ -under 5"}
       sev 8
