@@ -26,7 +26,7 @@ foreach _ {apave baltip bartabs hl_tcl} {
 
 namespace eval EG {
 
-  variable VERSION v1.0a
+  variable VERSION v1.0b5
   variable EGICON \
 {iVBORw0KGgoAAAANSUhEUgAAAEgAAABICAMAAABiM0N1AAAABlBMVEUUqHtCxf8p2J+gAAAAAnRS
 TlMA/1uRIrUAAAD7SURBVFjD3dhLEoQgDATQ7vtfejaz0IGEdGhKa7LzU09LAyEA/xiky6GJMUD8
@@ -219,7 +219,7 @@ proc EG::Source {scriptname} {
 
 # ________________________ Common procs _________________________ #
 
-proc EG::TimeDec {tm} {
+proc EG::TimeValue {tm} {
   # Converts time to decimal.
   #  tm - time value (of format hh:mm or hh.mm)
 
@@ -237,15 +237,15 @@ proc EG::TimeDec {tm} {
 }
 #_______________________
 
-proc EG::CheckDec {icon} {
-  # Gets decimal value ("weight") of item button.
+proc EG::ButtonValue {icon} {
+  # Gets decimal value ("weight") of button "chk" item.
   #   icon - name of icon
 
-  switch -- $icon {
-    yes     { set val $::EG::YESVAL  }
-    lamp    { set val $::EG::LAMPVAL  }
-    no      { set val $::EG::NOVAL }
-    default { set val $::EG::QUESVAL  }
+  switch $icon {
+    Y - yes  {set val $::EG::YESVAL}
+    N - no   {set val $::EG::NOVAL}
+    L - lamp {set val $::EG::LAMPVAL}
+    default  {set val $::EG::QUESVAL}
   }
   return $val
 }
@@ -285,7 +285,7 @@ proc EG::FormatDate {{dt ""}} {
 
   fetchVars
   if {$dt eq {}} {set dt [clock seconds]}
-  clock format $dt -format $D(DateUser)
+  string trim [clock format $dt -format $D(DateUser)]
 }
 #_______________________
 
@@ -305,7 +305,7 @@ proc EG::FormatDateUser {{dt ""}} {
 
   fetchVars
   if {$dt eq {}} {set dt [clock seconds]}
-  clock format $dt -format $D(DateUser2)
+  string trim [clock format $dt -format $D(DateUser2)]
 }
 #_______________________
 
@@ -457,14 +457,14 @@ proc EG::CommandIt {wid type item wday P V} {
         set im none
         set val {}
         switch [$w cget -image] {
-          none  {set im [set val ques]}
+          none {set im [set val ques]}
           ques {set im [set val yes]}
-          yes   {set im [set val lamp]}
-          lamp  {set im [set val no]}
+          yes  {set im [set val lamp]}
+          lamp {set im [set val no]}
         }
         $w configure -image $im
         focus $w
-        StoreData v $val $item $wday
+        after idle [list EG::StoreData v $val $item $wday]
       }
       9* - time {
         $w configure -validate key
@@ -630,16 +630,22 @@ proc EG::FormatValue {w type typ P} {
       set P $n1:$n2
     }
     chk {
-      set P [$w cget -image]
-      if {$P eq {none}} {set P {}}
+      switch [$w cget -image] {
+       yes     {set P Y}
+       no      {set P N}
+       lamp    {set P L}
+       ques    {set P Q}
+       default {set P {}}
+      }
     }
   }
   return $P
 }
 #_______________________
 
-proc EG::KeyPress {K s item wday} {
+proc EG::KeyPress {wid K s item wday} {
   # Handles pressing key in cell.
+  #   wid - widget's path
   #   K - key
   #   s - state
   #   item - item name
@@ -659,6 +665,29 @@ proc EG::KeyPress {K s item wday} {
     if {[info exists com]} {
       $com
       return break
+    }
+  } elseif {[ItemType $item] eq {chk}} {
+    switch -- $K {
+      Delete - BackSpace {
+        $wid configure -image none
+        StoreData v {} $item $wday
+      }
+      2 {
+        $wid configure -image yes
+        StoreData v Y $item $wday
+      }
+      1 {
+        $wid configure -image lamp
+        StoreData v L $item $wday
+      }
+      0 {
+        $wid configure -image ques
+        StoreData v Q $item $wday
+      }
+      - - minus - KP_Subtract {
+        $wid configure -image no
+        StoreData v N $item $wday
+      }
     }
   }
   set i [ItemIndex $item]
@@ -827,7 +856,7 @@ proc EG::CalculatedValue {itemtype idx {reslist ""}} {
     } else {
       set val [DataValue v $itv $idx]
       if {$itt eq {time}} {
-        set val [EG::TimeDec $val]
+        set val [EG::TimeValue $val]
       }
     }
     lappend data $val
@@ -1121,8 +1150,8 @@ proc EG::AllWeekData {} {
       v {
         set typ [string range %t 0 3]
         switch -glob $typ {
-          time {set val [TimeDec %v]}
-          chk* {set val [CheckDec %v]}
+          time {set val [TimeValue %v]}
+          chk* {set val [ButtonValue %v]}
           calc* - 9* {
             set val %v
             if {$val eq $::EG::EMPTY} {set val 0}
@@ -1396,8 +1425,14 @@ proc EG::ShowTable {} {
       set D($it$wday) [set val [DataValue v $item $wday]] ;# shows number
       switch -glob $type {
         chk {
-          if {$val eq {}} {set val none}  ;# shows icon
-          $w configure -image $val
+          switch $val {
+            Y - yes  {set im yes}
+            N - no   {set im no}
+            L - lamp {set im lamp}
+            Q - ques {set im ques}
+            default  {set im none}
+          }
+          $w configure -image $im
         }
         calc* {
           set val [CalculatedValue $type $wday]
@@ -1658,7 +1693,7 @@ proc EG::StatusBar {item wday} {
   set dt [clock add $dt $wday day]
   set D(Date1) [FormatDate $dt]
   set dtfull [string trim [clock format $dt -format $D(DateUser3)]]
-  set dtshort [string trim [FormatDateUser $dt]]
+  set dtshort [FormatDateUser $dt]
   [$EGOBJ Labstat1] configure -text $item
   [$EGOBJ Labstat2] configure -text $dtshort
   [$EGOBJ Lfr1] configure -text "\"$item\"  -  $dtfull"
@@ -2096,7 +2131,7 @@ proc EG::Backup {{auto no}} {
       lab "{} {-pady 8} {-t {Backup file name:}}" {} \
       fis "{} {} {-w 60 -filetypes {$types} -defaultextension .bak \
         -title {Backup file}}" "$D(FILEBAK)" \
-      chb "{} {} {-t {Auto backup at exit}}" $D(AUTOBAK)]] \
+      chb "{} {-pady 10} {-t {Auto backup at exit}}" $D(AUTOBAK)]] \
       auto fname chauto
     if {$auto} {
       if {$fname eq {}} {
@@ -2197,6 +2232,17 @@ proc EG::Help {{fhelp EG} args} {
     }
     openDoc $fhelp
   } else {
+    set VersionDate {}
+    if {$fhelp eq {about}} {
+      set clog [readTextFile [file join $DIR CHANGELOG.md]]
+      foreach line [textsplit $clog] {
+        lassign [regexp -inline {Version `.+(\(.+\))`} $line] -> line
+        if {$line ne {}} {
+          set VersionDate $line
+          break
+        }
+      }
+    }
     set fhelp [file join $DATADIR hlp $fhelp.txt]
     set helpcont [string trimright [apave::readTextFile $fhelp]]
     catch {set helpcont [subst $helpcont]} e
@@ -2349,7 +2395,7 @@ proc EG::_create {} {
       Tool_hamburger {EG::Actions -tip "Actions\nF10@@ -under 5"}
       sev 8
       Tool_SaveFile {{after idle EG::SaveAll} -tip "Save data\nCtrl+S@@ -under 5"}
-      Tool_info {EG::stat::_run -tip "Statistics\nF6@@ -under 5"}
+      Tool_info {EG::stat::_run -tip "Statistical info\nF6@@ -under 5"}
       sev 6
       Tool_previous2 {{EG::MoveToWeek -28} -tip "Previous 4 weeks@@ -under 5"}
       Tool_previous {{EG::MoveToWeek -7} -tip "Previous week@@ -under 5"}
@@ -2363,7 +2409,7 @@ proc EG::_create {} {
       sev 6
       Tool_date {EG::ChooseWeek -tip "Choose a week\nCtrl+D@@ -under 5"}
       Tool_home {EG::MoveToCurrentWeek -tip "To the current week\nCtrl+H@@ -under 5"}
-      Tool_find {EG::Find -tip "Search in comments\nCtrl+F@@ -under 5"}
+      Tool_find {EG::Find -tip "Search in texts\nCtrl+F@@ -under 5"}
       sev 6
       Tool_lock {EG::SwitchLock -tip "Unlock changes\nCtrl+L@@ -under 5"}
       lab {"" {-expand 1 -fill x}}
@@ -2403,7 +2449,7 @@ proc EG::_create {} {
         set lwid ".$n + L 1 1 {-st ewn} {$atr {EG::CommandIt $n {$typ} {$item}\
           $i %P %V} -onevent {<FocusIn> {EG::FocusedIt {$item} $i; EG::SelIt}\
           <FocusOut> {EG::StoreItem; EG::SelIt -1}\
-          <KeyPress> {EG::KeyPress %K %s {$item} $i}\
+          <KeyPress> {EG::KeyPress %W %K %s {$item} $i}\
           <ButtonPress-3> {EG::PopupOnItem %W %X %Y}} -tip {-BALTIP ! -COMMAND\
           {EG::CellTip $it $i} -UNDER 2 -PER10 999999}}"
         %C $lwid
@@ -2425,7 +2471,7 @@ proc EG::_create {} {
     {.LabTtl - - - - {pack -side left -expand 1 -fill x} {-anchor center}}
     {.EntTtl - - - - {pack forget -expand 1 -fill x -side left}
       {-tvar ::EG::stat::aggregate -w 50 -takefocus 0
-      -onevent {<FocusOut> EG::SaveAggrEG}
+      -onevent {<FocusOut> {EG::SaveAggrEG; EG::diagr::Draw}}
       -tip "AggrEG formula\n___________________\nAfter change\npress Enter to save"}}
     {frar1 fraTtl T 1 7 {-st nwe}}
     {.Can - - - - {pack -expand 1 -fill both -side top} {-w 70 -h 360}}

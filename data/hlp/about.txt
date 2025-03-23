@@ -1,4 +1,4 @@
- <r>$TITLE $VERSION</r>
+ <r>$TITLE $VERSION $VersionDate</r>
 
   • <linkChi>Chiselapp repository</linkChi>
   • <linkGit>Github repository</linkGit>
@@ -16,5 +16,5 @@
 
   <r>Tcl/Tk:</r>
 
-  • Version <b>[package require Tk]</b>
-  • Path <b>[info nameofexecutable]</b>
+  • <b>Version:</b> [package require Tk]
+  • <b>Path:</b> [info nameofexecutable]

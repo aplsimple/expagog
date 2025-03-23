@@ -26,29 +26,23 @@ borderColorLight=black cellPadding=3 cellSpacing=0 width="100%>
 <!-- Starting EG report -->
 
 <font face="Arial Cyr">
-
 <p>
+
 <FONT size=8><B>{Year+-}</B></FONT>
 <br>
 <br>
 <b>{headRepo+-}</b>
 
-<p>
-{blackComment+-}
-<p><font color=Fuchsia>
-{redComment+-}
-</font>
-</p>
-<pre class="code">
-{statRepo+-}
+<p>{blackComment+-}</p>
+<p><font color=Fuchsia>{redComment+-}</font></p>
+<pre class="code">{statRepo+-}
+{Notes+-}
 </pre>
-<p>
-{commentRepo+-}
-</p>
+<p>{commentRepo+-}</p>
 
 </font>
-
 </p>
+
 <TABLE width="100%" border=1>
 <TBODY>
 
@@ -72,13 +66,13 @@ borderColorLight=black cellPadding=3 cellSpacing=0 width="100%>
 <TBODY>
 <tr>
 <td align="center" BGcolor=#d3faef><i>Topic</i></td>
-<td align="center" BGcolor=#d3faef><i>Mon</i></td>
-<td align="center" BGcolor=#d3faef><i>Tue</i></td>
-<td align="center" BGcolor=#d3faef><i>Wed</i></td>
-<td align="center" BGcolor=#d3faef><i>Thu</i></td>
-<td align="center" BGcolor=#d3faef><i>Fri</i></td>
-<td align="center" BGcolor=#d3faef><i>Sat</i></td>
-<td align="center" BGcolor=#d3faef><i>Sun</i></td>
+<td align="center" BGcolor=#d3faef><i><b>{WD0+-}</b>, Mon</i></td>
+<td align="center" BGcolor=#d3faef><i><b>{WD1+-}</b>, Tue</i></td>
+<td align="center" BGcolor=#d3faef><i><b>{WD2+-}</b>, Wed</i></td>
+<td align="center" BGcolor=#d3faef><i><b>{WD3+-}</b>, Thu</i></td>
+<td align="center" BGcolor=#d3faef><i><b>{WD4+-}</b>, Fri</i></td>
+<td align="center" BGcolor=#d3faef><i><b>{WD5+-}</b>, Sat</i></td>
+<td align="center" BGcolor=#d3faef><i><b>{WD6+-}</b>, Sun</i></td>
 </tr>
 {Item+}
 <tr>

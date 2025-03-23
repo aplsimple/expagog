@@ -662,6 +662,7 @@ proc pref::_create {} {
   }
   $obPrf displayText [$obPrf Textags] $::EG::D(TextTags)
   bind $win <F1> "[$obPrf ButHelp] invoke"
+  bind $win <Control-o> [list $obPrf vieweditFile $::EG::D(FILE) {} -ro 1 -h 25]
   set res [$obPrf showModal $win -parent $::EG::WIN -resizable 0 \
     -onclose ::EG::pref::Cancel]
   if {[llength $res] < 2} {set res ""}

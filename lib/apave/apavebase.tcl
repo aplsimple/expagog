@@ -1709,7 +1709,7 @@ oo::class create ::apave::APaveBase {
         set dn [string range $dn 1 end]
       }
       set com [lindex [split $dn] 0] ;# command for initialdir
-      if {[llength [info commands $com]]} {set dn [eval $dn]}
+      if {$com ne {.} && [llength [info commands $com]]} {catch {set dn [eval $dn]}}
       set args [list -initialfile $fn -initialdir $dn {*}$parent {*}$args]
       incr isfilename
     } elseif {$nchooser eq {tk_chooseDirectory}} {
@@ -2628,9 +2628,19 @@ oo::class create ::apave::APaveBase {
             } elseif {![string match #* $fr]} {
               set attr [my GetMC $attr]
               set attr [subst $attr]
-              lassign [::apave::extractOptions attr -tip {} -tooltip {}] tip t2
+              lassign [::apave::extractOptions attr -tip {} -tooltip {} \
+                -Attrs {}] tip t2 Attrs
               set wt [my MakeWidgetName $w $fr]
-              $w add [ttk::frame $wt] {*}$attr
+              if {[string match lab* $fr]} {
+                set wid ttk::label
+              } elseif {[string match laB* $fr]} {
+                set wid label
+              } elseif {[string match fra* $fr]} {
+                set wid ttk::frame
+              } else {
+                set wid frame
+              }
+              $w add [$wid $wt {*}$Attrs] {*}$attr
               catch {$wt config -takefocus 0}
               if {[append tip $t2] ne {}} {
                 set tip [my MC $tip]

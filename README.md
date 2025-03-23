@@ -35,9 +35,7 @@ But even not very skilled teachers, by virtue of their profession, force us to d
 
 ---
 
-The main goal of *EG* is to direct human activity to experiment and adventure, in a broad sense and in the context of goodness.
-
-Therefore, *EG* makes life not only interesting, but also
+Thus, *EG* makes life not only interesting, but also
 
   - predictable about evil deeds and stupid situations
   - unpredictable about good deeds and smart situations
@@ -81,17 +79,33 @@ However, get to the point.
 
 **General notes** is an arbitrary text under the diagram containing comments and conclusions on the current database, diagram etc.
 
-**Sticker** is a short note that can be useful when working with *EG*, for example, criteria of ratings and equivalents; stickers can be placed anywhere on the screen and colored in any color.
-
 **Statistics** - summary data on the current database; contains two sections of data - *Current week and plan for the next* and *Previous, current and subsequent weeks*.
 
-**Count / Count0** - in statistics, they mean the total number of non-empty cells and the number of non-empty cells with a value of 0.
+**Cells / Cells0** - in statistics, they mean the total number of non-empty cells and the number of non-empty cells with a value of 0.
 
 **Report** is an html file that contains data from the current database, including statistics; it can be used for *external use.*
+
+**Sticker** is a short note that can be useful when working with *EG*, for example, criteria of ratings, equivalents, ideas for experiments etc.; stickers can be placed anywhere on the screen and colored in any color; open stickers are presented in the report.
 
 
  GENERAL USAGE PROCEDURE
 =========================
+
+For a quick installation of *EG*, just run an [installer of expagog](https://github.com/aplsimple/expagog/releases/tag/Installers_of_EG-1.0). Then run [expagog](https://github.com/aplsimple/expagog)'s desktop shortcut.
+
+---
+
+Also, when you have [Tcl/Tk](https://wiki.tcl-lang.org/) deployed on your machine and like to install and run *EG* from its source, you need only to unpack [expagog's source](https://github.com/aplsimple/expagog) to a directory and run it with *tclsh src/EG.tcl* command. Thus, in this case the installation of *EG* is straightforward as well:
+
+  * download *expagog.zip* from [here](https://github.com/aplsimple/expagog) or from [here](https://chiselapp.com/user/aplsimple/repository/expagog/download)
+  * unpack *expagog.zip* to some directory, say *~/PG/expagog*
+  * to run the installed *EG*, use the command:
+
+    `wish ~/PG/expagog/src/EG.tcl`
+
+In Linux, you can run *tclsh* instead of *wish*.
+
+---
 
 When you start *EG* for the first time, a table with the *default* topics opens. You will most likely want to replace them with your own topics and possibly change other program settings.
 
@@ -190,9 +204,9 @@ The date range for the *current weeks* column is set in the report header. The d
 
 A data value in the report is marked in color if it has changed by more than 2% relative to the previous period.
 
-The *Count*  is the total number of non-empty cells in the schedule. The *Count0* is the total number of non-empty cells with value of 0.
+The *Cells*  is the total number of non-empty cells in the schedule. The *Cells0* is the total number of non-empty cells with value of 0.
 
-The average values are obtained with dividing the sums by *Count*.
+The average values are obtained with dividing the sums by *Cells*.
 
 The *Report* button allows to save the statictics to html file.
 
@@ -397,7 +411,7 @@ To select *Date1* or *Date2*, just click its field and choose a date from the ca
 
 *Date2* cannot be greater than *Date1 + 53 weeks* which means maximum *Week range* is one year.
 
-That said, nothing prevents you from splitting the year into periods, e.g. 1st semester, 2nd semester, summer etc., and creating separate data files for this purpose.
+Nothing prevents you from splitting the year into periods, e.g. 1st semester, 2nd semester, summer etc., and creating separate data files for this purpose.
 
 The *Merge* menu item can be used to merge those separate data files into one file.
 

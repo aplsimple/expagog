@@ -158,6 +158,7 @@ proc stat::StatData {} {
   # where date1 is 1st date of week.
 
   variable DS
+  variable aggrdata
   set DS [dict create]
   set dkeys [EG::DatesKeys {} {} 0]
   # collect results
@@ -166,8 +167,8 @@ proc stat::StatData {} {
     if {$k eq {v}} {
       set typ [string range %t 0 3]
       switch -glob $typ {
-        time {set val [EG::TimeDec %v]}
-        chk* {set val [EG::CheckDec %v]}
+        time {set val [EG::TimeValue %v]}
+        chk* {set val [EG::ButtonValue %v]}
         calc* - 9* {
           set val %v
           if {$val eq $::EG::EMPTY} {set val 0}
@@ -195,6 +196,34 @@ proc stat::StatData {} {
       }
       dict set DS {*}$item [list $cnt $cnt0 $sum $avg]
     }
+  }
+  set aggrdata(daysCnt) 0
+  set aggrdata(daysCnt1) 0
+  set aggrdata(daysCnt0) 0
+  set aggrdata(Date1st) {}
+  set aggrdata(DateLast) {}
+  foreach day $dkeys {
+    if {$aggrdata(DateLast) eq {}} {set aggrdata(DateLast) $day}
+    set itv {0 0 0 0 0 0 0}
+    catch {
+      foreach {it val} [dict get $::EG::EGD $day] {
+        lmap {k v} $val {set i [string index $k 1]; set itv [lreplace $itv $i $i 1]}
+      }
+    }
+    foreach i $itv {
+      if {$i} {incr aggrdata(daysCnt1)} {incr aggrdata(daysCnt0)}
+    }
+    incr aggrdata(daysCnt) 7
+    set aggrdata(Date1st) $day
+  }
+  set aggrdata(daysAll) 0
+  catch {
+    set sec1 [EG::ScanDatePG $aggrdata(Date1st)]
+    set sec2 [EG::ScanDatePG $aggrdata(DateLast)]
+    set sec2 [clock add [EG::FirstWDay $sec2] +7 days]
+    set aggrdata(daysAll) [expr {($sec2-$sec1)/86400}]
+    set aggrdata(Date1st) [EG::FormatDate $sec1]
+    set aggrdata(DateLast) [EG::FormatDate $sec2]
   }
 }
 #_______________________
@@ -453,9 +482,10 @@ proc stat::DoTable1 {} {
   variable fmtX
   variable fmtC
   variable DS
+  variable aggrdata
   variable Table1
   lassign [GetOptions] d1 d2 namlen title namfill
-  set title "NN. $title| Count Count0 [Fmt Total $fmtC]  Average |"
+  set title "NN. $title| Cells Cells0 [Fmt Total $fmtC]  Average |"
   set reslen0 [expr {[string length $title] - $namlen - 8}]
   foreach wd {0 1 2 3 4 5 6} {
     append title " [lindex $::EG::D(WeekDays) $wd] "
@@ -464,7 +494,15 @@ proc stat::DoTable1 {} {
   set reslen [expr {$reslen0 + 42}]
   set resfill [string repeat { } $reslen]
   set fmtx [string repeat x $reslen]
-  PutLine Table1 "From Date1=<t>\"$date1\"</t> to Date2=<t>\"$date2\"</t>\n"
+  PutLine Table1 "<t>Current      : from Date1</t> $date1 <t>to Date2</t> $date2\n"
+  PutLine Table1 "<t>Data range   : from</t> $aggrdata(Date1st) <t>to</t>\
+    $aggrdata(DateLast)"
+  PutLine Table1 "<t>Data days    :</t> $aggrdata(daysAll)\n"
+  set todoweeks [expr {($aggrdata(daysCnt)+6)/7}]
+  PutLine Table1 "<t>Planned days :</t> $aggrdata(daysCnt)\
+    <t>(planned weeks :</t> $todoweeks<t>)</t>"
+  PutLine Table1 "<t>Checked days :</t> $aggrdata(daysCnt1)"
+  PutLine Table1 "<t>Empty days   :</t> $aggrdata(daysCnt0)\n"
   PutLine Table1 $title t
   PutLine Table1 $under t
   set weekdata [WeekData $d1 $d2]
@@ -510,8 +548,6 @@ proc stat::DoTable2 {} {
   variable fmtC
   variable DS
   variable Table2
-  variable aggregate
-  variable aggrdata
   # show table's head
   foreach w {1 2 3 4} {
     set dp$w [EG::FormatDatePG [clock add [EG::ScanDate $date1] -$w week]]
@@ -618,10 +654,10 @@ proc stat::Legend1 {} {
   # Gets Table1's legend.
 
   return "<s>\n\
-    Count   - all cells to be checked\n\
-    Count0  - cells non-checked (\"?\") or failed (value<=0) \n\
+    Cells   - all cells to be checked\n\
+    Cells0  - cells non-checked (\"?\") or failed (value<=0) \n\
     Total   - total sum of values\n\
-    Average - Total / Count\n\
+    Average - Total / Cells\n\
     The marks \"?\" stand for cells to be checked on Date1.\n</s>"
 }
 #_______________________
@@ -631,7 +667,7 @@ proc stat::Legend2 {} {
 
   variable maxdiff
   variable aggregate
-  return " AggrEG formula: <t>$aggregate</t>\n\
+  return " <t>AggrEG formula:</t> $aggregate\n\
     <s>\n\
     Previous weeks   - total sum for weeks before \"Date (-4 week)\"\n\
     Date (-4 week)   - total sum for week \"Date1 -4 week\"\n\
@@ -777,7 +813,7 @@ proc stat::_create {} {
   $pobj paveWindow $win.fra {
     {fra1 - - - - {-st nsew -cw 1}}
     {.v_ - - - - {-pady 8}}
-    {.lab1 + T 1 1 {-st es} {-t From -anchor e}}
+    {.lab1 + T 1 1 {-st es} {-t Current: -anchor e}}
     {.entDat1 + L 1 1 {-st ws -padx 4} {-w 11 -justify center
       -tvar ::EG::stat::date1 -tip "Click and choose a week@@ -under 5"
       -state disabled -onevent {<Button> {EG::stat::ChooseWeek date1}}}}

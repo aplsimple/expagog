@@ -1,13 +1,13 @@
  The <r>Search</r> dialogue is used to find information of
- cell comments and move to appropriate weeks.
+ cell texts and move to appropriate weeks.
  _______________________________________________________
 
  Available are the search options:
 
    <b>Find</b> entry - what to search
 
-   <b>Tags</b> list  - to add colors and keywords to the entry
-                these are set in <b>Settings</b> dialogue
+   <b>Tags</b> list  - to add colors and keywords to the entry;
+                these are set in <b>Preferences</b> dialogue
 
    <b>As tags</b>    - to search separate words of the entry
 

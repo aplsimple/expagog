@@ -262,7 +262,8 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
           } else {
             set color2 $ColorBg2
           }
-          set tag [DrawColumn $iw $x1prev $emptywidth $colHeight $color $color2 $ispoly]
+          set tag [DrawColumn $item $iw $x1prev $emptywidth $colHeight \
+            $color $color2 $ispoly]
           set moveday [expr {$emptywidth / $colWidth}]
           if {!$ispoly} {
             ::baltip::tip $C {NO DATA} -ctag $tag
@@ -278,23 +279,12 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
         } else {
           set color2 $colorCol
         }
-        set tag [DrawColumn $iw $x1 $colWidth $colHeight $color $color2 $ispoly]
-        if {!$ispoly} {
-          set under "\n____________ \n"
-          set tip "[EG::FormatDate $day1]$under\n\
-          Sum: [EG::Round $sum 2]\n\
-          Count: $cnt"
-          if {$itemtype eq {chk}} {
-            append tip "$under\
-              Icons weigh:\n\
-              question $::EG::QUESVAL\n\
-              yes $::EG::YESVAL\n\
-              lamp $::EG::LAMPVAL\n\
-              no $::EG::NOVAL"
-          }
-          ::baltip::tip $C $tip -ctag $tag
-          $C bind $tag <Button-1> [list EG::MoveToDay $day1]
-        }
+        set tag [DrawColumn $item $iw $x1 $colWidth $colHeight $color $color2 $ispoly]
+        set tip "[EG::FormatDate $day1]\n_______________ \n"
+        if {$ispoly} {append tip \n\"$item\"}
+        append tip "\nSum: [EG::Round $sum 2]\nCells: $cnt"
+        ::baltip::tip $C $tip -ctag $tag -per10 4000
+        $C bind $tag <Button-1> [list EG::MoveToDay $day1]
       }
     }
   }
@@ -318,8 +308,9 @@ proc diagr::DrawPolygons {} {
 }
 #_______________________
 
-proc diagr::DrawColumn {idx x1 colWidth colHeight color colorCol ispoly} {
+proc diagr::DrawColumn {item idx x1 colWidth colHeight color colorCol ispoly} {
   # Draws a column of polygon or histogram.
+  #   item - item name
   #   idx - week index
   #   x1 - starting X-coordinate
   #   colWidth - column's width
@@ -335,7 +326,7 @@ proc diagr::DrawColumn {idx x1 colWidth colHeight color colorCol ispoly} {
   if {$color ne {}} {
     $C itemconfigure WK$idx -fill $color
   }
-  set tag WC$x1
+  set tag WC$x1[EG::NormItem $item]
   if {$ispoly} {
     # polygon
     set x2 [expr {($x1+$x2)/2}]

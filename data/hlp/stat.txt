@@ -1,8 +1,8 @@
  <r>The statistics options are:</r>
 
- <b>Date1</b> - date "since" to collect data
+ <b>Current Date1</b>  - date "since" to collect data
 
- <b>Date2</b> - date "to" (excluded) to collect data
+ <b>Current Date2</b>  - date "to" (excluded) to collect data
 
  <b>AggrEG formula</b> - a formula to calculate "aggregate estimate"
     for a week; it can endow more weight to some topics against
@@ -14,10 +14,17 @@
 
  <r>The statistics data are:</r>
 
- <b>Count</b>            - all cells to check
- <b>Count0</b>           - cells non-checked ("?")
+ <b>Data range</b>       - dates range of real data in database
+ <b>Data days</b>        - data range in days
+
+ <b>Planned days</b>     - number of day to be checked
+ <b>Checked days</b>     - planned days that were checked in cell(s)
+ <b>Empty days</b>       - planned days that weren't checked at all
+
+ <b>Cells</b>            - number of cells to be checked
+ <b>Cells0</b>           - number of cells that weren't checked ("?")
  <b>Total</b>            - total sum of values
- <b>Average</b>          - Total / Count
+ <b>Average</b>          - Total / Cells
 
  <b>Previous weeks</b>   - total sum for weeks before "Date (-4 week)"
  <b>Date (-4 week)</b>   - total sum for week "Date1 -4 week"

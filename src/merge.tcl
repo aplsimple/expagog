@@ -253,9 +253,8 @@ proc merge::_create  {} {
     {.filIn + L 1 1 {-st swe -cw 1} {-w 60 -tvar ::EG::merge::fileToMerge
       -initialdir $::EG::USERDIR
       -filetypes {{{EG Data Files} {.egd} }} -defaultextension .egd}}
-    {.lab2 .lab1 T 1 1 {-st es -padx 4} {-t {Rewrite data:} -anchor e}}
-    {.chb + L 1 1 {-st w} {-var ::EG::merge::reWrite}}
-    {.v_4 .lab2 T 1 1 {-pady 8}}
+    {.lab2 .lab1 T 1 1 {-st es -padx 4 -pady 8} {-t {Rewrite data:} -anchor e}}
+    {.chb + L 1 1 {-st w -pady 8} {-var ::EG::merge::reWrite}}
     {lfr fra1 T 1 2 {-st nswe -rw 1 -cw 1} {-t {Log messages:} -labelanchor n}}
     {.TexLog - - - - {pack -side left -expand 1 -fill both}
       {-w 10 -h 16 -ro 1 -wrap none}}

@@ -23,7 +23,7 @@ constructor {idx} {
 
   set NN $idx
   set NoteKey Note$NN
-  set Pobj notepavedObj$NN
+  set Pobj ::EG::note::notepavedObj$NN
   set Win $::EG::WIN.sticker$NN
   set Ngeometry +0+0
   lassign [my GetNoteData] NName Ncolor
@@ -36,6 +36,13 @@ destructor {
 }
 
 # ________________________ Common methods _________________________ #
+
+method pobj {} {
+  # Gets Pobj of note's window.
+
+  return $Pobj
+}
+#_______________________
 
 method chooseColor {} {
   # Chooses a note's background color.
@@ -284,6 +291,20 @@ proc note::NoteColor {idx} {
 
   CreateObj $idx
   [NoteObj $idx] noteColor
+}
+#_______________________
+
+proc note::OpenNoteText {idx} {
+  # Gets an open note's text.
+  #   idx - note's index
+
+  set res {}
+  catch {
+    set nobj [NoteObj $idx]
+    set pobj [$nobj pobj]
+    set res [string trimright [[$pobj Text] get 1.0 end]]
+  }
+  return $res
 }
 #_______________________
 

@@ -80,7 +80,7 @@ proc repo::ReadPreferences {} {
       set $sv [EG::fromEOL [set $sv]]
     }
   }
-  set Year [EG::CurrentYear yes]
+  set Year [file root [file tail $::EG::D(FILE)]] ;# [EG::CurrentYear yes]
 }
 #_______________________
 
@@ -369,7 +369,7 @@ proc repo::PutItemData {date1 tplweek itemdata} {
   set lsttext [lsort -stride 3 $lsttext]
   foreach {dd item val} $lsttext {
     if {$dd ne $curdd} {
-      set dat [string trimleft [EG::FormatDateUser [clock add $dt1 $dd days]]]
+      set dat [EG::FormatDateUser [clock add $dt1 $dd days]]
       append textval "\n\n<b>$dat</b>"
     }
     set lp [string length $item]
@@ -425,6 +425,10 @@ proc repo::FillTable {} {
       set currweek $w
       set outweek [PutValue $Week WeekN $currweek]
       set outweek [PutValue $outweek WeekDate1 [EG::FormatDateUser $dt]]
+      foreach wday {0 1 2 3 4 5 6} {
+        set wval [EG::FormatDateUser [clock add $dt $wday days]]
+        set outweek [PutValue $outweek WD$wday $wval]
+      }
       set itemdata [list]
     }
     if {$currmonth ne $month} {
@@ -454,6 +458,13 @@ proc repo::FillFields {} {
   }
   lappend pairs statRepo [EG::stat::Calculate no $wtmp]
   lappend pairs commentRepo [TextContent [[$::EG::EGOBJ TextR] get 1.0 end]]
+  set Notes {}
+  foreach n $::EG::NOTESN {
+    if {[set note [EG::note::OpenNoteText $n]] ne {}} {
+      append Notes <p><b>[EG::note::NoteName $n]</b><br>$note</p>
+    }
+  }
+  lappend pairs Notes $Notes
   set Html [PutValue $Html {*}$pairs]
 }
 
