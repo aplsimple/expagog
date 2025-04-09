@@ -22,7 +22,6 @@ namespace eval stat {
   variable fmt1 [string repeat 9 [expr {$fieldwidth-2}]].9
   variable fmt2 [string repeat 9 [expr {$fieldwidth-3}]].99
   variable fmtX [string repeat X $fieldwidth]
-  variable fmtC [string repeat C $fieldwidth]
   variable DS; set DS [dict create]
   variable Table1 {}
   variable Table2 {}
@@ -73,6 +72,16 @@ proc stat::Fmt {val {fmt ""}} {
     }
   }
   return $res
+}
+#_______________________
+
+proc stat::FmtCnt {cnt} {
+  # Formats count.
+  #   cnt - count
+
+  set c [Fmt $cnt]
+  if {$cnt==0} {set c [string repeat { } [string length $c]]}
+  return $c
 }
 #_______________________
 
@@ -185,7 +194,7 @@ proc stat::StatData {} {
       }
       lassign $res cnt cnt0 sum
       incr cnt
-      if {$val<=0 || ![string is double -strict $val]} {
+      if {$val==0 || ![string is double -strict $val]} {
         incr cnt0
         set val 0
       }
@@ -222,8 +231,8 @@ proc stat::StatData {} {
     set sec2 [EG::ScanDatePG $aggrdata(DateLast)]
     set sec2 [clock add [EG::FirstWDay $sec2] +7 days]
     set aggrdata(daysAll) [expr {($sec2-$sec1)/86400}]
-    set aggrdata(Date1st) [EG::FormatDate $sec1]
-    set aggrdata(DateLast) [EG::FormatDate $sec2]
+    set aggrdata(Date1st) [EG::FormatDatePG $sec1]
+    set aggrdata(DateLast) [EG::FormatDatePG $sec2]
   }
 }
 #_______________________
@@ -286,10 +295,10 @@ proc stat::SetDates {} {
   variable date1
   variable date2
   if {$date1 eq {}} {
-    set date1 [EG::FirstWDay]
+    set date1 [EG::FirstWDay [EG::ScanDate]]
     set date2 [clock add $date1 +1 week]
-    set date1 [clock format $date1 -format $::EG::D(DateUser)]
-    set date2 [clock format $date2 -format $::EG::D(DateUser)]
+    set date1 [EG::FormatDate $date1]
+    set date2 [EG::FormatDate $date2]
   }
 }
 
@@ -337,7 +346,7 @@ proc stat::StartText {dotext} {
     [list h "-background $itemHL2"] \
     [list g "-foreground $g"] \
     [list r "-foreground $r"] \
-    [list s "-font {$font -size [expr $fontsize-2]}"] \
+    [list s "-font {$font -size [expr {$fontsize-2}]}"] \
   ]
   set tagsHtml [list \
     [list t "color=#5a1a00"] \
@@ -406,23 +415,27 @@ proc stat::GetOptions {} {
 }
 #_______________________
 
-proc stat::TableValue {itemtype val} {
+proc stat::TableValue {itemtype val {len 0}} {
   # Formats a value for table.
   #   itemtype - type of value
   #   val - value
+  #   len - value width
 
+  variable fmt0
   variable fmt1
   variable fmt2
   variable fmtX
   switch -glob $itemtype {
     time {
-      set val [EG::TimeSym $val]
+      set val [EG::TimeSym [Fmt $val $fmt2]]
       set val [Fmt $val $fmtX]
     }
     X*      {set val [Fmt $val $fmtX]}
+    chk     {set val [Fmt $val $fmt0]}
     AggrEG  {set val [Fmt $val $fmt1]}
     default {set val [Fmt $val $fmt2]}
   }
+  if {$len} {set val [string range $val end-$len end]}
   return $val
 }
 #_______________________
@@ -446,15 +459,19 @@ proc stat::Table2Value {nrow ncol nsum nprevsum nitemtype nchprev nrlen nres} {
   set t1 [set t2 {}]
   if {$chprev && [string is double -strict $sum] && \
   [string is double -strict $prevsum] && $sum!=0 && $prevsum!=0} {
-    set diff [expr {($sum - $prevsum) / $sum}]
-    if {abs($diff)>$maxdiff} {
-      # difference > 2% - highlight it
-      if {$sum > $prevsum} {
-        set t1 <g>  ;# green
-        set t2 </g>
-      } else {
-        set t1 <r>  ;# red
-        set t2 </r>
+    set s1 [TableValue $itemtype $sum]
+    set s2 [TableValue $itemtype $prevsum]
+    if {$s1 ne $s2} {
+      set diff [expr {($sum - $prevsum) / $sum}]
+      if {abs($diff)>$maxdiff} {
+        # difference > 2% - highlight it
+        if {$sum > $prevsum} {
+          set t1 <g>  ;# green
+          set t2 </g>
+        } else {
+          set t1 <r>  ;# red
+          set t2 </r>
+        }
       }
     }
   }
@@ -464,7 +481,7 @@ proc stat::Table2Value {nrow ncol nsum nprevsum nitemtype nchprev nrlen nres} {
     set prevsum 0
   } else {
     set ittype $itemtype
-     set prevsum $sum
+    set prevsum $sum
   }
   append res { } $t1[TableValue $ittype $sum]$t2
   incr rlen [string length $t1$t2]
@@ -480,23 +497,23 @@ proc stat::DoTable1 {} {
   variable date2
   variable fmt2
   variable fmtX
-  variable fmtC
   variable DS
   variable aggrdata
   variable Table1
-  lassign [GetOptions] d1 d2 namlen title namfill
-  set title "NN. $title| Cells Cells0 [Fmt Total $fmtC]  Average |"
-  set reslen0 [expr {[string length $title] - $namlen - 8}]
+  lassign [GetOptions] d1 d2 namlen namttl namfill
+  set title "NN.       $d1 :"
   foreach wd {0 1 2 3 4 5 6} {
-    append title " [lindex $::EG::D(WeekDays) $wd] "
+    append title "   [lindex $::EG::D(WeekDays) $wd]"
   }
+  append title " | ${namttl}Cells Cells0   Total   Average"
+  set reslen0 [expr {[string length $title] - $namlen - 64}]
   set under [string repeat - [string length $title]]
-  set reslen [expr {$reslen0 + 42}]
+  set reslen [expr {$reslen0 + 79}]
   set resfill [string repeat { } $reslen]
   set fmtx [string repeat x $reslen]
   PutLine Table1 "<t>Current      : from Date1</t> $date1 <t>to Date2</t> $date2\n"
-  PutLine Table1 "<t>Data range   : from</t> $aggrdata(Date1st) <t>to</t>\
-    $aggrdata(DateLast)"
+  PutLine Table1 "<t>Data range   : \[</t> $aggrdata(Date1st) <t>-</t>\
+    $aggrdata(DateLast) <t>\)</t>"
   PutLine Table1 "<t>Data days    :</t> $aggrdata(daysAll)\n"
   set todoweeks [expr {($aggrdata(daysCnt)+6)/7}]
   PutLine Table1 "<t>Planned days :</t> $aggrdata(daysCnt)\
@@ -508,29 +525,34 @@ proc stat::DoTable1 {} {
   set weekdata [WeekData $d1 $d2]
   set lastweek [EG::WeekValue $d1]
   foreach item $::EG::D(Items) itemtype $::EG::D(ItemsTypes) result $weekdata {
+    set res "<t>[string range $resfill$item end-$::EG::NAMEWIDTH end] |</t>"
+    foreach wd {0 1 2 3 4 5 6} {
+      if {[dict exists $lastweek $item v$wd]} {
+        set v [string trim [dict get $lastweek $item v$wd]]
+        if {$itemtype eq {chk} && $v ne {?}} {
+          set v [EG::ButtonValue $v]
+        }
+        set v [string range $v 0 4]
+        set v [string range "     $v" end-4 end]
+      } else {
+        set v {     }
+      }
+      append res " $v"
+    }
+    append res " <t>| [string range $item$resfill 0 $namlen]</t> "
     lassign $result cnt cnt0 sum avg
     if {[string is double -strict $avg]} {
-      set sum [TableValue $itemtype $sum]
-      set avg [TableValue $itemtype $avg]
-      set res "[Fmt $cnt] [Fmt $cnt0] $sum $avg"
+      set sum [TableValue $itemtype $sum 7]
+      set avg [TableValue $fmt2 $avg 9]
+      append res "[FmtCnt $cnt]   [FmtCnt $cnt0]$sum$avg"
     } else {
-      set res [Fmt $result $fmtx]
-    }
-    set res [string range $res$resfill 0 $reslen0-1]<t>|</t>
-    foreach wd {0 1 2 3 4 5 6} {
-      if {[dict exists $lastweek $item v$wd] && ![string match calc* $itemtype]} {
-        set v { ? }
-      } else {
-        set v {   }
-      }
-      append res " $v "
+      append res [Fmt $result $fmtx]
     }
     append item $namfill
     append res $resfill
     incr NN
     set sn [string range " $NN" end-1 end]
-    set line "$sn. [string range $item 0 $namlen]<t>|</t>\
-      [string range $res 0 $reslen]"
+    set line "$sn. [string range $res 0 $reslen]"
     if {$NN%2} {set tag {}} {set tag h}
     PutLine Table1 $line $tag
   }
@@ -542,10 +564,8 @@ proc stat::DoTable2 {} {
   # Makes 2nd table (data on previous, current and next weeks).
 
   variable date1
-  variable date2
   variable fmt2
   variable fmtX
-  variable fmtC
   variable DS
   variable Table2
   # show table's head
@@ -554,10 +574,10 @@ proc stat::DoTable2 {} {
   }
   lassign [GetOptions] d1 d2 namlen title namfill
   set title1 "$title|    Previous [Fmt $dp4 $fmtX] [Fmt $dp3 $fmtX]\
-    [Fmt $dp2 $fmtX] [Fmt $dp1 $fmtX]  $d1       Next  |    \
+    [Fmt $dp2 $fmtX] [Fmt $dp1 $fmtX]  $d1       Next  |      Total |     \
     Average     Average     Average     Average"
-  set title2 "       |    weeks      (-4 week)   (-3 week)   (-2 week)  \
-    (-1 week)  $d2       weeks |    previous     current       \
+  set title2 "       |       weeks   (-4 week)   (-3 week)   (-2 week)  \
+    (-1 week)  $d2       weeks |            |     previous     current       \
     next       total"
   set under [string repeat - [string length $title1]]
   set reslen [expr {[string length $title1] - $namlen + 4}]
@@ -577,11 +597,36 @@ proc stat::DoTable2 {} {
   set weekdata(next) [list [WeekData $d2] 1]
   set weekdata(current) [list [WeekData $dp4 $d2] 1]
   set weekdata(total) [list [WeekData] 1]
+  # get total sums, for the calculated totals
+  set Totals [list]
+  set irow 0
+  # ... firstly, collect all total sums
+  foreach itemtype $::EG::D(ItemsTypes) {
+    set totsum 0
+    foreach wd {prev dp-4 dp-3 dp-2 dp-1 dp-0 next} {
+      lassign $weekdata($wd) data
+      lassign [lindex $data $irow] - - sum
+      catch {set totsum [expr {$totsum+$sum}]}
+    }
+    lappend Totals [list $itemtype $totsum]
+    incr irow
+  }
+  set i 0
+  # ... secondly, calculate the calculated totals
+  foreach res $Totals {
+    lassign $res itemtype totsum
+    if {[string match calc* $itemtype]} {
+      set totsum [EG::CalculatedValue $itemtype 1 $Totals]
+      if {![string is double -strict $totsum]} {set totsum 0}
+      set Totals [lreplace $Totals $i $i [list $itemtype $totsum]]
+    }
+    incr i
+  }
   # show data
-  set irow [set icol 0]
+  set irow [set totalsum 0]
   foreach item $::EG::D(Items) itemtype $::EG::D(ItemsTypes) {
     append item $namfill
-    set line [string range $item 0 $namlen]<t>|</t>
+    set line <t>[string range $item 0 $namlen]|</t>
     set rlen $reslen
     # left part of table
     set res {}
@@ -592,13 +637,15 @@ proc stat::DoTable2 {} {
       lassign [lindex $data $irow] cnt cnt0 sum avg
       Table2Value irow icol sum prevsum itemtype chprev rlen res
     }
+    set totsum [lindex $Totals $irow 1]
+    set totalsum [expr {$totalsum + $totsum}]
     # right part of table
-    append res { <t>|</t>}
+    append res " <t>|[TableValue $itemtype $totsum] | </t>"
     set prevsum 0
     foreach wd {prev current next total} {
       lassign $weekdata($wd) data chprev
       lassign [lindex $data $irow] cnt cnt0 sum avg
-      Table2Value irow icol avg prevsum itemtype chprev rlen res
+      Table2Value irow icol avg prevsum fmt2 chprev rlen res
     }
     append res $resfill
     append line [string range $res 0 $rlen]
@@ -608,14 +655,16 @@ proc stat::DoTable2 {} {
   }
   PutLine Table2 $under t
   # AggrEG values
-  set line [string range AggrEG$namfill 0 $namlen]<t>|</t>
+  set line <t>[string range AggrEG$namfill 0 $namlen]|</t>
   set rlen $reslen
   set prevsum [set itmp1 [set itmp2 0]]
   set itemtype AggrEG
   set res {}
   for {set ic 0} {$ic<$icol} {incr ic} {
     set aeg [AggregateValue $ic]
-    if {$ic==($icol-4)} {append res { <t>|</t>}}
+    if {$ic==($icol-4)} {
+      append res " <t>|[TableValue $fmt2 $totalsum]*| </t>"
+    }
     Table2Value itmp1 itmp2 aeg prevsum itemtype ic rlen res
   }
   append res $resfill
@@ -676,6 +725,7 @@ proc stat::Legend2 {} {
     Date (-1 week)   - total sum for week \"Date1 -1 week\"\n\
     Date1-Date2      - total sum for week \"Date1 - Date2\"\n\
     Next weeks       - total sum for weeks after \"Date1 - Date2\"\n\
+    Total*           - rather \"total activity\" than anything real\n\
     Average previous - average for \"Previous weeks\"\n\
     Average current  - average for \"Date1 -4 week\" to Date2\n\
     Average next     - average for \"Next weeks\"\n\
@@ -691,14 +741,15 @@ proc stat::Legend2 {} {
 
 # ________________________ Actions _________________________ #
 
-proc stat::ChooseWeek {dtvar} {
+proc stat::ChooseWeek {dtvar ent} {
   # Calls a calendar to pick a date.
   #   dtvar - date variable name
+  #   ent - date entry's path
 
   variable date1
   variable date2
   variable win
-  set dt [EG::ChooseDay ::EG::stat::$dtvar -parent $win]
+  set dt [EG::ChooseDay ::EG::stat::$dtvar -entry $ent -parent $win]
   if {$dt ne {}} {
     set ::EG::stat::$dtvar [EG::FormatDate [EG::FirstWDay $dt]]
     set dt1 [EG::ScanDate $date1]
@@ -816,12 +867,12 @@ proc stat::_create {} {
     {.lab1 + T 1 1 {-st es} {-t Current: -anchor e}}
     {.entDat1 + L 1 1 {-st ws -padx 4} {-w 11 -justify center
       -tvar ::EG::stat::date1 -tip "Click and choose a week@@ -under 5"
-      -state disabled -onevent {<Button> {EG::stat::ChooseWeek date1}}}}
+      -state disabled -onevent {<Button> {EG::stat::ChooseWeek date1 %w}}}}
     {.fradat2 + L 1 99 {-st ws -padx 0}}
     {.fradat2.lab2 - - - - {-st ws} {-t to -anchor e}}
     {.fradat2.entDat2 + L 1 1 {-st ws -padx 4} {-w 11 -justify center
       -tvar ::EG::stat::date2 -tip "Click and choose a week@@ -under 5"
-      -state disabled -onevent {<Button> {EG::stat::ChooseWeek date2}}}}
+      -state disabled -onevent {<Button> {EG::stat::ChooseWeek date2 %w}}}}
     {.v_2 .lab1 T 1 1 {-pady 8}}
     {.lab3 + T 1 1 {-st es} {-t AggrEG -anchor e}}
     {.TexAggr + L 2 99 {-st nswe} {-w 70 -h 2 -tabnext *.entfs}}

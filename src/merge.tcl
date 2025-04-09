@@ -192,6 +192,16 @@ proc merge::GetFileToMerge {} {
 }
 #_______________________
 
+proc merge::AddTabs {selfiles} {
+  # Add merged files selected in tab bar.
+  #   selfiles - selected files
+
+  variable listToMerge
+  foreach fname $selfiles {lappend listToMerge $fname}
+  DisplayTexLog
+}
+#_______________________
+
 proc merge::CommonTmpData {dkey} {
   # Gets common data from EGDtmp.
   #   dkey - data key
@@ -237,8 +247,9 @@ proc merge::Help {} {
 
 # ________________________ GUI _________________________ #
 
-proc merge::_create  {} {
+proc merge::_create  {selfiles} {
   # Creates Merge dialogue.
+  #   selfiles - merged file list
 
   variable pobj
   variable win
@@ -273,6 +284,7 @@ proc merge::_create  {} {
   foreach ev {FocusIn FocusOut} {
     bind .eg.merge.fra.fra1.entfilIn <$ev> EG::merge::GetFileToMerge
   }
+  AddTabs $selfiles
   bind $win <F1> "[$pobj ButHelp] invoke"
   set res [$pobj showModal $win -parent $::EG::WIN -focus Tab \
     -minsize {300 200} -onclose EG::merge::Close]
@@ -281,8 +293,9 @@ proc merge::_create  {} {
 }
 #_______________________
 
-proc merge::_run  {} {
+proc merge::_run  {selfiles} {
   # Runs Merge dialogue.
+  #   selfiles - merged file list
 
   variable EGDSav
   variable ItemsSav
@@ -303,7 +316,7 @@ proc merge::_run  {} {
     EG::Backup yes
     set ::EG::D(FILEBAK) $backupFile
   }
-  _create
+  _create $selfiles
   EG::ShowTable
 }
 

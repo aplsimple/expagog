@@ -95,15 +95,30 @@ For a quick installation of *EG*, just run an [installer of expagog](https://git
 
 ---
 
-Also, when you have [Tcl/Tk](https://wiki.tcl-lang.org/) deployed on your machine and like to install and run *EG* from its source, you need only to unpack [expagog's source](https://github.com/aplsimple/expagog) to a directory and run it with *tclsh src/EG.tcl* command. Thus, in this case the installation of *EG* is straightforward as well:
+Also, when you have [Tcl/Tk](https://wiki.tcl-lang.org/) deployed on your machine and like to install and run *EG* from its source, you need only to unpack [expagog's source](https://github.com/aplsimple/expagog) to a directory and run it with *tclsh src/EG.tcl* command.
+
+Thus, in this case the installation of *EG* is straightforward as well:
 
   * download *expagog.zip* from [here](https://github.com/aplsimple/expagog) or from [here](https://chiselapp.com/user/aplsimple/repository/expagog/download)
+
   * unpack *expagog.zip* to some directory, say *~/PG/expagog*
+
   * to run the installed *EG*, use the command:
 
-    `wish ~/PG/expagog/src/EG.tcl`
+        wish ~/PG/expagog/src/EG.tcl
 
 In Linux, you can run *tclsh* instead of *wish*.
+
+---
+
+Generally, *EG* is run this way:
+
+    wish ~/PG/expagog/src/EG.tcl ?egd-path? ?rc-directory?
+
+where:
+
+  * *egd-path* - path to data (file or directory), for example: *~/.config/egd/2025.egd*
+  * *rc-directory* - path to expagog.rc (settings) or its directory, for example: *~/.config/egd*
 
 ---
 
@@ -382,18 +397,6 @@ Why is the program not localized in my language X?
 Knowing a few English words hasn't hurt anyone yet.
 
 *EG* is just a form, not a content. The content can be in any X language.
-
-If you really want to have localization in language X, we can do it by the three steps:
-
-  1. In [expagog repository](https://github.com/aplsimple/expagog), section [Issues](https://github.com/aplsimple/expagog/issues), you submit a request for localization of the X language.
-
-  2. I give you a template of English *EG* messages, with an explanation of what and how.
-
-  3. You translate these messages into X, and I include your translation in the *EG*.
-
-Though, expressing it in *Tcl* language,
-
-*if {$X in {Russian Ukranian}} then {# 1st step suffices}*
 
 ---
 

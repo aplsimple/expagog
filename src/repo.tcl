@@ -34,6 +34,9 @@ namespace eval repo {
   variable Item
   variable idxAEG
   variable prevAEG
+  variable RedColor #be0000
+  variable YellowColor #6b6b00
+  variable GreenColor #115111
 }
 
 # ________________________ Common _________________________ #
@@ -65,6 +68,9 @@ proc repo::fetchVars {} {
     variable Item
     variable idxAEG
     variable prevAEG
+    variable RedColor
+    variable YellowColor
+    variable GreenColor
   }
 }
 
@@ -177,7 +183,7 @@ proc repo::RelativePath {path1 path2} {
           set udir [string repeat . $prev]
           set res [file join {*}$udir {*}[lrange $lpor2 end-$next end]]
         } elseif {$k>2} {
-          set prev [expr {$l1 - $l2 + ($k==$l2 ? 0 : 1)}]
+          set prev [expr {$l1 - $k}]
           set next [expr {abs($prev ? $prev + $l2 - $l1 : 0)}]
           set udir [split [string repeat ../ $prev] /]
           set res [file join {*}$udir {*}[lrange $lpor2 end-$next end]]
@@ -248,6 +254,11 @@ funcs.js
 index.html \
 funcs.js
 #> funcs.js
+
+#% repo::RelativePath \
+/home/apl/PG/github/expagog/.bak/egd/EGrepo.html \
+/home/apl/PG/github/aplsimple.github.io/ru/zoo/style.css
+#> ../../../aplsimple.github.io/ru/zoo/style.css
 
 #> doctest
 
@@ -340,6 +351,7 @@ proc repo::PutItemData {date1 tplweek itemdata} {
   set dt1 [EG::ScanDatePG $date1]
   set outitems [set textval {}]
   set lsttext [list]
+  set end 9999
   foreach item $::EG::D(Items) itemtype $::EG::D(ItemsTypes) {
     set tplitem [PutValue $Item ItemName [incr itIdx].\ <b>$item</b>]
     foreach data $itemdata {
@@ -349,11 +361,30 @@ proc repo::PutItemData {date1 tplweek itemdata} {
         lassign [split $key {}] k d  ;# v1 => v 1
         switch $k {
           t {
+            if {[string match $::EG::D(TAGS)* $val]} {
+              set i1 [string length $::EG::D(TAGS)]
+              set i2 [string first  $::EG::D(EOL) $val]
+              if {$i2<0} {set i2 $end}
+              set tags [string range $val $i1 $i2-1]
+              set ltags [split $tags]
+              set rtags [string range $val $i2 $end]
+              foreach {cnam cval} "Red $RedColor Yellow $YellowColor Green $GreenColor" {
+                if {$cnam in $ltags} {
+                  set font "<font color=$cval>"
+                  set val $font$::EG::D(TAGS)$tags</font>$rtags
+                  break
+                }
+              }
+            }
             lappend lsttext $d $item $val
           }
           v {
             # fill a cell for item and week day
             set val [string map {ques ?} $val]
+            if {$itemtype eq {chk} && $val ne {?}} {
+              set val [EG::ButtonValue $val]
+            }
+            if {$item eq {EG}} {set val <b>$val</b>}
             set tplitem [PutValue $tplitem ItemD$d $val]
           }
         }
@@ -388,9 +419,9 @@ proc repo::PutItemData {date1 tplweek itemdata} {
     if {abs($diff)>$::EG::stat::maxdiff} {
       # difference > 2% - highlight it
       if {$aeg > $prevAEG} {
-        append font " color=#115111"
+        append font " color=$GreenColor"
       } else {
-        append font " color=#be0000"
+        append font " color=$RedColor"
       }
     }
   }

@@ -13,7 +13,7 @@ wm withdraw .
 # ______________________ Remove installed (perhaps) packages ____________________ #
 
 foreach _ {apave baltip bartabs hl_tcl} {
-  set __ [package version $_]
+  set __ [package versions $_]
   catch {
     package forget $_
     namespace delete ::$_
@@ -26,7 +26,7 @@ foreach _ {apave baltip bartabs hl_tcl} {
 
 namespace eval EG {
 
-  variable VERSION v1.0b5
+  variable VERSION v1.0
   variable EGICON \
 {iVBORw0KGgoAAAANSUhEUgAAAEgAAABICAMAAABiM0N1AAAABlBMVEUUqHtCxf8p2J+gAAAAAnRS
 TlMA/1uRIrUAAAD7SURBVFjD3dhLEoQgDATQ7vtfejaz0IGEdGhKa7LzU09LAyEA/xiky6GJMUD8
@@ -63,7 +63,7 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   variable EGOBJ ::EG::mainobj
   variable ICONTYPE middle
   variable COMMONTYPE _EG_
-  variable ITW 4
+  variable ITWIDTH 4
   variable NOTESN [list 1 2 3 4 5 6 7 8]
   variable MONTHSHORT [list Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec]
   variable MONTHSFULL [list January February March April May June July August\
@@ -74,6 +74,7 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   variable NOVAL -1
   variable QUESVAL 0
   variable TAGOPCLEN 16
+  variable NAMEWIDTH 15
 
   variable Colors;  ;# item colors
   array set Colors [list pending #ffff00 failed #ff0000 done #80ff80 \
@@ -121,6 +122,9 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   set D(poly) 1[string repeat 0 $D(MAXITEMS)] ;# saved flags of polygons
   readPolyFlags
   set D(NoteOnTop) 0  ;# yes for notes to be topmost
+  set D(DefFont) {}   ;# default font
+  set D(TexFont) {}   ;# text font
+  set D(TabFiles) {}  ;# file names of tab bar
   variable C          ;# canvas' path
   variable Opcvar     ;# option cascade var
   variable OpcItems   ;# option cascade list
@@ -128,6 +132,8 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   variable cumulate 0 ;# cumulative diagram
   variable LS         ;# list of item data
   variable itwidth 0  ;# item width
+  variable InpItem {} ;# input item to go to
+  variable InpDate {} ;# input date to go to
 
   ## ________________________ pathes ________________________ ##
 
@@ -155,12 +161,17 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
     }
   }
   set USERDIR [file join $USERDIR $TITLE egd]
+  if {![file exists $USERDIR]} {file mkdir $USERDIR}
+  variable USERDIRPG $USERDIR
+  variable USERFILEPG {}
 }
 
 # _____________________ Source & import ______________________ #
 
 source [file join $::EG::PAVEDIR apave.tcl]
+source [file join $::EG::LIBDIR bartabs bartabs.tcl]
 namespace import ::apave::*
+apave::initStyles
 namespace eval EG {
   source [file join $::EG::SCRDIR note.tcl]
   source [file join $::EG::SCRDIR stat.tcl]
@@ -180,7 +191,7 @@ proc EG::fetchVars {} {
     variable EGD
     variable ICONTYPE
     variable COMMONTYPE
-    variable ITW
+    variable ITWIDTH
     variable EMPTY
     variable Colors
     variable C
@@ -198,6 +209,8 @@ proc EG::fetchVars {} {
     variable LIBDIR
     variable DATADIR
     variable USERDIR
+    variable USERDIRPG
+    variable USERFILEPG
     variable PAVEDIR
     variable NOTESN
     variable FILEBAK
@@ -284,7 +297,7 @@ proc EG::FormatDate {{dt ""}} {
   #   dt - clock time
 
   fetchVars
-  if {$dt eq {}} {set dt [clock seconds]}
+  if {$dt eq {}} {set dt [Date1Seconds]}
   string trim [clock format $dt -format $D(DateUser)]
 }
 #_______________________
@@ -294,7 +307,7 @@ proc EG::FormatDatePG {{dt ""}} {
   #   dt - clock time
 
   fetchVars
-  if {$dt eq {}} {set dt [clock seconds]}
+  if {$dt eq {}} {set dt [Date1Seconds]}
   clock format $dt -format $D(DatePG)
 }
 #_______________________
@@ -304,7 +317,7 @@ proc EG::FormatDateUser {{dt ""}} {
   #   dt - clock time
 
   fetchVars
-  if {$dt eq {}} {set dt [clock seconds]}
+  if {$dt eq {}} {set dt [Date1Seconds]}
   string trim [clock format $dt -format $D(DateUser2)]
 }
 #_______________________
@@ -336,7 +349,7 @@ proc EG::CurrentYear {{fromdate1 no}} {
   if {$fromdate1} {
     return [clock format [EG::ScanDate] -format %Y]
   }
-  return [clock format [clock seconds] -format %Y]
+  return [clock format [Date1Seconds] -format %Y]
 }
 #_______________________
 
@@ -517,7 +530,11 @@ proc EG::FocusedIt {{item ""} {wday ""} {dt ""}} {
   StoreItem
   set it [NormItem $item]
   if {$item eq {}} {
-    if {$dt eq {}} {set dt [clock seconds]}
+    if {$dt eq {}} {
+      if {[catch {set dt [ScanDate $D(Date1)]}]} {
+        set dt [Date1Seconds]
+      }
+    }
     set D(Date1) [FormatDate $dt]
     set item EG
     set wday [clock format $dt -format %u]
@@ -634,7 +651,7 @@ proc EG::FormatValue {w type typ P} {
        yes     {set P Y}
        no      {set P N}
        lamp    {set P L}
-       ques    {set P Q}
+       ques    {set P $EMPTY}
        default {set P {}}
       }
     }
@@ -682,7 +699,7 @@ proc EG::KeyPress {wid K s item wday} {
       }
       0 {
         $wid configure -image ques
-        StoreData v Q $item $wday
+        StoreData v $EMPTY $item $wday
       }
       - - minus - KP_Subtract {
         $wid configure -image no
@@ -790,6 +807,7 @@ proc EG::AddTag {tag {doit 0}} {
     $wtxt replace 1.0 1.end $line1
   }
   StoreText
+  ShowTable
 }
 #_______________________
 
@@ -890,22 +908,34 @@ proc EG::TextValue {tval} {
 
 ## ________________________ Scanning _________________________ ##
 
-proc EG::ForEach {dkey dkeys script} {
+proc EG::ForEach {dkey dkeys script {egdinfo ""}} {
   # Scans item values, applying a script to them.
   #   dkey - filtering day key or {}
   #   dkeys - list of day keys or {}
   #   script - script with %d, %t, %i, %k and %v (date, itemtype, item, key & value)
+  #   egdinfo
 
   fetchVars
+  lassign $egdinfo fname egdvar
+  if {$egdvar eq {}} {
+    set EGDdict $EGD
+    set items [CommonData ITEMS]
+    set itemstypes [CommonData ITEMSTYPES]
+  } else {
+    set EGDdict [set $egdvar]
+    set items [DataValue $COMMONTYPE ITEMS {} $egdvar]
+    set itemstypes [DataValue $COMMONTYPE ITEMSTYPES {} $egdvar]
+  }
   if {![llength $dkeys]} {
-    set dkeys [lsort -decreasing [dict keys $EGD]]
+    set dkeys [lsort -decreasing [dict keys $EGDdict]]
   }
   set abra e#@
   foreach day $dkeys {
     if {![string match $COMMONTYPE* $day] && [string match $dkey* $day]} {
-      set line [dict get $EGD $day]
+      set line [dict get $EGDdict $day]
       foreach it [dict keys $line] {
-        set typ [list [ItemType $it]]
+        set i [lsearch -exact $items $it]
+        set typ [list [lindex $itemstypes $i]]
         set vals [dict get $line $it]
         set scr [string map [list %% $abra] $script]
         if {[string first %V $script]>-1} {
@@ -927,7 +957,7 @@ proc EG::ForEach {dkey dkeys script} {
 }
 #_______________________
 
-proc EG::DatesKeys {{date1 ""} {date2 ""} {incsort 1}} {
+proc EG::DatesKeys {{date1 ""} {date2 ""} {incsort 1} {egdvar ""}} {
   # Gets a list of date keys, for item data.
   #   date1 - min. date to include
   #   date2 - max. date to include
@@ -943,7 +973,8 @@ proc EG::DatesKeys {{date1 ""} {date2 ""} {incsort 1}} {
   } else {
     set date2 [CurrentYear]/99/99 ;# used for comparison
   }
-  set keys [lsort $sord [dict keys $EGD */*/*]]
+  if {$egdvar eq {}} {set egdvar EGD}
+  set keys [lsort $sord [dict keys [set $egdvar] */*/*]]
   set res [list]
   foreach dt $keys {
     if {$date1 <= $dt && $dt < $date2} {lappend res $dt}
@@ -984,15 +1015,16 @@ proc EG::DataKey {styp {item ""} {wday ""}} {
 }
 #_______________________
 
-proc EG::DataValue {styp item {wday ""}} {
+proc EG::DataValue {styp item {wday ""} {egdvar EGD}} {
   # Gets a value for EGD dictionary.
   #   styp - store type (v - cell value, t - text, and others)
   #   item - item
   #   wday - week day
+  #   egdvar - egd dictionary variable
 
   fetchVars
   set key [DataKey $styp $item $wday]
-  if {[catch {set val [dict get $EGD {*}$key]}]} {
+  if {[catch {set val [dict get [set $egdvar] {*}$key]}]} {
     set val {}
   }
   fromEOL $val
@@ -1074,9 +1106,20 @@ proc EG::SaveRC {} {
   foreach n $NOTESN {
     lappend noteopen [winfo exists [note::NoteWin $n]]
   }
+  ResourceData Geometry [wm geometry $WIN]
   ResourceData NoteOpen {*}$noteopen
   ResourceData Zoom $D(Zoom)
   ResourceData NoteOnTop $D(NoteOnTop)
+  ResourceData DefFont {*}$D(DefFont)
+  ResourceData TexFont {*}$D(TexFont)
+  TabFilesArray
+  ResourceData TabFiles {*}$D(TabFiles)
+  ResourceData DATEUSER {*}[split $D(DateUser)]
+  ResourceData DATEUSER2 {*}[split $D(DateUser2)]
+  ResourceData DATEUSER3 {*}[split $D(DateUser3)]
+  ResourceData THEME $D(Theme)
+  ResourceData CS $D(CS)
+  ResourceData HUE $D(Hue)
   ResourceData FILEBAK $D(FILEBAK)
   ResourceData AUTOBAK $D(AUTOBAK)
   SaveAggrEG
@@ -1087,7 +1130,7 @@ proc EG::SaveAggrEG {} {
   # Saves AggrEG value to .rc file.
 
   stat::CheckAggrEG
-  ResourceData StatAggr $::EG::stat::aggregate
+  ResourceData StatAggr $::EG::stat::aggregate  ;# for new databases
   CommonData AGGREG $::EG::stat::aggregate
 }
 #_______________________
@@ -1145,10 +1188,14 @@ proc EG::AllWeekData {} {
     } else {
       set res [list 0 0 0 ""]
     }
-    lassign $res cnt cnt0 sum tags
+    lassign $res cnt cnt0 sum tags tagcmnt
     switch $k {
       v {
-        set typ [string range %t 0 3]
+        if {{%i} eq {EG}} {
+          set typ 999
+        } else {
+          set typ [string range %t 0 3]
+        }
         switch -glob $typ {
           time {set val [TimeValue %v]}
           chk* {set val [ButtonValue %v]}
@@ -1166,16 +1213,23 @@ proc EG::AllWeekData {} {
           set val 0
         }
         set sum [expr {$sum + $val}]
-        dict set DS {*}$item [list $cnt $cnt0 $sum $tags]
+        dict set DS {*}$item [list $cnt $cnt0 $sum $tags $tagcmnt]
       }
       t {
-        lassign [split %v \n] ltext
-        if {[set i [string first $ltext $D(EOL)]]>-1} {
-          set ltext [string range $ltext 0 $i-1]
+        set i1 [string first \n %v]
+        set i2 [string first $D(EOL) %v]
+        set i [expr {max($i1,$i2)}]
+        if {$i>-1} {
+          set ltext [string range %v 0 $i-1]
+          set ctext [string trim [fromEOL [string range %v $i end]]]
+        } else {
+          set ltext %v
+          set ctext {}
         }
         if {[string first $D(TAGS) $ltext]==0} {
           append tags { } [string range $ltext [string length $D(TAGS)] end]
-          dict set DS {*}$item [list $cnt $cnt0 $sum [string trimleft $tags]]
+          set tagcmnt [string trim "$tagcmnt\n$ctext"]
+          dict set DS {*}$item [list $cnt $cnt0 $sum [string trimleft $tags] $tagcmnt]
         }
       }
     }
@@ -1191,19 +1245,25 @@ proc EG::Week1Data {inpdata {inpitem ""}} {
 
   fetchVars
   set row [set col [set cnt [set cnt0 [set sum 0]]]]
-  set tags [set color {}]
+  set tags [set tagcmnt [set color {}]]
   foreach item $::EG::D(Items) {
     set ::EG::stat::aggrdata($row,$col) 0
     if {$inpitem in [list {} $item AggrEG]} {
       set asum 0
       foreach {it data} $inpdata {
         if {$it eq $item} {
-          lassign $data icnt icnt0 isum tag
+          lassign $data icnt icnt0 isum tag cmnt
           incr cnt $icnt
           incr cnt0 $icnt0
           set sum [expr {$sum + $isum}]
           set asum [expr {$asum + $isum}]
           append tags $tag
+          foreach clr {Green Yellow Red} {
+            if {[string first $clr $tag]>-1} {
+              set tagcmnt [string trim "$tagcmnt\n$cmnt"]
+              break
+            }
+          }
         }
       }
       set ::EG::stat::aggrdata($row,$col) $asum
@@ -1219,7 +1279,7 @@ proc EG::Week1Data {inpdata {inpitem ""}} {
       set color $Colors($clr)
     }
   }
-  list $cnt $cnt0 $sum $color
+  list $cnt $cnt0 $sum $color $tagcmnt
 }
 #_______________________
 
@@ -1247,7 +1307,7 @@ proc EG::FirstWDay {{dt ""}} {
   #   dt - clock time
 
   fetchVars
-  if {$dt eq {}} {set dt [clock seconds]}
+  if {$dt eq {}} {set dt [Date1Seconds]}
   set wd [clock format $dt -format %u]
   clock add $dt -[incr wd -1] day
 }
@@ -1291,6 +1351,18 @@ proc EG::ChooseWeek {{dtvar ""}} {
 }
 #_______________________
 
+proc EG::IsLockedBase {} {
+  # Checks if the whole base isn't for today (i.e. it's past or future).
+
+  fetchVars
+  set currDate [FormatDatePG [clock seconds]]
+  if {$currDate < $D(egdDate1) || $currDate >= $D(egdDate2)} {
+    return yes
+  }
+  return no
+}
+#_______________________
+
 proc EG::CheckCurrentWeek {} {
   # Checks if the week is current and empty (no values set).
   # If so, fills it with "pending values" (0 for number, 0:00 for time,
@@ -1298,6 +1370,7 @@ proc EG::CheckCurrentWeek {} {
 
   fetchVars
   ConfigLock
+  if {[IsLockedBase]} return
   # current week's 1st day
   set datec [FirstWDay]
   # next week's 1st day
@@ -1330,11 +1403,7 @@ proc EG::CheckCurrentWeek {} {
         foreach data $pendlist {
           lassign $data it typ key
           lassign [split $key {}] k wday
-          switch -glob -- $typ {
-            chk  {set val ques}
-            default {set val $EMPTY}
-          }
-          StoreValue $k $val $it $wday
+          StoreValue $k $EMPTY $it $wday
         }
       }
       return
@@ -1350,7 +1419,7 @@ proc EG::AfterWeekSwitch {} {
   # the past data should be locked by default
   set d1 [ScanDate [FormatDate [FirstWDay [ScanDate]]]]
   set d2 [ScanDate [FormatDate [FirstWDay]]]
-  set D(lockdata) [expr {$d1 < $d2}]
+  set D(lockdata) [expr {[IsLockedBase] || $d1 < $d2}]
   ConfigLock
 }
 
@@ -1362,11 +1431,19 @@ proc EG::IsMoveWeek {} {
   fetchVars
   update
   set D1 [FormatDatePG [FirstWDay [ScanDate]]]
-  if {$D1<$D(egdDate1) || $D1>=$D(egdDate2)} {
+  set isBad1 [expr {$D1<$D(egdDate1)}]
+  set isBad2 [expr {$D1>=$D(egdDate2)}]
+  if {$isBad1 || $isBad2} {
     EG::msg ok warn "\n\
       Cannot move to [string trim $D(Date1)]!\n\n\
       In \"Preferences\", the week range is \[$D(egdDate1) - $D(egdDate2)\).\n"
-    after idle [list EG::MoveToWeek 0 {} yes]
+    if {$isBad1} {
+      set date [EG::ScanDatePG $D(egdDate1)]
+    } else {
+      set date [EG::ScanDatePG $D(egdDate2)]
+      set date [clock add $date -7 days]
+    }
+    after idle [list EG::MoveToWeek 0 $date]
     return no
   }
   return yes
@@ -1397,7 +1474,7 @@ proc EG::MoveToWeek {wdays {dt ""} {doit no}} {
 proc EG::MoveToCurrentWeek {} {
   # Moves to current week.
 
-  MoveToWeek 0 [clock seconds]
+  MoveToWeek 0 [Date1Seconds]
 }
 #_______________________
 
@@ -1408,14 +1485,24 @@ proc EG::MoveToDay {date} {
   EG::CurrentItemDay "" [EG::FormatDatePG $date]
   EG::MoveToWeek 0 $date
 }
-#_______________________
 
 # ________________________ Show data _________________________ #
 
-proc EG::ShowTable {} {
+proc EG::ShowTable {{atStart 0}} {
   # Shows table: values and colors.
+  #   atStart - 1 if run at starting EG
 
   fetchVars
+  variable InpItem
+  variable InpDate
+  if {$atStart} {
+    if {![IsTabFiles]} UpdateBAR
+    if {$InpItem ne {} && $InpDate ne {}} {
+      CurrentItemDay $InpItem $InpDate
+      MoveToWeek 0 [EG::ScanDatePG $InpDate]
+      return
+    }
+  }
   foreach item $D(Items) type $D(ItemsTypes) {
     # cells
     for {set wday 0} {$wday<7} {incr wday} {
@@ -1429,7 +1516,7 @@ proc EG::ShowTable {} {
             Y - yes  {set im yes}
             N - no   {set im no}
             L - lamp {set im lamp}
-            Q - ques {set im ques}
+            ? - Q - ques {set im ques}
             default  {set im none}
           }
           $w configure -image $im
@@ -1564,6 +1651,172 @@ proc EG::ColorItemLabels {{ispoly 0}} {
   FocusedIt
 }
 
+# ________________________ Bar of tabs _________________________ #
+
+proc EG::FillBar {} {
+  # Fills the bar of tabs.
+
+  fetchVars
+  catch {BAR removeAll}
+  catch {::bartabs::Bars create D(bts)}   ;# D(bts) is Bars object
+  if {![IsTabFiles]} return
+  update ;# to get real sizes of -wbase
+  set wbase [$EGOBJ Lfr1]
+  set wframe [$EGOBJ Frabts]
+  set curtab 0
+  if {[set i [lsearch -exact $D(TabFiles) $D(FILE)]]>=0} {
+    set curtab $i
+  }
+  set bar1Opts [list -wbar $wframe -wbase $wbase -pady 2 -scrollsel 1 \
+    -lablen 16 -tiplen 16 -bg [lindex [$EGOBJ csGet] 3] \
+    -font TkTooltipFont -cdel {EG::OnTabDeletion %t} -cdel2 EG::UpdateBAR \
+    -csel2 {EG::OnTabSelection %t} -padx 0]
+  set tip "To select a bar tab\npress Ctrl and click it."
+  lappend bar1Opts -menu [list \
+    sep "com {Open...} EG::Open" \
+    sep "com {Merge...} {EG::Merge 1 %t} {} {} {$tip}"]
+  set tabs [list]
+  foreach fname $D(TabFiles) {
+    set tab [UniqueTab $tabs [file tail $fname]]
+    lappend tabs $tab
+    lappend bar1Opts -tab $tab
+  }
+  set curname [lindex $tabs $curtab]
+  if {[catch {set D(BID) [D(bts) create D(bt) $bar1Opts $curname]}]} {
+    foreach tab $tabs {BAR insertTab $tab}
+  }
+  foreach fname $D(TabFiles) tab [BAR listTab] {
+    set tid [lindex $tab 0]
+    BAR $tid configure -tip $fname
+  }
+}
+#_______________________
+
+proc EG::IsTabFiles {} {
+  # Checks if the bar tabs are multiple.
+
+  expr {[llength $::EG::D(TabFiles)] > 1}
+}
+#_______________________
+
+proc EG::TabFilesArray {} {
+  # Gets the bar tab array.
+
+  fetchVars
+  catch {
+    set tabs [BAR listTab]
+    if {[llength $tabs]} {
+      set D(TabFiles) [list]
+      foreach tab $tabs {
+        set tid [lindex $tab 0]
+        set fname [BAR $tid cget -tip]
+        if {[lsearch -exact $D(TabFiles) $fname]<0} {
+          lappend D(TabFiles) $fname
+        }
+      }
+    }
+  }
+  if {[lsearch -exact $D(TabFiles) $D(FILE)]<0} {
+    lappend D(TabFiles) $D(FILE)
+  }
+}
+#_______________________
+
+proc EG::UniqueTab {tabs tab} {
+  # Returns a unique name for a tab.
+  #   tabs - list of tabs
+  #   tab - tab name to be checked for its duplicate
+  # If some file has a tail name (tab name) equal to an existing one's,
+  # the new tab name should get "(N)" suffix to be unique.
+  # This is required by bartabs package: no duplicates allowed.
+
+  set cnttab 1
+  set taborig $tab
+  while {1} {
+    if {[lsearch $tabs $tab]==-1} break
+    set tab "$taborig ([incr cnttab])"
+  }
+  return $tab
+}
+#_______________________
+
+proc EG::BAR {args} {
+  # Runs the tab bar's method.
+  #   args - method's name and its arguments
+
+  fetchVars
+  set res {}
+  catch {
+    if {[lindex $args 0] eq {popList}} {
+      if {[llength $args] eq 1} {lappend args {} {}}
+      lappend args $D(sortList)
+    }
+    if {[lindex $args 1] eq {cget}} {
+      if {![D(bts) isTab [lindex $args 0]]} {
+        return {} ;# at closing tabs: cget must return "" to "after" proc
+      }
+    }
+    set res [D(bts) $D(BID) {*}$args]
+  }
+  return $res
+}
+#_______________________
+
+proc EG::OnTabSelection {TID} {
+  # Handles selecting a tab in the bar.
+  #   TID - tab's ID
+
+  fetchVars
+  set fname [BAR $TID cget -tip]
+  if {$fname ne $D(FILE)} {OpenFile $fname} UpdateBAR
+
+}
+#_______________________
+
+proc EG::OnTabDeletion {TID args} {
+
+  fetchVars
+  set fname [BAR $TID cget -tip]
+  if {$fname eq $D(FILE)} {
+    if {[set i [lsearch $args -first]]>=0} {
+      if {[lindex $args $i+1] == -1} {
+        return yes  ;# run with Close of context menu
+      }
+    }
+    Message {Only "Close" of context menu closes the current file!} 20
+    return 2
+  }
+  return yes
+}
+#_______________________
+
+proc EG::UpdateBAR {args} {
+  # Updates the tab bar.
+  # Renames tabs: "name(2)" => "name", if "name" is closed.
+
+  set bartabs [BAR listTab]
+  if {[llength $bartabs] < 2} {
+    pack forget [$::EG::EGOBJ Frabts]
+  }
+  # first, remove all (n)
+  set tabs [list]
+  foreach tab $bartabs {
+    lassign $tab tid tname
+    set tname [file tail [BAR $tid cget -tip]]
+    lappend tabs [list $tid $tname]
+  }
+  # then update tab titles
+  set i 0
+  foreach tinf $tabs {
+    lassign $tinf tid tname
+    set tname [UniqueTab $tabs $tname]
+    BAR $tid configure -text $tname
+    set tabs [lreplace $tabs $i $i $tname]
+    incr i
+  }
+  BAR draw
+}
+
 # ________________________ Canvas _________________________ #
 
 proc EG::opcPre {args} {
@@ -1647,7 +1900,7 @@ proc EG::Message {msg {wait 0} {lab ""} {doit 0}} {
       return
     }
     set D(msg) $msg
-    $lab configure -text $msg
+    $lab configure -text $msg {*}$::EG::D(MsgFont)
     if {$wait<=0} {set wait [expr {[string length $msg]/4}]}
     set D(idafter) [after [expr {$wait*1000}] "EG::CheckMessage $lab"]
   }
@@ -1766,7 +2019,7 @@ proc EG::FillOpcLists {} {
     incr i
   }
   set Opcvar AggrEG
-  set OpcItems [list AggrEG Totals -- $pitems -- $litems]
+  set OpcItems [list AggrEG Totals -- $litems $pitems]
 }
 #_______________________
 
@@ -1774,7 +2027,11 @@ proc EG::ResourceFileName {} {
   # Gets .rc file name.
 
   fetchVars
-  return [file join $USERDIR $TITLE.rc]
+  if {$USERFILEPG ne {}} {
+    return $USERFILEPG
+  } else {
+    return [file join $USERDIRPG $TITLE.rc]
+  }
 }
 #_______________________
 
@@ -1784,22 +2041,22 @@ proc EG::Resource {args} {
 
   fetchVars
   set fname [ResourceFileName]
-  set ::EG::cont [apave::readTextFile $fname]
+  set ::EG::contRC [apave::readTextFile $fname]
   if {[llength $args]} {
     foreach {opt val} $args {
       if {$val ne {} && $val ne "{}"} {
-        dict set ::EG::cont $opt $val
+        dict set ::EG::contRC $opt $val
       } else {
-        catch {dict unset ::EG::cont $opt}
+        catch {dict unset ::EG::contRC $opt}
       }
     }
-    set cont {}
-    foreach key [dict keys $::EG::cont] {
-      append cont "$key {[dict get $::EG::cont $key]}\n"
+    set contRC {}
+    foreach key [dict keys $::EG::contRC] {
+      append contRC "$key {[dict get $::EG::contRC $key]}\n"
     }
-    apave::writeTextFile $fname cont
+    apave::writeTextFile $fname contRC
   }
-  return $::EG::cont
+  return $::EG::contRC
 }
 #_______________________
 
@@ -1816,7 +2073,7 @@ proc EG::ResourceData {key args} {
     Resource
   }
   set res {}
-  catch {set res [dict get $::EG::cont $key]}
+  catch {set res [dict get $::EG::contRC $key]}
   return $res
 }
 #_______________________
@@ -1852,13 +2109,6 @@ proc EG::OpenDataFile {fname} {
     set fname [file join $USERDIR [file tail $fname]]
   }
   if {![file exists $fname]} {
-    if {[obj csDark]} {
-      set D(Theme) darkbrown
-      set D(CS) 29
-    } else {
-      set D(Theme) lightbrown
-      set D(CS) 4
-    }
     obj basicFontSize 11
     InitThemeEG
     set dir [file dirname $fname]
@@ -1872,16 +2122,13 @@ proc EG::OpenDataFile {fname} {
   }
   set D(FILE) $fname
   ReadEGDFile $fname ::EG::EGD
+  set D(TabFiles) [ResourceData TabFiles]
+  if {[lsearch -exact $D(TabFiles) $fname]<0} {
+    lappend D(TabFiles) $fname
+  }
   # Filling main settings
   if {[set _ [CommonData BYWEEK]] in {0 1}} {set byWeek $_}
   if {[set _ [CommonData CUMULATE]] in {0 1}} {set cumulate $_}
-  if {[set _ [CommonData OPCVAR]] ne {}} {set Opcvar $_}
-  if {[set _ [CommonData DATEUSER]] ne {}} {set D(DateUser) $_}
-  if {[set _ [CommonData DATEUSER2]] ne {}} {set D(DateUser2) $_}
-  if {[set _ [CommonData DATEUSER3]] ne {}} {set D(DateUser3) $_}
-  if {[set _ [CommonData THEME]] ne {}} {set D(Theme) $_}
-  if {[set _ [CommonData CS]] ne {}} {set D(CS) $_}
-  if {[set _ [CommonData HUE]] ne {}} {set D(Hue) $_}
   if {[set _ [CommonData COLOR0]] ne {}} {set Colors(fgsel) $_}
   if {[set _ [CommonData COLOR3]] ne {}} {set Colors(bgtex) $_}
   if {[set _ [CommonData COLORRED]] ne {}} {set Colors(Red) $_}
@@ -1893,8 +2140,9 @@ proc EG::OpenDataFile {fname} {
   set D(egdDate1) [CommonData EGDDATE1]
   set D(egdDate2) [CommonData EGDDATE2]
   CheckEgdDates
+  if {[IsLockedBase]} {set D(Date1) [Date1Seconds]}
   readPolyFlags
-  set D(MsgFont) "-font {-weight bold -size 9} -foreground {$Colors(fgsel)}"
+  set D(MsgFont) [list -font {-weight bold -size 9} -foreground $Colors(fgsel)]
   for {set iit 1} {$iit<=$D(MAXITEMS)} {incr iit} {
     if {[set _ [CommonData COLORMY$iit]] ne {}} {set Colors(my$iit) $_}
   }
@@ -1913,8 +2161,8 @@ proc EG::OpenDataFile {fname} {
   }
   set D(ItemsTypes) [lreplace $D(ItemsTypes) end end 999] ;# EG's format
   foreach it $D(Items) {
-    set itw [expr min(16,[string length $it]+2)] ;# +2 for bold font
-    if {$ITW<$itw} {set ITW $itw}
+    set itw [expr {min(16,[string length $it]+2)}] ;# +2 for bold font
+    if {$ITWIDTH<$itw} {set ITWIDTH $itw}
   }
   GeItemsNumber
 }
@@ -1928,26 +2176,18 @@ proc EG::SaveDataFile {{newfile no} {fname ""}} {
   fetchVars
   CommonData ITEMS $D(Items)
   CommonData ITEMSTYPES $D(ItemsTypes)
-  CommonData GEOMETRY [wm geometry $WIN]
   CommonData BYWEEK $byWeek
   CommonData CUMULATE $cumulate
-  CommonData OPCVAR $Opcvar
-  CommonData DATEUSER $D(DateUser)
-  CommonData DATEUSER2 $D(DateUser2)
-  CommonData DATEUSER3 $D(DateUser3)
-  CommonData THEME $D(Theme)
-  CommonData CS $D(CS)
-  CommonData HUE $D(Hue)
   CommonData COLOR0 $Colors(fgsel)
   CommonData COLOR3 $Colors(bgtex)
   CommonData COLORRED $Colors(Red)
   CommonData COLORYELLOW $Colors(Yellow)
   CommonData COLORGREEN $Colors(Green)
-  savePolyFlags
   CommonData POLYFLAGS $D(poly)
   CommonData TEXTTAGS $D(TextTags)
   CommonData EGDDATE1 $D(egdDate1)
   CommonData EGDDATE2 $D(egdDate2)
+  savePolyFlags
   SaveAggrEG
   for {set iit 1} {$iit<=$D(MAXITEMS)} {incr iit} {
     CommonData COLORMY$iit $Colors(my$iit)
@@ -1993,6 +2233,22 @@ proc EG::CheckEgdDates {} {
     set dt [clock add $dt $::EG::diagr::NDays days]
     set D(egdDate2) [FormatDatePG $dt]
   }
+}
+#_______________________
+
+proc EG::Date1Seconds {} {
+  # Gets current date in seconds.
+
+  fetchVars
+  set res [clock seconds]
+  set D2 [FormatDatePG $res]
+  if {$D2 < $D(egdDate1) || $D2 >= $D(egdDate2)} {
+    set keys [lsort [dict keys $EGD */*/*]]
+    set D2 [lindex $keys end]
+    if {$D2 eq {}} {set D2 $D(egdDate1)}
+    catch {set res [ScanDatePG $D2]}
+  }
+  return $res
 }
 
 # ________________________ Menu _________________________ #
@@ -2068,28 +2324,10 @@ proc EG::Actions {} {
 #_______________________
 
 proc EG::Preferences {} {
+  # Opens Preferences dialog.
 
   Source pref
   pref::_run
-}
-#_______________________
-
-proc EG::New {} {
-
-  fetchVars
-  set fname [CloneFileName $D(FILE)]
-  set types {{{EG Data Files} {.egd} }}
-  lassign [$EGOBJ input {} "New EG data file" [list \
-    lab "{} {-pady 8} {-t {File name:}}" {} \
-    fis "{} {-pady 0} {-w 64 -filetypes {$types} -defaultextension .egd\
-      -title {New file}}" "{$fname}" \
-    v_ "{} {-pady 8}"]] res fname
-  if {!$res || [set fname [string trim $fname]] eq {}} return
-  if {[file exists $fname]} {
-    Message "File $fname already exists."
-    return
-  }
-  OpenData $fname -newfile
 }
 #_______________________
 
@@ -2102,8 +2340,21 @@ proc EG::Open {} {
   set types {{{EG Data Files} {.egd} }}
   set fname [$EGOBJ chooser tk_getOpenFile ::EG::D(filetmp) \
     -initialdir $dir -defaultextension .egd -filetypes $types -parent $WIN]
-  if {$fname ne {} && [file exists $fname]} {
-    OpenData $fname -openfile
+  OpenFile $fname
+}
+#_______________________
+
+proc EG::OpenFile {fname} {
+  # Opens data file.
+  #   fname - file name
+
+  fetchVars
+  if {$fname ni [list {} $D(FILE)]} {
+    if {[file exists $fname]} {
+      OpenData $fname -openfile
+    } else {
+      Message "\"$fname\" doesn't exist" 10
+    }
   }
 }
 #_______________________
@@ -2147,12 +2398,12 @@ proc EG::Backup {{auto no}} {
   if {$auto} {
     SaveDataFile no $D(FILEBAK)
     # additional save of "week day" version
-    set wd [clock format [clock seconds] -format %u]
+    set wd [clock format [Date1Seconds] -format %u]
     set bak _$wd.bak
     set fname  [file root $D(FILEBAK)]$bak
     SaveDataFile no $fname
     set fname [ResourceFileName]
-    set fback [file root $fname]_rc$bak
+    set fback [file rootname $fname]_rc$bak
     catch {file copy $fname $fback}
   }
 }
@@ -2166,35 +2417,14 @@ proc EG::OpenData {fname args} {
   SaveDataFile
   $EGOBJ res $WIN 1
   set D(FILE) $fname
+  catch {
+    set D(egdDate1) $D(NEWFILEDATE1) ;# both are set in "New file" dialogue
+    set D(egdDate2) $D(NEWFILEDATE2)
+  }
   FileToResource $fname
   set ::argc 1
   set ::argv [list $fname]
   Exit $fname -restart {*}$args
-}
-#_______________________
-
-proc EG::CloneFileName {fname} {
-  # Gets a clone's name.
-  #   fname - file name
-  # Returns the clone's file name.
-
-  set tailname [file tail $fname]
-  set ext [file extension $tailname]
-  set root [file rootname $tailname]
-  # possibly existing suffix in the filename
-  set suffix {_\d+$}
-  set suff [regexp -inline $suffix $root]
-  set root [string range $root 0 end-[string length $suff]]
-  set i1 2
-  set i2 99
-  if {$suff eq {}} {set suff _$i1}
-  # find the free suffix for the clone
-  for {set i $i1} {$i<=$i2} {incr i} {
-    set suff [string map [list {\d+} $i \$ {}] $suffix]
-    set fname2 [file join [file dirname $fname] $root$suff$ext]
-    if {![file exists $fname2]} break
-  }
-  return $fname2
 }
 #_______________________
 
@@ -2230,6 +2460,12 @@ proc EG::Help {{fhelp EG} args} {
         set fhelp $fhp.txt
       }
     }
+    set tcltk_version [package require Tk]
+    if { [package vsatisfies $tcltk_version 9.0-] } {
+      set tmphelp [file join [file tempdir] README.md]
+      file copy -force $fhelp $tmphelp
+      set fhelp $tmphelp
+    }
     openDoc $fhelp
   } else {
     set VersionDate {}
@@ -2251,11 +2487,30 @@ proc EG::Help {{fhelp EG} args} {
 }
 #_______________________
 
-proc EG::Merge {} {
+proc EG::Merge {{doadd no} args} {
   # Merging data files.
+  #   doadd - if yes, add selected tabs to merged file list
 
+  fetchVars
   Source merge
-  merge::_run
+  set selfiles [list]
+  if {$doadd} {
+    set tabs [BAR cget -select]
+    if {![llength $tabs]} {
+      lappend tabs {*}$args ;# <- right clicked tab
+    }
+    foreach tab $tabs {
+      lassign $tab tid
+      set fname [BAR $tid cget -tip]
+      if {$D(FILE) ne $fname} {
+        lappend selfiles $fname
+      }
+    }
+    if {![llength $selfiles]} {
+      Message "To select a tab, press Ctrl & click it. Or right click it." 15
+    }
+  }
+  merge::_run $selfiles
 }
 #_______________________
 
@@ -2270,13 +2525,155 @@ proc EG::Exit {args} {
   #   args - additional arguments, incl. provided by apave
 
   fetchVars
+  if {[set i [lsearch -exact $args -openfile]]>=0} {
+    set args2 [lrange $args $i+1 end]
+    set args [lrange $args 0 $i]
+  } else {
+    set args2 {}
+  }
   SaveAll {*}$args
   if {$D(AUTOBAK)} {Backup yes}
   catch {$EGOBJ destroy}
   if {"-restart" in $args} {
-    exec -- [info nameofexecutable] $SCRIPT {*}$::argv &
+    exec -- [info nameofexecutable] $SCRIPT {*}$::argv {*}$args2 &
   }
   exit
+}
+
+## ________________________ New... _________________________ ##
+
+proc EG::New {} {
+  # Runs New file dialog.
+
+  fetchVars
+  set types {}
+  set D(NEWFILE) [CloneFileName $D(FILE)]
+  set dt [ScanDatePG $D(egdDate2)]
+  set D(NEWFILEDATE1) [FormatDatePG [FirstWDay $dt]]
+  set dt [ScanDatePG $D(NEWFILEDATE1)]
+  set D(NEWFILEDATE2) [FormatDatePG [clock add $dt $::EG::diagr::NDays days]]
+  set pobj [set D(NEWFILEPOBJ) ::apave::pavedObj_newfile]
+  set win $WIN.newfile
+  ::apave::APave create $pobj $win
+  $pobj makeWindow $win.fra "New EG data file"
+  $pobj paveWindow $win.fra {
+    {fra1 - - - - {-st nsew -pady 16}}
+    {.lab - - - - {-pady 0} {-t {File name:}}}
+    {.fis + L 1 99 {-pady 0} {-w 60 -filetypes {{{EG Data Files} {.egd}}}
+      -defaultextension .egd -title {New file} -tvar ::EG::D(NEWFILE)}}
+    {.v_ + T 1 1 {-pady 8}}
+    {.labegdD1 + T 1 1 {-st w} {-t "Week range:    \["}}
+    {.EntegdD1 + L 1 1 {-st w} {-tvar ::EG::D(NEWFILEDATE1) -w 11 -justify center
+      -state disabled -onevent {<Button> {::EG::SelEgdDate 1}}}}
+    {.labspc + L 1 1 {-st w -padx 0} {-t {  -  }}}
+    {.EntegdD2 + L 1 1 {-st w -padx 0} {-tvar ::EG::D(NEWFILEDATE2) -w 11 -justify center
+      -state disabled -onevent {<Button> {::EG::SelEgdDate 2}}}}
+    {.labspc2 + L 1 1 {-st w -padx 0} {-t \)}}
+    {seh fra1 T 1 5 {-pady 8 -st ew -cw 1}}
+    {frabot + T 1 5 {-st ew} {}}
+    {.butHelp - - - - {pack -side left}
+      {-text Help -com {EG::Help newfile -width 61} -takefocus 0}}
+    {.h_ + L 1 1 {pack -side left -expand 1 -fill x}}
+    {.butOK + L 1 1 {pack -side left} {-t OK -com {EG::NewFileButton 1}}}
+    {.butCancel + L 1 1 {pack -side left -padx 4} {-t Cancel
+      -com {EG::NewFileButton 0}}}
+  }
+  bind $win <F1> {EG::Help newfile -width 61}
+  set res [$pobj showModal $win -resizable 0 -escape 1 \
+    -onclose destroy -focus $win.fra.fra1.entfis]
+  catch {destroy $win}
+  $pobj destroy
+  if {$res && [set fname [string trim $D(NEWFILE)]] ne {}} {
+    if {[file exists $fname]} {
+      Message "File $fname already exists."
+    } else {
+      OpenData $fname -newfile
+    }
+  }
+  unset D(NEWFILE)
+  unset D(NEWFILEDATE1)
+  unset D(NEWFILEDATE2)
+  unset D(NEWFILEPOBJ)
+}
+#_______________________
+
+proc EG::NewFileButton {res} {
+  # Handles OK / Cancel of "New file" dialogue.
+  #   res - result of dialogue
+
+  fetchVars
+  $D(NEWFILEPOBJ) res $WIN.newfile $res
+}
+#_______________________
+
+proc EG::SelEgdDate {ndate} {
+  # Date chooser for D(NEWFILEDATE1) / D(NEWFILEDATE2).
+  #   ndate - date number (1 or 2)
+
+  fetchVars
+  if {$ndate==1} {set ttl {Week first}} {set ttl {Week last}}
+  set ent [$D(NEWFILEPOBJ) EntegdD$ndate]
+  ChooseDay ::EG::D(NEWFILEDATE$ndate) -entry $ent -title $ttl -dateformat $D(DatePG)
+  if {$ndate==1} CheckEgdDate1 CheckEgdDate2
+}
+#_______________________
+
+proc EG::CheckEgdDate1 {} {
+  # Checks 1st .egd date against the last.
+
+  fetchVars
+  set dt [FirstWDay [ScanDatePG $D(NEWFILEDATE1)]]
+  set D(NEWFILEDATE1) [FormatDatePG $dt]
+  set dt [clock add $dt $::EG::diagr::NDays days]
+  set egdDate2 [EG::FormatDatePG $dt]
+  if {$D(NEWFILEDATE1)>$D(NEWFILEDATE2) || $D(NEWFILEDATE2)>$egdDate2} {
+    set D(NEWFILEDATE2) $egdDate2
+    Message "Week range's Date2 is set to $egdDate2"
+  } elseif {$D(NEWFILEDATE2) != $egdDate2} {
+    Message "Week range's Date2 is advised to be $egdDate2"
+  }
+}
+#_______________________
+
+proc EG::CheckEgdDate2 {} {
+  # Checks last .egd date against the first.
+
+  fetchVars
+  set dt [FirstWDay [ScanDatePG $D(NEWFILEDATE2)]]
+  set D(NEWFILEDATE2) [FormatDatePG $dt]
+  set dt [clock add $dt -$::EG::diagr::NDays days]
+  set egdDate1 [FormatDatePG $dt]
+  if {$D(NEWFILEDATE1)>$D(NEWFILEDATE2) || $D(NEWFILEDATE1)<$egdDate1} {
+    set D(NEWFILEDATE1) $egdDate1
+    Message "Week range's Date1 is set to $egdDate1"
+  } elseif {$D(NEWFILEDATE1) != $egdDate1} {
+    Message "Week range's Date1 is advised to be $egdDate1"
+  }
+}
+#_______________________
+
+proc EG::CloneFileName {fname} {
+  # Gets a clone's name.
+  #   fname - file name
+  # Returns the clone's file name.
+
+  set tailname [file tail $fname]
+  set ext [file extension $tailname]
+  set root [file rootname $tailname]
+  # possibly existing suffix in the filename
+  set suffix {_\d+$}
+  set suff [regexp -inline $suffix $root]
+  set root [string range $root 0 end-[string length $suff]]
+  set i1 2
+  set i2 99
+  if {$suff eq {}} {set suff _$i1}
+  # find the free suffix for the clone
+  for {set i $i1} {$i<=$i2} {incr i} {
+    set suff [string map [list {\d+} $i \$ {}] $suffix]
+    set fname2 [file join [file dirname $fname] $root$suff$ext]
+    if {![file exists $fname2]} break
+  }
+  return $fname2
 }
 
 # ________________________ Main _________________________ #
@@ -2285,44 +2682,118 @@ proc EG::Init {} {
   # Open data file and initializes the app's data.
 
   global argv argc
+  variable InpItem
+  variable InpDate
   fetchVars
   set fileegd [CurrentYear].egd
+  set i1 [lsearch -exact $argv -item]
+  set i2 [lsearch -exact $argv -date]
+  if {$i1>=0 && $i2>=0} {
+    set InpItem [lindex $argv $i1+1]
+    set InpDate [lindex $argv $i2+1]
+    set argv [lrange $argv 0 $i1-1]
+    set argc [llength $argv]
+  }
+  set err no
   switch $argc {
     0 {
       set rc [Resource]
       if {[catch {set fname [dict get $rc FILE]}] || $fname eq {}} {
         set fname [file join $USERDIR $fileegd]
-      } elseif {[file exists $fname]} {
-        set USERDIR [file dirname $fname]
       }
     }
-    1 {
-      set fname [file normalize [lindex $argv 0]]
-      if {[file isdirectory $fname]} {
-        set USERDIR $fname
-        set rc [Resource]
-        if {[catch {set fname [dict get $rc FILE]}] || ![file exists $fname]} {
-          set fname [file join $fname $fileegd]
+    1 - 2 - 3 {
+      lassign $argv arg1 arg2 arg3
+      set fname [file normalize $arg1]
+      # at starting by EG executable (see EG::Exit)
+      if {$argc==2} {
+        if {[file tail $arg1] eq {EG.tcl}} {
+          set fname [file normalize $arg2]      ;# run by EG executable
+        } else {
+          set USERDIRPG [file normalize $arg2]  ;# 2nd arg is .rc directory
+          set rc [Resource]
         }
-      } else {
-        set USERDIR [file dirname $fname]
+      } elseif {$argc==3} {
+        if {[file tail $arg1] eq {EG.tcl}} {
+          set fname [file normalize $arg2]      ;# run by EG executable
+          set USERDIRPG [file normalize $arg3]  ;# 3rd arg is .rc directory
+          set rc [Resource]
+        } else {
+          set err yes
+        }
+      }
+      if {[file isfile $USERDIRPG]} {
+        set USERFILEPG $USERDIRPG
+        set USERDIRPG [file dirname $USERDIRPG]
       }
     }
     default {
-      puts "$::EG::TITLE is run so:\n\n  tclsh [file tail $SCRIPT] ?NAME?\
-        \n  where NAME is a data file (e.g. 2025.egd) or a directory of data files.\
-        \n\nLook README.md for details."
-      exit
+      set err yes
     }
+  }
+  if {$err} {
+    puts "$::EG::TITLE is run so:\n\n  tclsh [file tail $SCRIPT] ?NAME?\
+      \n  where NAME is a data file (e.g. 2025.egd) or a directory of data files.\
+      \n\nLook README.md for details."
+    exit
+  }
+  if {[file isdirectory $fname]} {
+    set USERDIR $fname
+    set rc [Resource]
+    if {[catch {set fname [dict get $rc FILE]}] || ![file exists $fname]} {
+      set fname [file join $fname $fileegd]
+    }
+  } else {
+    set USERDIR [file dirname $fname]
   }
   OpenDataFile $fname
   FileToResource $fname
-  set D(Zoom) [ResourceData Zoom]
-  if {$D(Zoom)<0 || $D(Zoom)>16} {set D(Zoom) 3}
+  if {[obj csDark]} {
+    set D(Theme) darkbrown
+    set D(CS) 29
+  } else {
+    set D(Theme) lightbrown
+    set D(CS) 4
+  }
+  if {[set _ [ResourceData DATEUSER]] ne {}} {set D(DateUser) $_}
+  if {[set _ [ResourceData DATEUSER2]] ne {}} {set D(DateUser2) $_}
+  if {[set _ [ResourceData DATEUSER3]] ne {}} {set D(DateUser3) $_}
+  if {[set _ [ResourceData THEME]] ne {}} {set D(Theme) $_}
+  if {[set _ [ResourceData CS]] ne {}} {set D(CS) $_}
+  if {[set _ [ResourceData HUE]] ne {}} {set D(Hue) $_}
   set D(FILEBAK) [ResourceData FILEBAK]
   set D(AUTOBAK) [string is true -strict [ResourceData AUTOBAK]]
   set D(NoteOnTop) [string is true -strict [ResourceData NoteOnTop]]
+  set D(Zoom) [ResourceData Zoom]
+  if {$D(Zoom)<0 || $D(Zoom)>16} {set D(Zoom) 3}
   set fs [expr {8+$D(Zoom)}]
+  if {[set D(DefFont) [ResourceData DefFont]] ne {}} {
+    catch {dict set D(DefFont) -size $fs}
+    foreach font {TkDefaultFont TkMenuFont TkHeadingFont TkCaptionFont} {
+      if {[catch {font configure $font {*}$D(DefFont)}]} {
+        set D(DefFont) {}
+      }
+    }
+    if {$D(DefFont) ne {}} {
+      obj basicDefFont $D(DefFont)
+      set smallfont $D(DefFont)
+      if {![catch {dict set smallfont -size [expr {$fs-2}]}]} {
+        ::baltip::configure -font $smallfont
+        foreach font {TkSmallCaptionFont TkIconFont TkTooltipFont} {
+          if {[catch {font configure $font {*}$smallfont}]} {
+            set smallfont {}
+          }
+        }
+      }
+    }
+  }
+  if {[set D(TexFont) [ResourceData TexFont]] ne {}} {
+    if {[catch {dict set D(TexFont) -size $fs}]} {
+      set D(TexFont) {}
+    } else {
+      obj basicTextFont $D(TexFont)
+    }
+  }
   obj basicFontSize $fs
   obj basicDefFont [list {*}[obj basicDefFont] -size $fs]
   apave::initBaltip
@@ -2348,7 +2819,7 @@ proc EG::Init {} {
     image create photo $img -data [apave::iconData $ico small]
   }
   obj basicSmallFont [list {*}[obj basicSmallFont] -size 9]
-  set D(Date1) [FormatDate]
+  apave::initStylesFS
   set fd [FirstWDay]
   set D(WeekDays) [list]
   foreach d {0 1 2 3 4 5 6} {
@@ -2357,6 +2828,7 @@ proc EG::Init {} {
   }
   set D(lockdata) 0
   set D(toformat) {}
+  set itwidth [MaxItemWidth]
   FillOpcLists
 }
 #_______________________
@@ -2382,14 +2854,12 @@ proc EG::_create {} {
   # Creates the app's main window.
 
   fetchVars
-  set itwidth [MaxItemWidth]
-  obj untouchWidgets *.laBI*
   set Year [CurrentYear]
-  apave::initStylesFS
+  obj untouchWidgets *.laBI*
   apave::APave create $EGOBJ $WIN
   $EGOBJ makeWindow $WIN.fra "EG - $D(FILE)"
   $EGOBJ paveWindow $WIN.fra {
-    {frat - - 1 3 {-st we} }
+    {Fratop - - 1 3 {-st we} }
     #####-tool-bar
     {.tool - - - - {pack -side top} {-relief flat -borderwidth 0 -array {
       Tool_hamburger {EG::Actions -tip "Actions\nF10@@ -under 5"}
@@ -2415,49 +2885,53 @@ proc EG::_create {} {
       lab {"" {-expand 1 -fill x}}
       Tool_exit {EG::Exit -tip "Exit@@ -under 5"}
     }}}
-    {Fral frat T 3 1 {-st nswe -pady 4}}
+    #####-frame-of-items
+    {Fral fratop T 4 1 {-st nswe -pady 4}}
+    {fral.Frabts fratop T 1 1 {pack -fill x}}
+    {.btsBar  - - - - {pack -fill x}}
     {fral.fra - - - - {pack}}
     {.tcl {
-    # row of head
-    %C ".LaBIh - - - - {-st ews -pady 0 -padx 0} {-t {} -w $::EG::ITW\
-      -fg $::EG::Colors(fghot) -bg $::EG::Colors(bg)}"
-    for {set i 0} {$i<7} {incr i} {
-      %C ".LaBIh$i + L 1 1 {-st ews} {-t [lindex $::EG::D(WeekDays) $i]\
-      -anchor center -fg $::EG::Colors(fghot) -bg $::EG::Colors(bg)}"
-    }
-    set n .laBIh
-    # cells of items
-    foreach item $::EG::D(Items) typ $::EG::D(ItemsTypes) {
-      if {$item eq {EG}} {
-        %C ".seheg $n T 1 8 {-st ew -pady 4}"
-        set n .seheg
-      }
-      # item name and its normalized version
-      set it [EG::NormItem $item]
-      %C ".LaBI$it $n T - - {-st ews} {-t {$item } -anchor w}"
-      # item values day by day
+      # heading: week days
+      %C ".LaBIh - - - - {-st ews -pady 0 -padx 0} {-t {} -w $::EG::ITWIDTH\
+        -fg $::EG::Colors(fghot) -bg $::EG::Colors(bg)}"
       for {set i 0} {$i<7} {incr i} {
-        if {$typ eq {chk}} {
-          set n BuTSTD$it$i
-          set atr "-image none -compound center -com"
-        } else {
-          set n EnTSTD$it$i
-          set atr "-textvar ::EG::D($it$i) -justify center -w $::EG::itwidth\
-            -validate key -validatecommand"
-        }
-        set ::EG::D(fld$it,$i) $n
-        set lwid ".$n + L 1 1 {-st ewn} {$atr {EG::CommandIt $n {$typ} {$item}\
-          $i %P %V} -onevent {<FocusIn> {EG::FocusedIt {$item} $i; EG::SelIt}\
-          <FocusOut> {EG::StoreItem; EG::SelIt -1}\
-          <KeyPress> {EG::KeyPress %W %K %s {$item} $i}\
-          <ButtonPress-3> {EG::PopupOnItem %W %X %Y}} -tip {-BALTIP ! -COMMAND\
-          {EG::CellTip $it $i} -UNDER 2 -PER10 999999}}"
-        %C $lwid
+        %C ".LaBIh$i + L 1 1 {-st ews} {-t [lindex $::EG::D(WeekDays) $i]\
+        -anchor center -fg $::EG::Colors(fghot) -bg $::EG::Colors(bg)}"
       }
-      set n .LaBI$it
-    }
-    }
-    }
+      set n .laBIh
+      # cells of items
+      foreach item $::EG::D(Items) typ $::EG::D(ItemsTypes) {
+        if {$item eq {EG}} {
+          %C ".seheg $n T 1 8 {-st ew -pady 4}"
+          set n .seheg
+        }
+        # item name and its normalized version
+        set it [EG::NormItem $item]
+        %C ".LaBI$it $n T - - {-st ews} {-t {$item } -anchor w}"
+        # item values day by day
+        for {set i 0} {$i<7} {incr i} {
+          if {$typ eq {chk}} {
+            set n BuTSTD$it$i
+            set atr "-image none -compound center -com"
+          } else {
+            set n EnTSTD$it$i
+            set atr "-textvar ::EG::D($it$i) -justify center -w $::EG::itwidth\
+              -validate key -validatecommand"
+          }
+          set ::EG::D(fld$it,$i) $n
+          set lwid ".$n + L 1 1 {-st ewn} {$atr {EG::CommandIt $n {$typ} {$item}\
+            $i %P %V} -onevent {<FocusIn> {EG::FocusedIt {$item} $i; EG::SelIt}\
+            <FocusOut> {EG::StoreItem; EG::SelIt -1}\
+            <KeyPress> {EG::KeyPress %W %K %s {$item} $i}\
+            <ButtonPress-3> {EG::PopupOnItem %W %X %Y}} -tip {-BALTIP ! -COMMAND\
+            {EG::CellTip $it $i} -UNDER 2 -PER10 999999}}"
+          %C $lwid
+        }
+        set n .LaBI$it
+      }
+      # end of .tcl
+    }}
+    #####-comments-on-cell
     {.h_ + T 1 1 {-pady 4}}
     {fral.Lfr1 - - - - {pack -expand 1 -fill both} {-t { } -labelanchor n}}
     {fral.lfr1.Text - - - - {pack -side left -expand 1 -fill both}
@@ -2466,15 +2940,17 @@ proc EG::_create {} {
       <KeyRelease> {+ EG::StoreText} <FocusOut> {EG::StoreText; EG::ShowTable}}}}
     {fral.lfr1.sbv fral.lfr1.text L - - {pack -side left}}
     #####-right-frame
-    {sev fral L 3 1 {-st ns -padx 4}}
-    {fraTtl + L 1 1 {-st nswe -cw 1}}
+    {sev fral L 4 1 {-st ns -padx 4}}
+    {LabWeekRange + L 1 1 {-st we} {-anchor center}}
+    {fraTtl + T 1 1 {-st nswe -cw 1}}
     {.LabTtl - - - - {pack -side left -expand 1 -fill x} {-anchor center}}
     {.EntTtl - - - - {pack forget -expand 1 -fill x -side left}
       {-tvar ::EG::stat::aggregate -w 50 -takefocus 0
       -onevent {<FocusOut> {EG::SaveAggrEG; EG::diagr::Draw}}
       -tip "AggrEG formula\n___________________\nAfter change\npress Enter to save"}}
+    #####-diagram
     {frar1 fraTtl T 1 7 {-st nwe}}
-    {.Can - - - - {pack -expand 1 -fill both -side top} {-w 70 -h 360}}
+    {.Can - - - - {pack -expand 1 -fill both -side top} {-w 70 -h 360 -closeenough 0.0}}
     {.frar2 - - - - {pack -side bottom -fill x -pady 2}}
     {.frar2.btT - - - - {-st w}
       {-image $::EG::img_diagram -com EG::diagr::Draw -tip "Redraw diagram\nF5"}}
@@ -2488,6 +2964,7 @@ proc EG::_create {} {
       -com EG::diagr::Draw -takefocus 0}}
     {.frar2.chb + L 1 1 {-st w -padx 20} {-t cumulate
       -var ::EG::cumulate -takefocus 0 -com EG::diagr::Draw}}
+    #####-comments-on-diagram-and-all
     {lfr2 frar1 T 1 1 {-st nswe -cw 1 -rw 99 -pady 4} {-t Notes -labelanchor n}}
     {.TextR - - - - {pack -side left -expand 1 -fill both}
       {-wrap word -h 4 -w 8 -tip "General notes about $Year" -tabnext {[EG::FirstCell]}}}
@@ -2499,28 +2976,30 @@ proc EG::_create {} {
         -padding {0 0} -anchor center} 10
       {" Day:" -font {-weight bold -size 9} -foreground $::EG::Colors(fghot)
         -padding {0 0} -anchor center} 7
-      {"" $::EG::D(MsgFont) -padding {0 0} -anchor w -expand 1} 1
+      {"" -padding {0 0} -anchor w -expand 1} 1
     }}}
   }
-  apave::setAppIcon $WIN $::EG::EGICON
-  set wtxtR [$EGOBJ TextR]
-  ::baltip tip [$EGOBJ Text] Comments -command EG::TextTip
-  ColorItemLabels
   update
-  $EGOBJ displayText $wtxtR $D(TextR)
+  apave::setAppIcon $WIN $::EG::EGICON
+  ColorItemLabels
+  [$EGOBJ LabWeekRange] configure -foreground $Colors(fgit) \
+    -text "\[ $D(egdDate1)  -  $D(egdDate2) \)"
+  ::baltip tip [$EGOBJ Text] Comments -command EG::TextTip
+  $EGOBJ displayText [$EGOBJ TextR] $D(TextR)
   set C [$EGOBJ Can]
   set W [winfo reqwidth $WIN]
   set H [winfo reqheight $WIN]
+  after idle EG::FillBar
   after idle after 100 "wm minsize $WIN $W $H; EG::HighlightEG"
   after idle after 400 \
     "EG::FocusedIt; EG::CheckCurrentWeek; EG::diagr::Title;\
-    EG::ShowTable; after 300 {EG::diagr::Draw 1}"
+    EG::ShowTable 1; EG::AfterWeekSwitch; after 300 {EG::diagr::Draw 1}"
   bind $WIN <F1> EG::Help
   bind $WIN <F5> EG::diagr::Draw
   bind $WIN <F6> EG::stat::_run
   bind $WIN <F7> EG::Report
   bind $WIN <F10> EG::Actions
-  set geo [CommonData GEOMETRY]
+  set geo [ResourceData Geometry]
   if {$geo ne {}} {
     set geo [list -geometry [apave::checkGeometry $geo]]
   }

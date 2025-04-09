@@ -21,6 +21,7 @@
  <b>Checked days</b>     - planned days that were checked in cell(s)
  <b>Empty days</b>       - planned days that weren't checked at all
 
+ <b>Week table</b>       - current week table (on <b>Date1</b>)
  <b>Cells</b>            - number of cells to be checked
  <b>Cells0</b>           - number of cells that weren't checked ("?")
  <b>Total</b>            - total sum of values
@@ -33,12 +34,17 @@
  <b>Date (-1 week)</b>   - total sum for week "Date1 -1 week"
  <b>Date1-Date2</b>      - total sum for week "Date1 - Date2"
  <b>Next weeks</b>       - total sum for weeks after "Date1 - Date2"
+
+ <b>Total</b>            - total sum for all weeks, per item & overall
+                    (the overall <b>Total*</b> reflects rather <b>a total
+                    activity</b> than anything real)
+
  <b>Average previous</b> - average for "Previous weeks"
  <b>Average current</b>  - average for "Date1 -4 week" to Date2
  <b>Average next</b>     - average for "Next weeks"
  <b>Average total</b>    - average for all weeks
 
- <b>AggrEG</b>           - aggregate estimate
+ <b>AggrEG</b>           - aggregate estimate (excluding <b>Total</b> column)
 
  The marks <b>"?"</b> stand for cells to be checked on <b>Date1</b>.
 

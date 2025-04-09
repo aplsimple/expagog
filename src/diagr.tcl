@@ -37,6 +37,8 @@ namespace eval diagr {
   variable yPREV  ;# used in DrawColumn
   variable DayColWidth 3  ;# width of day column
   variable WeekColWidth [expr {$DayColWidth*7}]  ;# width of week column
+  variable UnderLine "\n_______________ \n"
+
 }
 #_______________________
 
@@ -71,6 +73,7 @@ proc diagr::fetchVars {} {
     variable yPREV
     variable DayColWidth
     variable WeekColWidth
+    variable UnderLine
   }
 }
 #_______________________
@@ -114,13 +117,8 @@ proc diagr::Layout {} {
   for {set iw 0} {$iw < $NWeeks} {incr iw} {
     set x1 [expr {$X0 + $iw*$WeekColWidth}]
     set x2 [expr {$x1 + $WeekColWidth}]
-    if {$iw % 2} {
-      set fill [list -fill $ColorBg2]
-    } else {
-      set fill [list -fill $ColorBg]
-    }
     set weekid [$C create polygon $x1 $Y1 $x2 $Y1 $x2 $Y2 $x1 $Y2 \
-      -outline $HotColor {*}$fill -tag WK$iw]
+      -outline $HotColor -fill $ColorBg2 -tag WK$iw]
     set dt [clock add $ydate1 [expr {$iw*7}] days]
     set day1 [EG::FirstWDay $dt]
     lappend x1list [list $x1 [EG::FormatDatePG $day1]]
@@ -141,7 +139,8 @@ proc diagr::Layout {} {
   if {$cumulate} {
     foreach percent {0.25 0.5 0.75} {
       set y [expr {$percent*$Y1}]
-      lappend idlist [$C create polygon 0 $y $scw $y -outline $::EG::Colors(grey)]
+      lappend idlist [$C create polygon 0 $y $scw $y \
+        -outline $::EG::Colors(grey) -dash {1 6}]
     }
   }
 }
@@ -228,8 +227,8 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
       set wday [clock format $date -format %u]
       set x1 [expr {$x1 + $DayColWidth*($wday-1)}]
     }
-    lassign [EG::Week1Data $data $item] cnt cnt0 sum color
-    lappend coldata [list $x1 $cnt $cnt0 $sum $color $date]
+    lassign [EG::Week1Data $data $item] cnt cnt0 sum color tagcmnt
+    lappend coldata [list $x1 $cnt $cnt0 $sum $color $date $tagcmnt]
     if {$cumulate} {
       set cumulatedsum [expr {$cumulatedsum + $sum}]
       set sum $cumulatedsum
@@ -245,8 +244,12 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
     set cumulatedsum 0
     set cumulatedcnt 0
     foreach data $coldata {
-      lassign $data x1 cnt cnt0 sum color day1
-      set iw [expr $x1/$WeekColWidth]
+      lassign $data x1 cnt cnt0 sum color day1 tagcmnt
+      set iw [expr {$x1/$WeekColWidth}]
+      if {$tagcmnt ne {}} {
+        set tip [EG::FormatDate $day1]$UnderLine\n$tagcmnt
+        ::baltip::tip $C $tip -ctag WK$iw
+      }
       if {$cumulate} {
         set cumulatedsum [expr {$cumulatedsum + $sum}]
         incr cumulatedcnt $cnt
@@ -279,8 +282,9 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
         } else {
           set color2 $colorCol
         }
-        set tag [DrawColumn $item $iw $x1 $colWidth $colHeight $color $color2 $ispoly]
-        set tip "[EG::FormatDate $day1]\n_______________ \n"
+        set tag [DrawColumn $item $iw $x1 $colWidth $colHeight \
+          $color $color2 $ispoly]
+        set tip "[EG::FormatDate $day1]$UnderLine"
         if {$ispoly} {append tip \n\"$item\"}
         append tip "\nSum: [EG::Round $sum 2]\nCells: $cnt"
         ::baltip::tip $C $tip -ctag $tag -per10 4000
@@ -377,10 +381,13 @@ proc diagr::Draw {{atStart no}} {
   DrawDiagram $item
   if {$atStart} {
     # at start, scroll to current week
+    set w1 [clock format [EG::ScanDatePG $::EG::D(egdDate1)] -format %V]
+    set w2 [clock format [EG::ScanDate] -format %V]
+    set curweek [expr {$w2 - $w1 + 1}]
     foreach _ {1 2 3 4} {
       lassign [$C xview] fr1 fr2
       set week2 [expr {$NWeeks*$fr2}]
-      if {[clock format [EG::ScanDate] -format %V] > $week2} {
+      if {$curweek > $week2} {
         Scroll 1 pages
       } else {
         break

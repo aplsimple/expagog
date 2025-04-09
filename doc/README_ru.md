@@ -96,15 +96,30 @@ A вот вам и узда для авантюр - *expagog*. Чтобы был
 
 ---
 
-Если у вас уже установлен пакет [Tcl/Tk](https://wiki.tcl-lang.org/) и вы хотите вызывать  *EG* непосредственно из исходников, просто распакуйте [исходники expagog](https://github.com/aplsimple/expagog) в какой-нибудь каталог и выполните команду *tclsh src/EG.tcl*. Установка *EG* и в этом случае довольно проста:
+Если у вас уже установлен пакет [Tcl/Tk](https://wiki.tcl-lang.org/) и вы хотите вызывать  *EG* непосредственно из исходников, просто распакуйте [исходники expagog](https://github.com/aplsimple/expagog) в какой-нибудь каталог и выполните команду *tclsh src/EG.tcl*.
+
+Установка *EG* и в этом случае довольно проста:
 
   * загрузите *expagog.zip* [отсюда](https://github.com/aplsimple/expagog) или [отсюда](https://chiselapp.com/user/aplsimple/repository/expagog/download)
-  * распакуйте *expagog.zip* в какой-нибудь каталог, например *~/PG/expagog*
+
+  *  распакуйте *expagog.zip* в какой-нибудь каталог, например *~/PG/expagog*
+
   * вызовите *EG* командой:
 
-    `wish ~/PG/expagog/src/EG.tcl`
+        wish ~/PG/expagog/src/EG.tcl
 
 На Linux, можно использовать *tclsh* вместо *wish*.
+
+---
+
+Общий формат вызова *EG* таков:
+
+    wish ~/PG/expagog/src/EG.tcl ?egd-path? ?rc-directory?
+
+где:
+
+  * *egd-path* - путь к данным (файл или каталог), например: *~/.config/egd/2025.egd*
+  * *rc-directory* - путь к expagog.rc (файлу настроек) или каталогу с ним, например: *~/.config/egd*
 
 ---
 
@@ -372,18 +387,6 @@ A вот вам и узда для авантюр - *expagog*. Чтобы был
  Знание нескольких английских слов еще никому не повредило.
 
  *EG* - всего лишь форма, а не содержание. Содержание может быть на любом языке X.
-
- Если вам так уж хочется иметь локализацию на языке X, мы можем сделать это на счет три:
-
-  1. В [репозитории на GitHub](https://github.com/aplsimple/expagog), раздел [Issues](https://github.com/aplsimple/expagog/issues), вы оставляете заявку на локализацию языка X.
-
-  2. Я передаю вам шаблон английских сообщений *EG*, с объяснением что и как.
-
-  3. Вы переводите эти сообщения, и я включаю ваш перевод в *EG*.
-
- Впрочем, выражаясь на языке Tcl,
-
- *if {$X in {Russian Ukranian}} then {# 1st step suffices}*
 
 ---
 

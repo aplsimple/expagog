@@ -21,7 +21,7 @@ namespace eval pref {
   variable tagColorGreen  $::EG::Colors(Green)
   variable DP; array set DP [list]
   variable DPars {FILE Theme CS Items ItemsTypes Hue Zoom NoteOnTop \
-    DateUser DateUser2 DateUser3 egdDate1 egdDate2}
+    DateUser DateUser2 DateUser3 egdDate1 egdDate2 DefFont TexFont}
   variable currTab {}
   variable currFoc {}
   variable txtColor {}
@@ -179,6 +179,40 @@ proc pref::RenameItems {remap} {
     }
   }
 }
+#_______________________
+
+proc pref::IsChangedMainSettings {} {
+  # Gets the flag "main settings' values are changed".
+  # "Main" means "require restarting".
+
+  fetchVars
+  set res no
+  foreach k {FILE Items ItemsTypes egdDate1 egdDate2 Theme} {
+    set old $::EG::D($k)
+    set new $DP($k)
+    if {$k in {Items ItemsTypes}} {
+      # items & item types include EG - don't check it
+      set old [lrange $old 0 end-1]
+    }
+    if {$old ne $new} {set res yes; break}
+  }
+  lassign $::EG::D(CS) ::EG::D(CS)
+  lassign $DP(CS) DP(CS)
+  set oldDark [$obPrf csDark $::EG::D(CS)]
+  set newDark [$obPrf csDark $DP(CS)]
+  expr {$res || $oldDark != $newDark}
+}
+#_______________________
+
+proc pref::UpdateAppearance {} {
+  # Updates the appearance: colors & dates.
+
+  EG::SaveAll
+  EG::Init
+  EG::FocusedIt $::EG::D(curritem) $::EG::D(currwday)
+  EG::ShowTable
+  EG::diagr::Draw
+}
 
 # ________________________ Main Frame _________________________ #
 
@@ -196,8 +230,7 @@ proc pref::MainFrame {} {
     {fraB + T 1 2 {-st nsew} {-padding {2 2}}}
     {.ButHelp - - - - {pack -side left}
       {-t Help -tip F1 -com ::EG::pref::Help -takefocus 0}}
-    {.LabMess - - - - {pack -side left -expand 1 -fill both -padx 8}
-      {$::EG::D(MsgFont)}}
+    {.LabMess - - - - {pack -side left -expand 1 -fill both -padx 8}}
     {.ButOK - - - - {pack -side left -anchor s -padx 2} {-t Save -com ::EG::pref::Ok}}
     {.butCancel - - - - {pack -side left -anchor s}
       {-t Cancel -com ::EG::pref::Cancel}}
@@ -231,7 +264,7 @@ proc pref::Ok {args} {
     set $clrvar $clr
     set itm [string trim [set $itmvar]]
     set itm [string map [list { } _] $itm]  ;# no spaces in item names!
-    set itm [string range $itm 0 15]  ;# limit length of item names
+    set itm [string range $itm 0 $::EG::NAMEWIDTH]  ;# limit length of item names
     set $itmvar $itm
     lappend ItemsNew $itm
     set frm [string trim [set $frmvar]]
@@ -292,7 +325,10 @@ proc pref::Ok {args} {
   set DP(ItemsTypes) $ItemsTypes
   set DP(Theme) $opct
   set DP(CS) [lindex [split $opcc :] 0]
-  foreach k $DPars {set ::EG::D($k) $DP($k)}
+  set mainchanged [IsChangedMainSettings]
+  foreach k $DPars {
+    set ::EG::D($k) $DP($k)
+  }
   $obPrf res $win 1
   if {$isnewfile} {
     EG::FileToResource $DP(FILE)
@@ -303,7 +339,11 @@ proc pref::Ok {args} {
     set args {}
   }
   EG::SaveAggrEG
-  EG::Exit -restart {*}$args
+  if {$mainchanged} {
+    EG::Exit -restart {*}$args
+  } else {
+    UpdateAppearance
+  }
 }
 #_______________________
 
@@ -355,10 +395,10 @@ proc pref::General_Tab {} {
     {fra1 - - - - {-st nsew}}
     {.h_a - - - - {-pady 8}}
     {.labFL + T 1 1 {-st se -padx 3} {-t {Data file:}}}
-    {.fil + L 1 2 {-st sw} {-tvar ::EG::pref::DP(FILE) -w 60
+    {.fil + L 1 3 {-st sw} {-tvar ::EG::pref::DP(FILE) -w 60
       -afteridle {EG::pref::focusFirst %w}}}
     {.h_b .labFL T 1 1 {-pady 8}}
-    {.fraegdD + L 1 2 {-st w}}
+    {.fraegdD + L 1 3 {-st w}}
     {.fraegdD.labegdD1 - - - - {-st se} {-t "Week range:   \["}}
     {.fraegdD.EntegdD1 + L 1 1 {-st sw -padx 0} {-tvar ::EG::pref::DP(egdDate1)
       -w 11 -justify center -tip "Included for data\n(click to choose)"
@@ -370,15 +410,15 @@ proc pref::General_Tab {} {
     {.fraegdD.labspc2 + L 1 1 {-st sw} {-t \)}}
     {.h_c .h_b T 1 1 {-pady 8}}
     {.labD1 + T 1 1 {-st e -pady 1 -padx 3} {-t {Date format long:}}}
-    {.entD1 + L 1 1 {-st sw -pady 1} {-tvar ::EG::pref::DP(DateUser) -w 30
+    {.entD1 + L 1 1 {-st sw -pady 1} {-tvar ::EG::pref::DP(DateUser) -w 20
       -validate all -validatecommand {EG::pref::ValidateDateFormat %P LabVD1}}}
     {.LabVD1 + L 1 1 {-st w -pady 1}}
     {.labD2 .labD1 T 1 1 {-st e -pady 1 -padx 3} {-t {Date format short:}}}
-    {.entD2 + L 1 1 {-st sw -pady 1} {-tvar ::EG::pref::DP(DateUser2) -w 30
+    {.entD2 + L 1 1 {-st sw -pady 1} {-tvar ::EG::pref::DP(DateUser2) -w 20
       -validate all -validatecommand {EG::pref::ValidateDateFormat %P LabVD2}}}
     {.LabVD2 + L 1 1 {-st w -pady 1}}
     {.labD3 .labD2 T 1 1 {-st e -pady 1 -padx 3} {-t {Date format full:}}}
-    {.entD3 + L 1 1 {-st sw -pady 1} {-tvar ::EG::pref::DP(DateUser3) -w 30
+    {.entD3 + L 1 1 {-st sw -pady 1} {-tvar ::EG::pref::DP(DateUser3) -w 20
       -validate all -validatecommand {EG::pref::ValidateDateFormat %P LabVD3}}}
     {.LabVD3 + L 1 1 {-st w -pady 1} {-w 30}}
     {.h_0 .labD3 T - - {-pady 8}}
@@ -392,14 +432,20 @@ proc pref::General_Tab {} {
     {.labHue .labCS T 1 1 {-st e -pady 1 -padx 3} {-t Hue:}}
     {.spxHue + L 1 1 {-st sw -pady 1}
       {-tvar ::EG::pref::DP(Hue) -from -50 -to 50 -increment 5 -w 4}}
-    {.lfRZoom .opc1 L 6 2 {-st nswe} {-padx 2 -pady 2 -bd 1 -relief raised
+    {.lfRMisc .opc1 L 6 3 {-st nswe} {-padx 2 -pady 2 -bd 1 -relief raised
       -labelwidget $win.labelmisc -labelanchor n}}
-    {.lfRZoom.labZoom - - - - {-st e} {-t Zoom:}}
-    {.lfRZoom.spxZoom + L 1 1 {-st sw} {-w 3 -from 0 -to 16
+    {.lfRMisc.labZoom - - - - {-st e} {-t Zoom:}}
+    {.lfRMisc.spxZoom + L 1 1 {-st sw} {-w 3 -from 0 -to 16
       -tvar ::EG::pref::DP(Zoom)}}
-    {.lfRZoom.labNotetm .lfRZoom.labZoom T 1 1 {-st e -padx 3}
-      {-t {Sticker topmost:}}}
-    {.lfRZoom.chbNotetm + L 1 1 {-st w} {-var ::EG::pref::DP(NoteOnTop)}}
+    {.lfRMisc.labDFont .lfRMisc.labZoom T 1 1 {-st e -padx 3 -pady 4}
+      {-t {Default font:}}}
+    {.lfRMisc.fontDef + L 1 1 {-st w -pady 4} {-tvar ::EG::pref::DP(DefFont) -w 22}}
+    {.lfRMisc.labTFont .lfRMisc.labDFont T 1 1 {-st e -padx 3}
+      {-t {Text font:}}}
+    {.lfRMisc.fontTex + L 1 1 {-st w} {-tvar ::EG::pref::DP(TexFont) -w 22}}
+    {.lfRMisc.labNotetm .lfRMisc.labTFont T 1 1 {-st e -padx 3 -pady 4}
+      {-t {Top stickers:}}}
+    {.lfRMisc.chbNotetm + L 1 1 {-st w -pady 4} {-var ::EG::pref::DP(NoteOnTop)}}
     {.h_1 .labHue T - - {-pady 8}}
     {.lab1 .h_1 T 1 1 {-st e -pady 1 -padx 3} {-t {Color of text cell:}}}
     {.clrtxtGEO + L 1 1 {-st w -pady 1 -padx 0} {-tvar ::EG::pref::txtColor
@@ -408,7 +454,7 @@ proc pref::General_Tab {} {
     {.clrmsgGEO + L 1 1 {-st w -pady 1 -padx 0} {-tvar ::EG::pref::msgColor
       -title {Color for Messages} -w 11}}
     {.h_2 .lab2 T - - {-pady 8}}
-    {.lfRTag + T 1 3 {-st nsew} {-labelwidget $win.labellfr -bd 1 -relief raised -labelanchor n}}
+    {.lfRTag + T 1 4 {-st nsew} {-labelwidget $win.labellfr -bd 1 -relief raised -labelanchor n}}
     {.lfRTag.fract - - - - {pack -side left -anchor n -padx 8 -pady 4}}
     {.lfRTag.fract.labc - - - - {pack -side top -anchor nw} {-t {Red, Yellow, Green}}}
     {.lfRTag.fract.clrGEOR - - - - {pack -side top -anchor n -pady 4}
@@ -448,8 +494,7 @@ proc pref::Items_Tab {} {
       -com {EG::pref::SwopIt 1}}"
     %C ".LaBI3 .fra L - - {-st wes -pady 0} {-t Format -fg $::EG::Colors(fgit)\
       -bg $::EG::Colors(bg)}"
-    %C ".sehit .laB0 T 1 4 {-st ewn -pady 2}"
-    set n .sehit
+    set n .laB0
     set iitmax [expr {[llength $::EG::D(Items)]-1}] ;# excluding EG
     # rows of items
     for {set iit 0} {$iit<$::EG::D(MAXITEMS)} {} {
@@ -468,7 +513,7 @@ proc pref::Items_Tab {} {
         -onevent {<Button> {EG::pref::Message {}}}}"
       %C ".EnTI_$iit + L 1 1 {-st ws -padx 6} {-tvar ::EG::pref::EnTI$iit -w 12\
         -onevent {<Button> {EG::pref::Message {}}}}"
-      %C ".EnTF_$iit + L 1 1 {-st ews} {-tvar ::EG::pref::EnTF$iit -w 50\
+      %C ".EnTF_$iit + L 1 1 {-st ews} {-tvar ::EG::pref::EnTF$iit -w 45\
         -onevent {<Button> {EG::pref::Message {}}}}"
       set n .labI_$iit
     }
@@ -662,7 +707,8 @@ proc pref::_create {} {
   }
   $obPrf displayText [$obPrf Textags] $::EG::D(TextTags)
   bind $win <F1> "[$obPrf ButHelp] invoke"
-  bind $win <Control-o> [list $obPrf vieweditFile $::EG::D(FILE) {} -ro 1 -h 25]
+  bind $win <Control-o> \
+    [list $obPrf vieweditFile $::EG::D(FILE) {} -h {15 25} -w {60 100} -rotext _]
   set res [$obPrf showModal $win -parent $::EG::WIN -resizable 0 \
     -onclose ::EG::pref::Cancel]
   if {[llength $res] < 2} {set res ""}

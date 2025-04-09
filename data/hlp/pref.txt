@@ -23,7 +23,7 @@
 
    - <b>Path to data file</b>
 
-   - <b>Week range</b> is from Date1 to Date2; "[" means "included",
+   - <b>Week range</b> is from <b>Date1</b> to <b>Date2</b>; "[" means "included",
      ")" means "excluded"; Date1 < Date2 <= Date1 + 53 weeks
 
    - <b>List of topics</b>

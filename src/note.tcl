@@ -10,7 +10,7 @@
 # _________________________ note ________________________ #
 
 namespace eval note {
-  variable NNlen 14
+  variable NNlen 12
 }
 
 # ________________________ Class "Notes" _________________________ #
@@ -27,7 +27,7 @@ constructor {idx} {
   set Win $::EG::WIN.sticker$NN
   set Ngeometry +0+0
   lassign [my GetNoteData] NName Ncolor
-  set NoteFile [file join $::EG::USERDIR $NoteKey.note]
+  set NoteFile [file join $::EG::USERDIRPG $NoteKey.note]
 }
 
 destructor {
@@ -95,7 +95,7 @@ method SetNoteData {} {
   #   n - note's number
 
   set NName [set ::EG::note::notename$NN]
-  set NName [string range [string trim $NName] 0 $::EG::note::NNlen]
+  set NName [string range [string trim $NName] 0 31]
   set NName [string trim $NName]
   catch {set Ncolor [[$Pobj Text] cget -bg]}
   catch {set Ngeometry [wm geometry $Win]}
@@ -108,8 +108,10 @@ method SetNoteData {} {
 method saveNoteData {} {
   # Saves a note's data.
 
-  my SetNoteData
-  EG::SaveRC  ;# for a company
+  catch {
+    my SetNoteData
+    EG::SaveRC  ;# for a company
+  }
   return 1
 }
 
@@ -149,25 +151,28 @@ method createNote {n onlyshow} {
   #   n - note's index
   #   onlyshow - yes, if only show the note
 
+  catch {$Pobj destroy}
+  set Self [self]
   lassign [my GetNoteData] NName Ncolor Ngeometry
   set ::EG::note::notename$n $NName
   if {$Ncolor eq {}} {set Ncolor [lindex [obj csGet] 1]}
+  set Ngeometry [apave::checkGeometry $Ngeometry]
+  lassign [split $Ngeometry x+] w h
+  if {$w<2 || $h<2} {set Ngeometry +0+0}
   lassign [apave::InvertBg $Ncolor] fcolor
-  set Self [self]
   obj untouchWidgets *ANote*
-  catch {$Pobj destroy}
   ::apave::APave create $Pobj $Win
   $Pobj makeWindow $Win.fra "EG - Sticker $n"
   $Win configure -bg $Ncolor
   $Pobj paveWindow $Win.fra {
-    {Fra1 - - 1 1 {-st nsew}}
+    {fra1 - - 1 1 {-st nsew}}
     {.tool - - - - {pack -side top} {-relief flat -borderwidth 0 -array {
       mnu_color {"$Self chooseColor" -tip "Choose background color@@ -under 5"}
       lab1 {"" {-fill x -expand 1}}
-      Ent {-tvar ::EG::note::notename$n -justify center -w $::EG::note::NNlen
+      EntANote {-tvar ::EG::note::notename$n -justify center -w $::EG::note::NNlen
         -validate focusout -validatecommand "$Self saveNoteData"}
       lab2 {"" {-fill x -expand 1}}
-      no {"$Self saveNoteData; $Self exitNote" -tip "exitNote@@ -under 5"}
+      no {"$Self saveNoteData; $Self exitNote" -tip "Close@@ -under 5"}
       }
     }}
     {frANote fra1 T 1 1 {-st nsew -rw 1 -cw 1} {-width 1 -bg $Ncolor}}
@@ -179,7 +184,14 @@ method createNote {n onlyshow} {
   }
   my ReadNoteText
   set wtxt [$Pobj Text]
-  set went [$Pobj Ent]
+  set went [$Pobj EntANote]
+  catch {
+    set tfont [obj basicTextFont]
+    set fs [dict get $tfont -size]
+    dict set tfont -size [incr fs -1]
+    $wtxt configure -font $tfont
+  }
+  $went configure -font TkTooltipFont
   if {$::EG::D(NoteOnTop)} {
     wm overrideredirect $Win 1
     bind $wtxt <ButtonPress-1> "apave::focusByForce $wtxt"

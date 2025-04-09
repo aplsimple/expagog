@@ -1,0 +1,16 @@
+ The new file options are:
+
+   - <b>Path to data file</b>
+
+   - <b>Week range</b> is from <b>Date1</b> to <b>Date2</b>;
+     "[" means "included", ")" means "excluded";
+     Date1 < Date2 <= Date1 + 53 weeks
+
+ The <b>path to data file</b> is cloned from the current file name.
+
+ Also, by default
+
+   - <b>Date1</b> is taken from the last week of the current file
+
+   - <b>Date2</b> is equal to "Date1 + 53 weeks"
+

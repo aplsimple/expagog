@@ -1,22 +1,44 @@
 # Last changes:
 
 
-Version `v1.0b5 (23 Mar'25)`
+Version `v1.0 (9 Apr'25)`
 
-  - BUGFIX: switching "weeks" => \n added to comments
+  - BUGFIX: diagram: switching "weeks" => \n added to comments
   - BUGFIX: calendar: highlighthing weeks with data (on other years)
-  - NEW   : Preferences: week range
-  - NEW   : Merge
-  - NEW   : open notes go to report
+  - BUGFIX: repo::RelativePath: last doctest failed
+  - NEW   : *Merge* dialogue
+  - NEW   : *Preferences* dialogue: week range
+  - NEW   : *New file* dialogue: week range
+  - NEW   : *Preferences* dialogue: fonts (default & text)
+  - NEW   : week range title above diagram
+  - NEW   : tab bar for multiple open egd files
+  - NEW   : find.tcl: "In all" to search in multiple open egd files
+  - NEW   : open stickers go to report
   - NEW   : Delete/Backspace on *chk* field clears it; 0/1/2/- sets icon
   - NEW   : stat.tcl: info on days: data/planned/checked/empty
+  - NEW   : stat.tcl: *Total* in 2nd table to reflect total activity
+  - NEW   : repo.tcl: colored tags
+  - NEW   : diagram.tcl: for colored week cells, add comments in tips
+  - NEW   : optional 2nd argument: .rc file/directory name
   - DELETE: sframe.tcl (not used)
+  - CHANGE: pref.tcl: restart only if main settings changed
+  - CHANGE: some settings moved from .egd to .rc file, supposedly to be global
+  - CHANGE: ~/*.config*/expagog.rc be the only resource by default
+  - CHANGE: repo.tcl: heading week days
+  - CHANGE: stat.tcl: current week: filled with cell values & set at left side
+  - CHANGE: stat.tcl: button cell values as integers; time averages rounded
+  - CHANGE: note.tcl: fonts for heading & text
+  - CHANGE: stickers' location is .rc directory
+  - CHANGE: docs: no localization promised
+  - CHANGE: week range counted in diagrams
+  - CHANGE: locking data for "non-today" week ranges
+  - CHANGE: at trespassing the week range: go to a week of range i/o current week
   - CHANGE: update diagram at exiting AggrEG field
   - CHANGE: tips on polygons include item name
-  - CHANGE: saving "Y/L/N/Q" i/o "yes/lamp/no/ques" for *chk*
-  - CHANGE: repo.tcl: heading week days: values i/o names
   - CHANGE: tips with comments of calc/chk cells
-  - CHANGE: packages: apave 4.5.7
+  - CHANGE: EG::Date1Seconds: current date in seconds i/o [clock seconds]
+  - CHANGE: saving "Y/L/N/?" i/o "yes/lamp/no/ques" for *chk*
+  - CHANGE: packages: apave 4.5.8
 
 
 Version `v0.9.6 (8 Mar'25)`

@@ -11,7 +11,9 @@
 
    <b>As tags</b>    - to search separate words of the entry
 
-   <b>Match case</b> - to switch on/off "case sensitive" search
+   <b>Match case</b> - to switch ON/OFF "case sensitive" search
+
+   <b>In all</b>     - if ON, searching in all bar tabs
  _______________________________________________________
 
  After search, a list of found matches will be shown.
