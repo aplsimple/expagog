@@ -15,7 +15,7 @@ And here is an interesting thing for pedagogy - experiment and adventure in the 
 
 And here you have a bridle for adventures - *expagog*. To reduce the letters and pathos, we will shorten this name to *EG*.
 
-Adventures are different. For example, Christians are currently in Lent (March 2025) and *EG* is perfect for the adventure called *fasting*. The whole point of *EG* is that this pedagogy should not be lean and boring, but interesting, although not without rigor as pedagogy assumes.
+Adventures are different. For example, Christians are currently in Lent (March 2025) and *EG* is perfect for the adventure called *fasting*. The whole point of *EG* is that this pedagogy should not be lean nor boring, but interesting, although not without a strictness as pedagogy assumes.
 
 It's *adventure with sense* - that's what *EG* is. I've finally found a passable definition for this program.
 
@@ -452,15 +452,15 @@ Grigoriy Gorin ([The Very Same Munchhausen](https://en.wikipedia.org/wiki/The_Ve
  LINKS
 =======
 
+Installers:
+
+  - [for Linux and Windows](https://github.com/aplsimple/expagog/releases/tag/Installers_of_EG-1.0)
+
 Sources:
 
   - [on ChiselApp](https://chiselapp.com/user/aplsimple/repository/expagog)
 
   - [on GitHub](https://github.com/aplsimple/expagog)
-
-Installers:
-
-  - [for Linux and Windows](https://github.com/aplsimple/expagog/releases/tag/Installers_of_EG-1.0)
 
 Demo video:
 

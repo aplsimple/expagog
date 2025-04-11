@@ -26,7 +26,7 @@ foreach _ {apave baltip bartabs hl_tcl} {
 
 namespace eval EG {
 
-  variable VERSION v1.0
+  variable VERSION {}
   variable EGICON \
 {iVBORw0KGgoAAAANSUhEUgAAAEgAAABICAMAAABiM0N1AAAABlBMVEUUqHtCxf8p2J+gAAAAAnRS
 TlMA/1uRIrUAAAD7SURBVFjD3dhLEoQgDATQ7vtfejaz0IGEdGhKa7LzU09LAyEA/xiky6GJMUD8
@@ -104,6 +104,8 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   set D(TAGS) TAGS:  ;# tags' prompt
   set D(FILEBAK) {}  ;# backup file
   set D(AUTOBAK) 0   ;# auto-backup flag
+  set D(WeeklyITEM) {_TI_ 0} ;# item name & day for weekly text
+  set D(WeeklyKEY) W ;# key for weekly text
 
   ## ________________________ main variables ______________________ ##
 
@@ -118,7 +120,6 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   set D(curritem) ""  ;# current choosen item
   set D(currwday) ""  ;# current week day
   set D(WeekDays) {}  ;# week day names
-  set D(TextR) {}     ;# comments on diagram
   set D(poly) 1[string repeat 0 $D(MAXITEMS)] ;# saved flags of polygons
   readPolyFlags
   set D(NoteOnTop) 0  ;# yes for notes to be topmost
@@ -1421,6 +1422,7 @@ proc EG::AfterWeekSwitch {} {
   set d2 [ScanDate [FormatDate [FirstWDay]]]
   set D(lockdata) [expr {[IsLockedBase] || $d1 < $d2}]
   ConfigLock
+  ShowTextR
 }
 
 # ________________________ Move to _________________________ #
@@ -1569,18 +1571,41 @@ proc EG::ShowText {item wday} {
 }
 #_______________________
 
-proc EG::StoreText {{t ?@-*}} {
-  # Handles quiting text.
+proc EG::ShowTextR {} {
+  # Shows weekly text.
+
+  fetchVars
+  set textR [DataValue $D(WeeklyKEY) {*}$D(WeeklyITEM)]
+  $EGOBJ displayText [$EGOBJ TextR] $textR
+  set week [clock format [ScanDate] -format %V]
+  [$EGOBJ Lfr2] configure -text " Weekly #$week "
+
+}
+#_______________________
+
+proc EG::StoreText {{tex ?@-*}} {
+  # Stores item comments.
+  #   tex - text to store (taken from Text field, if omitted)
 
   fetchVars
   set wtxt [$EGOBJ Text]
-  if {$t eq {?@-*}} {
-    set t [string trimright [$wtxt get 1.0 end]]
+  if {$tex eq {?@-*}} {
+    set tex [string trimright [$wtxt get 1.0 end]]
   } else {
-    set t [string trimright $t]
-    $EGOBJ displayText $wtxt $t
+    set tex [string trimright $tex]
+    $EGOBJ displayText $wtxt $tex
   }
-  StoreValue t $t
+  StoreValue t $tex
+}
+#_______________________
+
+proc EG::StoreTextR {} {
+  # Stores weekly comments.
+
+  fetchVars
+  set wtxt [$EGOBJ TextR]
+  set tex [string trimright [$wtxt get 1.0 end]]
+  StoreValue $D(WeeklyKEY) $tex {*}$D(WeeklyITEM)
 }
 #_______________________
 
@@ -1949,7 +1974,7 @@ proc EG::StatusBar {item wday} {
   set dtshort [FormatDateUser $dt]
   [$EGOBJ Labstat1] configure -text $item
   [$EGOBJ Labstat2] configure -text $dtshort
-  [$EGOBJ Lfr1] configure -text "\"$item\"  -  $dtfull"
+  [$EGOBJ Lfr1] configure -text " \"$item\"  -  $dtfull "
 }
 #_______________________
 
@@ -2146,7 +2171,6 @@ proc EG::OpenDataFile {fname} {
   for {set iit 1} {$iit<=$D(MAXITEMS)} {incr iit} {
     if {[set _ [CommonData COLORMY$iit]] ne {}} {set Colors(my$iit) $_}
   }
-  set D(TextR) [CommonData TEXTR]
   set items [CommonData ITEMS]
   set itemstypes [CommonData ITEMSTYPES]
   if {[llength $items] && [llength $itemstypes]} {
@@ -2191,12 +2215,6 @@ proc EG::SaveDataFile {{newfile no} {fname ""}} {
   SaveAggrEG
   for {set iit 1} {$iit<=$D(MAXITEMS)} {incr iit} {
     CommonData COLORMY$iit $Colors(my$iit)
-  }
-  set textr [[$EGOBJ TextR] get 1.0 end]
-  if {$newfile} {
-    CommonData TEXTR {}
-  } else {
-    CommonData TEXTR [string trimright $textr]
   }
   if {$fname eq {}} {set fname $D(FILE)}
   set output {}
@@ -2472,7 +2490,8 @@ proc EG::Help {{fhelp EG} args} {
     if {$fhelp eq {about}} {
       set clog [readTextFile [file join $DIR CHANGELOG.md]]
       foreach line [textsplit $clog] {
-        lassign [regexp -inline {Version `.+(\(.+\))`} $line] -> line
+        lassign [regexp -inline {Version (`.+\(.+\)`)} $line] -> line
+        set line [string map {` ""} $line]
         if {$line ne {}} {
           set VersionDate $line
           break
@@ -2854,7 +2873,6 @@ proc EG::_create {} {
   # Creates the app's main window.
 
   fetchVars
-  set Year [CurrentYear]
   obj untouchWidgets *.laBI*
   apave::APave create $EGOBJ $WIN
   $EGOBJ makeWindow $WIN.fra "EG - $D(FILE)"
@@ -2937,7 +2955,7 @@ proc EG::_create {} {
     {fral.lfr1.Text - - - - {pack -side left -expand 1 -fill both}
       {-wrap word -h 4 -w 10 -tabnext {*.textR}
       -onevent {<FocusIn> EG::StoreItem <<Modified>> {+ EG::StoreText}
-      <KeyRelease> {+ EG::StoreText} <FocusOut> {EG::StoreText; EG::ShowTable}}}}
+      <KeyRelease> {+ EG::StoreText} <FocusOut> {+ EG::StoreText; EG::ShowTable}}}}
     {fral.lfr1.sbv fral.lfr1.text L - - {pack -side left}}
     #####-right-frame
     {sev fral L 4 1 {-st ns -padx 4}}
@@ -2965,9 +2983,11 @@ proc EG::_create {} {
     {.frar2.chb + L 1 1 {-st w -padx 20} {-t cumulate
       -var ::EG::cumulate -takefocus 0 -com EG::diagr::Draw}}
     #####-comments-on-diagram-and-all
-    {lfr2 frar1 T 1 1 {-st nswe -cw 1 -rw 99 -pady 4} {-t Notes -labelanchor n}}
+    {Lfr2 frar1 T 1 1 {-st nswe -cw 1 -rw 99 -pady 4} {-t Weekly -labelanchor n}}
     {.TextR - - - - {pack -side left -expand 1 -fill both}
-      {-wrap word -h 4 -w 8 -tip "General notes about $Year" -tabnext {[EG::FirstCell]}}}
+      {-wrap word -h 4 -w 8 -tip "Comments on the week" -tabnext {[EG::FirstCell]}
+      -onevent {<<Modified>> {+ EG::StoreTextR}
+      <KeyRelease> {+ EG::StoreTextR} <FocusOut> {+ EG::StoreTextR}}}}
     {.sbvR .textR L - - {pack -side left}}
     #####-status-bar
     {fras fral T 1 3 {-st we}}
@@ -2985,7 +3005,6 @@ proc EG::_create {} {
   [$EGOBJ LabWeekRange] configure -foreground $Colors(fgit) \
     -text "\[ $D(egdDate1)  -  $D(egdDate2) \)"
   ::baltip tip [$EGOBJ Text] Comments -command EG::TextTip
-  $EGOBJ displayText [$EGOBJ TextR] $D(TextR)
   set C [$EGOBJ Can]
   set W [winfo reqwidth $WIN]
   set H [winfo reqheight $WIN]

@@ -1,6 +1,13 @@
 # Last changes:
 
 
+Version `v1.1.0a (11 Apr'25)`
+
+  - NEW   : "Weekly" field (comments)
+  - NEW   : repo.tcl: weekly comments, AggrEG in table row
+  - DELETE: "Notes" field (general notes)
+
+
 Version `v1.0 (9 Apr'25)`
 
   - BUGFIX: diagram: switching "weeks" => \n added to comments

@@ -352,11 +352,16 @@ proc repo::PutItemData {date1 tplweek itemdata} {
   set outitems [set textval {}]
   set lsttext [list]
   set end 9999
+  lassign $::EG::D(WeeklyITEM) weeklyItem
+  set weekly {}
   foreach item $::EG::D(Items) itemtype $::EG::D(ItemsTypes) {
     set tplitem [PutValue $Item ItemName [incr itIdx].\ <b>$item</b>]
     foreach data $itemdata {
       lassign $data it valdata  ;# e.g. {Dist {v2 9} Time {v2 0:50}}
-      if {$it ne $item} continue
+      if {$it ne $item} {
+        if {$it eq $weeklyItem} {set weekly $valdata}
+        continue
+      }
       foreach {key val} $valdata {
         lassign [split $key {}] k d  ;# v1 => v 1
         switch $k {
@@ -428,8 +433,15 @@ proc repo::PutItemData {date1 tplweek itemdata} {
   set prevAEG $aeg
   incr idxAEG
   set aeg <$font>$aeg</font>
-  set outweek [PutValue $outweek BottomComment \
-    "<b>AggrEG:</b> <b>$aeg</b> ([EG::stat::AggregateFormula])<br><br>"]
+  if {[set weeklyKeyVal $weekly] ne {}} {
+    set weekly {<pre class="code">}
+    append weekly "\n<hr>"
+    append weekly [EG::fromEOL [lindex $weeklyKeyVal 1]]
+    append weekly </pre>
+  }
+  set outweek [PutValue $outweek Weekly $weekly]
+  set outweek [PutValue $outweek AggrEGvalue $aeg]
+  set outweek [PutValue $outweek AggrEGformula [EG::stat::AggregateFormula]]
   return $outweek
 }
 #_______________________
@@ -488,7 +500,6 @@ proc repo::FillFields {} {
     lappend pairs $fld [TextContent [set $fld]]
   }
   lappend pairs statRepo [EG::stat::Calculate no $wtmp]
-  lappend pairs commentRepo [TextContent [[$::EG::EGOBJ TextR] get 1.0 end]]
   set Notes {}
   foreach n $::EG::NOTESN {
     if {[set note [EG::note::OpenNoteText $n]] ne {}} {
