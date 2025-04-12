@@ -48,18 +48,25 @@ method chooseColor {} {
   # Chooses a note's background color.
 
   lassign [split [wm geometry $Win] x+] w h x y
+  if {$x<=0 || $y<=0} {
+    lassign [split [winfo geometry $Win] x+] w h x y
+    set x [expr {max(30,$x)}]
+    set y [expr {max(30,$y-30)}]
+  }
   set geo +[expr {$x+$w}]+$y
   if {$::EG::D(NoteOnTop)} {
     after idle "catch {wm overrideredirect .__tk__color 1}"
   }
   set ::EG::note::ncolor $Ncolor
-  set res [$Pobj chooser colorChooser ::EG::note::ncolor \
-    -geometry $geo -parent $Win -ontop 1]
-  if {$res ne {}} {
-    set Ncolor $res
-    lassign [apave::InvertBg $Ncolor] fcolor
-    [$Pobj Text] configure -fg $fcolor -bg $Ncolor -insertbackground $fcolor
-    my SetNoteData
+  catch {
+    set res [$Pobj chooser colorChooser ::EG::note::ncolor \
+      -geometry $geo -parent $Win -ontop 1]
+    if {$res ne {}} {
+      set Ncolor $res
+      lassign [apave::InvertBg $Ncolor] fcolor
+      [$Pobj Text] configure -fg $fcolor -bg $Ncolor -insertbackground $fcolor
+      my SetNoteData
+    }
   }
 }
 
