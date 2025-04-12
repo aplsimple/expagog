@@ -1,7 +1,7 @@
 # Last changes:
 
 
-Version `v1.1.0a (11 Apr'25)`
+Version `v1.1.0a2 (12 Apr'25)`
 
   - NEW   : "Weekly" field (comments)
   - NEW   : repo.tcl: weekly comments, AggrEG in table row

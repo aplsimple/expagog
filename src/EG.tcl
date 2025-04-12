@@ -1895,7 +1895,9 @@ proc EG::ConfigLock {} {
     set st normal
     set ttl {Lock changes}
   }
-  [$EGOBJ Text] configure -state $st
+  set wtxt [$EGOBJ Text]
+  $wtxt configure -state $st
+  $wtxt configure -fg [lindex [$EGOBJ csGet] 0]
   ::baltip::tip [$EGOBJ BuT_Tool_lock] $ttl
   return $ttl
 }
@@ -2535,7 +2537,7 @@ proc EG::Merge {{doadd no} args} {
 
 proc EG::About {} {
 
-  Help about -title About... -width 28 -height {10 18} -wrap none
+  Help about -title About... -width 30 -height {10 18} -wrap none
 }
 #_______________________
 
@@ -2716,9 +2718,14 @@ proc EG::Init {} {
   set err no
   switch $argc {
     0 {
+      set fdefault [file join $USERDIR $fileegd]
       set rc [Resource]
       if {[catch {set fname [dict get $rc FILE]}] || $fname eq {}} {
-        set fname [file join $USERDIR $fileegd]
+        set fname $fdefault
+      } else {
+        if {![file exists [file dirname $fname]]} {
+          set fname $fdefault  ;# foreign .rc ?
+        }
       }
     }
     1 - 2 - 3 {
