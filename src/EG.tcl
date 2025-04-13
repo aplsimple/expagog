@@ -1693,9 +1693,9 @@ proc EG::FillBar {} {
     set curtab $i
   }
   set bar1Opts [list -wbar $wframe -wbase $wbase -pady 2 -scrollsel 1 \
-    -lablen 16 -tiplen 16 -bg [lindex [$EGOBJ csGet] 3] \
+    -lablen 16 -tiplen 16 -padx 0 -bg [lindex [$EGOBJ csGet] 3] \
     -font TkTooltipFont -cdel {EG::OnTabDeletion %t} -cdel2 EG::UpdateBAR \
-    -csel2 {EG::OnTabSelection %t} -padx 0]
+    -csel2 {EG::OnTabSelection %t} -popuptip ::EG::PopupTip]
   set tip "To select a bar tab\npress Ctrl and click it."
   lappend bar1Opts -menu [list \
     sep "com {Open...} EG::Open" \
@@ -1734,7 +1734,7 @@ proc EG::TabFilesArray {} {
       set D(TabFiles) [list]
       foreach tab $tabs {
         set tid [lindex $tab 0]
-        set fname [BAR $tid cget -tip]
+        set fname [TIDfname $tid]
         if {[lsearch -exact $D(TabFiles) $fname]<0} {
           lappend D(TabFiles) $fname
         }
@@ -1792,7 +1792,7 @@ proc EG::OnTabSelection {TID} {
   #   TID - tab's ID
 
   fetchVars
-  set fname [BAR $TID cget -tip]
+  set fname [TIDfname $TID]
   if {$fname ne $D(FILE)} {OpenFile $fname} UpdateBAR
 
 }
@@ -1801,7 +1801,7 @@ proc EG::OnTabSelection {TID} {
 proc EG::OnTabDeletion {TID args} {
 
   fetchVars
-  set fname [BAR $TID cget -tip]
+  set fname [TIDfname $TID]
   if {$fname eq $D(FILE)} {
     if {[set i [lsearch $args -first]]>=0} {
       if {[lindex $args $i+1] == -1} {
@@ -1827,7 +1827,7 @@ proc EG::UpdateBAR {args} {
   set tabs [list]
   foreach tab $bartabs {
     lassign $tab tid tname
-    set tname [file tail [BAR $tid cget -tip]]
+    set tname [file tail [TIDfname $tid]]
     lappend tabs [list $tid $tname]
   }
   # then update tab titles
@@ -1840,6 +1840,25 @@ proc EG::UpdateBAR {args} {
     incr i
   }
   BAR draw
+}
+#_______________________
+
+proc EG::PopupTip {wmenu idx TID} {
+  # Makes tooltips (full file names) for popup menu items.
+  # wmenu - path to popup menu
+  # idx - index of item
+  # TID - ID of item's tab
+
+  if {[$wmenu cget -tearoff]} {incr idx}
+  ::baltip::tip $wmenu [TIDfname $TID] -index $idx -shiftX 10 -ontop 1
+}
+#_______________________
+
+proc EG::TIDfname {TID} {
+  # Gets file name of bar tab.
+  #   TID - tab's ID
+
+  BAR $TID cget -tip
 }
 
 # ________________________ Canvas _________________________ #
@@ -2522,7 +2541,7 @@ proc EG::Merge {{doadd no} args} {
     }
     foreach tab $tabs {
       lassign $tab tid
-      set fname [BAR $tid cget -tip]
+      set fname [TIDfname $tid]
       if {$D(FILE) ne $fname} {
         lappend selfiles $fname
       }

@@ -368,7 +368,8 @@ proc repo::PutItemData {date1 tplweek itemdata} {
           t {
             if {[string match $::EG::D(TAGS)* $val]} {
               set i1 [string length $::EG::D(TAGS)]
-              set i2 [string first  $::EG::D(EOL) $val]
+              set i2 [string first $::EG::D(EOL) $val]
+              if {$i2<0} {set i2 [string first \n $val]}
               if {$i2<0} {set i2 $end}
               set tags [string range $val $i1 $i2-1]
               set ltags [split $tags]
@@ -376,7 +377,7 @@ proc repo::PutItemData {date1 tplweek itemdata} {
               foreach {cnam cval} "Red $RedColor Yellow $YellowColor Green $GreenColor" {
                 if {$cnam in $ltags} {
                   set font "<font color=$cval>"
-                  set val $font$::EG::D(TAGS)$tags</font>$rtags
+                  set val $font$::EG::D(TAGS)$tags$rtags</font>
                   break
                 }
               }

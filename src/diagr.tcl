@@ -276,20 +276,18 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
         set x1prev $x1
       }
       set colHeight [expr {$BodyHeight * $sum / $maxsum - 1}]
-      if {$colHeight>0} {
-        if {$item eq {EG}} {
-          set color2 $::EG::Colors(fgsel)
-        } else {
-          set color2 $colorCol
-        }
-        set tag [DrawColumn $item $iw $x1 $colWidth $colHeight \
-          $color $color2 $ispoly]
-        set tip "[EG::FormatDate $day1]$UnderLine"
-        if {$ispoly} {append tip \n\"$item\"}
-        append tip "\nSum: [EG::Round $sum 2]\nCells: $cnt"
-        ::baltip::tip $C $tip -ctag $tag -per10 4000
-        $C bind $tag <Button-1> [list EG::MoveToDay $day1]
+      if {$item eq {EG}} {
+        set color2 $::EG::Colors(fgsel)
+      } else {
+        set color2 $colorCol
       }
+      set tag [DrawColumn $item $iw $x1 $colWidth $colHeight \
+        $color $color2 $ispoly]
+      set tip "[EG::FormatDate $day1]$UnderLine"
+      if {$ispoly} {append tip \n\"$item\"}
+      append tip "\nSum: [EG::Round $sum 2]\nCells: $cnt"
+      ::baltip::tip $C $tip -ctag $tag -per10 4000
+      $C bind $tag <Button-1> [list EG::MoveToDay $day1]
     }
   }
 }
