@@ -61,23 +61,23 @@ However, get to the point.
 
 **EG** (the last topic in the list) is a user's overall estimate for the day he/she have lived.
 
-**AggrEG** is an aggregate estimate calculated by a user-defined formula, setting the *weight* of topics; it reflects the overall quality of a day / week / month / year.
+**AggrEG** is an aggregate estimate calculated by a user-defined formula, setting the *weight* of topics; the weight can be negative (e.g. for topics like "cigarettes"); AggrEG reflects the overall quality of a day / week / month / year.
 
 **Cell** is located at the intersection of the *subject* row with the *week day* column.
 
-**Cell value** - for topics such as numbers and time, these are their values; for the switch, these are 2 (*yes*), 1 (*lamp*), 0 (*?*) or -1 (*no*); for text, it is always 1 plus the number of initial *+* minus the number of *-* (for example, value of *++ wow!* is 3); values less than zero are reset to 0 (there is no negative in *EG*).
+**Cell value** - for topics such as numbers and time, these are their values; for the switch, these are 2 (*yes*), 1 (*lamp*), 0 (*?*) or -1 (*no*); for text, it is always 1 plus the number of initial *+* minus the number of *-* (for example, value of *++ wow!* is 3); value sums less than zero are reset to 0 (there is no negative sum in *EG*).
 
-**Schedule** is set in the form of question marks (*?*) in the cells of the table; these are the points of your adventure desirable to fulfill, for example, a point of *Feat* on Wednesdays; the value of *?* is 0, so it *spoils the statistics* if the cell experiment has not been carried out.
+**Schedule** is set in the form of question marks (*?*) in the cells of the table; these are the points of your adventures desirable to fulfill, for example, a point of *Feat* on Wednesdays; the value of *?* is 0, so it *spoils the statistics* if the cell experiment has not been fulfilled.
 
 **Chart** has two types: a histogram and a graph.
 
 **Cumulative chart** is a chart, each point of which is obtained by summing the values of the previous period; the last value is the sum of all values.
 
-**Tag** is a keyword that can be used to mark a cell; tags are available through the context menu of cells; there are three tags that mark a cell with a color.
+**Tag** is a keyword that marks a cell; tags are available through the context menu of cells; marks can be searched with *Find* tool.
 
-**Cell comment** is an arbitrary text for the current cell; it can contain tags; comments can be searched with *Find* tool.
+**Cell comment** is arbitrary notes on the current cell, under the table; it can contain tags and be searched with *Find* tool.
 
-**General notes** is an arbitrary text under the diagram containing comments and conclusions on the current database, diagram etc.
+**Weekly** is arbitrary notes on the current week, under the diagram.
 
 **Statistics** - summary data on the current database; contains two sections of data - *Current week and plan for the next* and *Previous, current and subsequent weeks*.
 
@@ -85,7 +85,7 @@ However, get to the point.
 
 **Report** is an html file that contains data from the current database, including statistics; it can be used for *external use.*
 
-**Sticker** is a short note that can be useful when working with *EG*, for example, criteria of ratings, equivalents, ideas for experiments etc.; stickers can be placed anywhere on the screen and colored in any color; open stickers are presented in the report.
+**Sticker** is a short note that can be useful when working with *EG* - estimate criteria, value equivalents, ideas for experiments etc.; stickers can be colored and placed anywhere on the screen; open stickers are present in the report.
 
 
  GENERAL USAGE PROCEDURE
@@ -374,7 +374,7 @@ Moreover, the openness of the *EG* database will scare away those wanting to use
 
 **Question**:
 
-Why choose a home-made database format? Why not SQLite? Why not JSON?
+Why a home-made database format? Why not SQLite? Why not JSON?
 
 **Answer**:
 
@@ -396,7 +396,7 @@ Why is the program not localized in my language X?
 
 Knowing a few English words hasn't hurt anyone yet.
 
-*EG* is just a form, not a content. The content can be in any X language.
+*EG* is just a form, not a content. The content can be in any X language provided by UTF-8.
 
 ---
 
