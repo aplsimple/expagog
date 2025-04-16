@@ -21,13 +21,12 @@ namespace eval pref {
   variable tagColorGreen  $::EG::Colors(Green)
   variable DP; array set DP [list]
   variable DPars {FILE Theme CS Items ItemsTypes Hue Zoom NoteOnTop \
-    DateUser DateUser2 DateUser3 egdDate1 egdDate2 DefFont TexFont}
+    DateUser DateUser2 DateUser3 egdDate1 egdDate2 DefFont TexFont AggrEG}
   variable currTab {}
   variable currFoc {}
   variable txtColor {}
   variable msgColor {}
   variable itemOrder [list]
-  variable savedAggrEG
   variable savedEgdDate1
   variable savedEgdDate2
 }
@@ -55,7 +54,6 @@ proc pref::fetchVars {} {
     variable txtColor
     variable msgColor
     variable itemOrder
-    variable savedAggrEG
     variable savedEgdDate1
     variable savedEgdDate2
   }
@@ -230,10 +228,11 @@ proc pref::MainFrame {} {
     {fraB + T 1 2 {-st nsew} {-padding {2 2}}}
     {.ButHelp - - - - {pack -side left}
       {-t Help -tip F1 -com ::EG::pref::Help -takefocus 0}}
+    {.butRun - - - - {pack -side left -padx 2} {-t Test -com {::EG::pref::Save 1}
+      -takefocus 0}}
     {.LabMess - - - - {pack -side left -expand 1 -fill both -padx 8}}
-    {.ButOK - - - - {pack -side left -anchor s -padx 2} {-t Save -com ::EG::pref::Ok}}
-    {.butCancel - - - - {pack -side left -anchor s}
-      {-t Cancel -com ::EG::pref::Cancel}}
+    {.butOK - - - - {pack -side left -padx 2} {-t OK -com ::EG::pref::Save}}
+    {.butCancel - - - - {pack -side left} {-t Cancel -com ::EG::pref::Cancel}}
   }
 }
 #_______________________
@@ -251,13 +250,21 @@ proc pref::opcCSPre {args} {
 }
 #_______________________
 
-proc pref::Ok {args} {
-  # Handler of "OK" button.
+proc pref::Save {{istest 0} args} {
+  # Saves preferences.
+  #   istest - if true, starts EG in testing mode
 
   fetchVars
+  set savedUSERFILEPG $::EG::USERFILEPG
+  set tmpD [array get ::EG::D]
+  set tmpDateUser $::EG::D(DateUser)
+  set tmpcolors [array get ::EG::Colors]
+  set tmprc [file join $::EG::USERDIR _tmp_.rc]
+  if {$istest} {
+    set ::EG::USERFILEPG $tmprc
+  }
   set Items [set ItemsNew [list]]
   set ItemsTypes [list]
-  set egcolors [array get ::EG::Colors]
   for {set iit 1} {$iit<=$::EG::D(MAXITEMS)} {incr iit} {
     lassign [ItemVars $iit] clrvar itmvar frmvar
     set clr [string trim [set $clrvar]]
@@ -274,7 +281,7 @@ proc pref::Ok {args} {
         EG::msg ok warn \
           "<r>$itm</r> is a special name used by the app.\n\
           \nPlease, change this item's name."
-        array set ::EG::Colors $egcolors
+        array set ::EG::Colors $tmpcolors
         return
       }
       lappend Items $itm
@@ -286,13 +293,13 @@ proc pref::Ok {args} {
     EG::msg ok warn \
       "No item settings found.\n \
       \nPlease, set item colors, names <b>and</b> formats."
-    array set ::EG::Colors $egcolors
+    array set ::EG::Colors $tmpcolors
     return
   }
   set DP(FILE) [string trim $DP(FILE)]
   if {$DP(FILE) eq {}} {
     EG::msg ok warn "Data file isn't set.\n\nPlease, set a file name."
-    array set ::EG::Colors $egcolors
+    array set ::EG::Colors $tmpcolors
     return
   }
   set ::EG::D(FILE) [string trim $::EG::D(FILE)]
@@ -300,10 +307,10 @@ proc pref::Ok {args} {
   if {$isnewfile && [file exists $DP(FILE)]} {
     EG::msg ok warn "File\n  $DP(FILE)\nalready exists.\
       \n\nPlease, set a new file name."
-    array set ::EG::Colors $egcolors
+    array set ::EG::Colors $tmpcolors
     return
   }
-  if {!$::EG::D(AUTOBAK)} {
+  if {!$::EG::D(AUTOBAK) && !$istest} {
     EG::Backup yes ;# force backup
   }
   set remap [ReMap [origItems] $ItemsNew [origItemOrder] $itemOrder]
@@ -329,17 +336,34 @@ proc pref::Ok {args} {
   foreach k $DPars {
     set ::EG::D($k) $DP($k)
   }
-  $obPrf res $win 1
-  if {$isnewfile} {
-    EG::FileToResource $DP(FILE)
-    set ::argc 1
-    set ::argv [list $DP(FILE)]
-    set args -newfile
-  } else {
-    set args {}
+  if {$istest} {
+    if {$::argc>1} {
+      set ::argv [lreplace $::argv 1 1 $tmprc]
+    } elseif {$::argc==1} {
+      lappend ::argv $tmprc
+    } else {
+      set ::argv [list $::EG::D(FILE) $tmprc]
+    }
+    set ::argc [llength $::argv]
+    set ::EG::D(DateUser) $tmpDateUser
+    EG::SaveAllData
+    catch {exec -- [info nameofexecutable] $::EG::SCRIPT {*}$::argv -test}
+    set ::EG::USERFILEPG $savedUSERFILEPG
+    array set ::EG::Colors $tmpcolors
+    array set ::EG::D $tmpD
+    EG::SaveAllData
+    return
   }
-  EG::SaveAggrEG
+  $obPrf res $win 1
   if {$mainchanged} {
+    if {$isnewfile} {
+      EG::FileToResource $DP(FILE)
+      set ::argc 1
+      set ::argv [list $DP(FILE)]
+      set args -newfile
+    } else {
+      set args {}
+    }
     EG::Exit -restart {*}$args
   } else {
     UpdateAppearance
@@ -352,7 +376,6 @@ proc pref::Cancel {args} {
   #   args - not empty, if called by Esc, Alt+F4 or "X" button
 
   fetchVars
-  set ::EG::stat::aggregate $savedAggrEG
   $obPrf res $win 0
 }
 #_______________________
@@ -516,12 +539,10 @@ proc pref::Items_Tab {} {
       %C ".EnTF_$iit + L 1 1 {-st ews} {-tvar ::EG::pref::EnTF$iit -w 45\
         -onevent {<Button> {EG::pref::Message {}}}}"
       set n .labI_$iit
-    }
-    }
-    }
+    }}}
     {labagg fra1 T 1 1 {-st sw -pady 8} {-anchor center -t {AggrEG formula: }
       -foreground $::EG::Colors(fgit)}}
-    {entagg + L 1 1 {-st sw -pady 8} {-tvar ::EG::stat::aggregate -w 60}}
+    {entagg + L 1 1 {-st sw -pady 8} {-tvar ::EG::pref::DP(AggrEG) -w 60}}
   }
 }
 #_______________________
@@ -709,15 +730,13 @@ proc pref::_create {} {
   bind $win <F1> "[$obPrf ButHelp] invoke"
   bind $win <Control-o> \
     [list $obPrf vieweditFile $::EG::D(FILE) {} -h {15 25} -w {60 100} -rotext _]
-  set res [$obPrf showModal $win -parent $::EG::WIN -resizable 0 \
-    -onclose ::EG::pref::Cancel]
-  if {[llength $res] < 2} {set res ""}
+  $obPrf showModal $win -parent $::EG::WIN -resizable 0 \
+    -onclose ::EG::pref::Cancel
   set currTab [$win.fra.fraR.nbk select]
   set currFoc [focus]
-  EG::stat::CheckAggrEG
+  EG::CheckAggrEG
   catch {destroy $win}
   $obPrf destroy
-  return $res
 }
 #_______________________
 
@@ -726,13 +745,13 @@ proc pref::_run {} {
   # Returns yes, if settings were saved.
 
   fetchVars
+  if {[EG::IsTestMode]} return
   EG::SaveAllData
-  set savedAggrEG $::EG::stat::aggregate
   set itemOrder [origItemOrder]
   foreach k $DPars {set DP($k) $::EG::D($k)}
   set savedEgdDate1 $DP(egdDate1)
   set savedEgdDate2 $DP(egdDate2)
-  return [_create]
+  _create
 }
 
 # _________________________________ EOF _________________________________ #

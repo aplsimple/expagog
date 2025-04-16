@@ -126,6 +126,7 @@ proc find::KeyOnTree {K X Y B} {
     if {[llength $curlist]>1} {
       set fname [Tab2Fname [lindex $curlist end]]
       if {[file exist $fname]} {
+        if {[EG::IsTestMode]} return
         SaveOptions
         EG::OpenData $fname -openfile -item $item -date $date
         return
@@ -219,6 +220,7 @@ proc find::OK {} {
   foreach flit $foundList {
     lassign [split $flit \t] date item where fname
     set tID ti[incr treeid]
+    set where [string map [list \n { }] $where]
     $wtree insert {} end -id $tID -values [list $date $fname $where]
     if {$treeid==1} {set tID1 $tID}
   }

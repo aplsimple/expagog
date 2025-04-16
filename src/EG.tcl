@@ -126,6 +126,7 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   set D(DefFont) {}   ;# default font
   set D(TexFont) {}   ;# text font
   set D(TabFiles) {}  ;# file names of tab bar
+  set D(AggrEG) EG    ;# aggregate formula
   variable C          ;# canvas' path
   variable Opcvar     ;# option cascade var
   variable OpcItems   ;# option cascade list
@@ -135,6 +136,7 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   variable itwidth 0  ;# item width
   variable InpItem {} ;# input item to go to
   variable InpDate {} ;# input date to go to
+  variable TestMode 0 ;# allows no changes to data
 
   ## ________________________ pathes ________________________ ##
 
@@ -217,6 +219,7 @@ proc EG::fetchVars {} {
     variable FILEBAK
     variable AUTOBAK
     variable itwidth
+    variable TestMode
   }
 }
 #_______________________
@@ -437,6 +440,20 @@ proc EG::GeItemsNumber {} {
   variable D
   set D(Curritems) [expr {min( $D(MAXITEMS), \
     [llength $D(Items)], [llength $D(ItemsTypes)])}]
+}
+#_______________________
+
+proc EG::WriteTextFile {fname contVar} {
+  # Writes contents to a file.
+  #   fname - file name
+  #   contVar - variable for contents
+
+  variable TestMode
+  upvar $contVar cont
+  if {![IsLockedBase]} {
+    set tmpcont $cont
+    apave::writeTextFile $fname tmpcont
+  }
 }
 
 # ________________________ Items _________________________ #
@@ -812,6 +829,65 @@ proc EG::AddTag {tag {doit 0}} {
 }
 #_______________________
 
+proc EG::PopupOnWeekTitle {ccur X Y} {
+  # Handles popup menu on week day title.
+  #   ccur - index of clicked title
+  #   X - X-coordinate of pointer
+  #   Y - Y-coordinate of pointer
+
+  fetchVars
+  set wpop $WIN.popupwttl
+  if {[winfo exist $wpop]} {destroy $wpop}
+  menu $wpop
+  obj themePopup $wpop
+  set ttl [lindex $D(WeekDays) $ccur]
+  $wpop add command -label "Clear \"$ttl\"" -command "EG::ClearCells $ccur it"
+  $wpop add command -label {... All} -command "EG::ClearCells $ccur all"
+  $wpop add command -label {... All at Left} -command "EG::ClearCells $ccur left"
+  $wpop add command -label {... All at Right} -command "EG::ClearCells $ccur right"
+  $wpop configure -tearoff 0
+  if {$ccur==0} {
+    $wpop entryconfigure 2 -state disabled
+  } elseif {$ccur==6} {
+    $wpop entryconfigure 3 -state disabled
+  }
+  tk_popup $wpop $X $Y
+}
+#_______________________
+
+proc EG::ClearCells {ccur what} {
+  # Clears cells.
+  #   ccur - index of clicked title
+  #   what - what cells to clear
+
+  fetchVars
+  switch $what {
+    all {
+      set c1 0
+      set c2 6
+    }
+    left {
+      set c1 0
+      set c2 [incr ccur -1]
+    }
+    right {
+      set c1 [incr ccur]
+      set c2 6
+    }
+    default {
+      set c1 [set c2 $ccur]
+    }
+  }
+  for {set wday $c1} {$wday<=$c2} {incr wday} {
+    foreach item $D(Items) {
+      StoreValue v {} $item $wday
+      StoreValue t {} $item $wday
+    }
+  }
+  ShowTable
+}
+#_______________________
+
 proc EG::ItemColor {item {defcolor black}} {
   # Gets item's color.
   #   item - item name
@@ -1123,16 +1199,6 @@ proc EG::SaveRC {} {
   ResourceData HUE $D(Hue)
   ResourceData FILEBAK $D(FILEBAK)
   ResourceData AUTOBAK $D(AUTOBAK)
-  SaveAggrEG
-}
-#_______________________
-
-proc EG::SaveAggrEG {} {
-  # Saves AggrEG value to .rc file.
-
-  stat::CheckAggrEG
-  ResourceData StatAggr $::EG::stat::aggregate  ;# for new databases
-  CommonData AGGREG $::EG::stat::aggregate
 }
 #_______________________
 
@@ -1158,6 +1224,7 @@ proc EG::SaveAll {args} {
   # Saves all data and shows a message.
 
   fetchVars
+  if {[IsTestMode]} return
   FocusedIt
   SaveAllData {*}$args
   Message "Data saved to $USERDIR" 5
@@ -1300,6 +1367,13 @@ proc EG::GetAggrEG {date1} {
   }
   EG::Round $aeg 2
 }
+#_______________________
+
+proc EG::CheckAggrEG {} {
+  # Checks the aggregate formula and sets its default at need.
+
+  if {[string trim $::EG::D(AggrEG)] eq {}} {set ::EG::D(AggrEG) EG}
+}
 
 # ________________________ Weeks _________________________ #
 
@@ -1357,7 +1431,18 @@ proc EG::IsLockedBase {} {
 
   fetchVars
   set currDate [FormatDatePG [clock seconds]]
-  if {$currDate < $D(egdDate1) || $currDate >= $D(egdDate2)} {
+  if {$currDate < $D(egdDate1) || $currDate >= $D(egdDate2) || $TestMode} {
+    return yes
+  }
+  return no
+}
+#_______________________
+
+proc EG::IsTestMode {} {
+  # Checks if the app in the test mode. Shows message if it is.
+
+  if {$::EG::TestMode} {
+    Message "Disabled at testing" 7
     return yes
   }
   return no
@@ -1792,6 +1877,7 @@ proc EG::OnTabSelection {TID} {
   #   TID - tab's ID
 
   fetchVars
+  if {[IsTestMode]} return
   set fname [TIDfname $TID]
   if {$fname ne $D(FILE)} {OpenFile $fname} UpdateBAR
 
@@ -1801,6 +1887,7 @@ proc EG::OnTabSelection {TID} {
 proc EG::OnTabDeletion {TID args} {
 
   fetchVars
+  if {[IsTestMode]} {return 2}
   set fname [TIDfname $TID]
   if {$fname eq $D(FILE)} {
     if {[set i [lsearch $args -first]]>=0} {
@@ -1897,6 +1984,7 @@ proc EG::SwitchLock {} {
   # Switches lock mode.
 
   fetchVars
+  if {[IsTestMode]} return
   set D(lockdata) [expr {!$D(lockdata)}]
   ConfigLock
   after 500 EG::MessageState
@@ -2048,6 +2136,19 @@ proc EG::msg {type icon message {defb ""} args} {
     -onclose destroy {*}[MessageTags] -text 1 {*}$args]
   return [lindex $res 0]
 }
+#_______________________
+
+proc EG::Balloon {msg args} {
+  # Shows balloon with message.
+  #   msg - message
+
+  fetchVars
+  lassign [split [winfo geometry $WIN] x+] w h x y
+  set geo "+([expr {$w+$x}]-W-8)+$y"
+  ::baltip tip $WIN $msg -geometry $geo -fg white -bg red \
+    -pause 1400 -fade 1400 -padx 20 -pady 20 \
+    -per10 3000 -font [$EGOBJ boldDefFont] {*}$args
+}
 
 # ________________________ App actions _________________________ #
 
@@ -2100,7 +2201,7 @@ proc EG::Resource {args} {
     foreach key [dict keys $::EG::contRC] {
       append contRC "$key {[dict get $::EG::contRC $key]}\n"
     }
-    apave::writeTextFile $fname contRC
+    WriteTextFile $fname contRC
   }
   return $::EG::contRC
 }
@@ -2182,13 +2283,12 @@ proc EG::OpenDataFile {fname} {
   if {[set _ [CommonData COLORGREEN]] ne {}} {set Colors(Green) $_}
   if {[set _ [CommonData TEXTTAGS]] ne {}} {set D(TextTags) $_}
   if {[set _ [CommonData POLYFLAGS]] ne {}} {set D(poly) $_}
-  if {[set _ [CommonData AGGREG]] ne {}} {set ::EG::stat::aggregate $_}
+  if {[set _ [CommonData AGGREG]] ne {}} {set D(AggrEG) $_}
   set D(egdDate1) [CommonData EGDDATE1]
   set D(egdDate2) [CommonData EGDDATE2]
   CheckEgdDates
   if {[IsLockedBase]} {set D(Date1) [Date1Seconds]}
   readPolyFlags
-  set D(MsgFont) [list -font {-weight bold -size 9} -foreground $Colors(fgsel)]
   for {set iit 1} {$iit<=$D(MAXITEMS)} {incr iit} {
     if {[set _ [CommonData COLORMY$iit]] ne {}} {set Colors(my$iit) $_}
   }
@@ -2232,8 +2332,8 @@ proc EG::SaveDataFile {{newfile no} {fname ""}} {
   CommonData TEXTTAGS $D(TextTags)
   CommonData EGDDATE1 $D(egdDate1)
   CommonData EGDDATE2 $D(egdDate2)
+  CommonData AGGREG $D(AggrEG)
   savePolyFlags
-  SaveAggrEG
   for {set iit 1} {$iit<=$D(MAXITEMS)} {incr iit} {
     CommonData COLORMY$iit $Colors(my$iit)
   }
@@ -2245,7 +2345,7 @@ proc EG::SaveDataFile {{newfile no} {fname ""}} {
     set line [toEOL $line]
     append output $key\ [list $line]\n
   }
-  apave::writeTextFile $fname output
+  WriteTextFile $fname output
 }
 #_______________________
 
@@ -2296,6 +2396,7 @@ proc EG::Actions {} {
   # Handles Actions menu.
 
   fetchVars
+  if {[IsTestMode]} return
   set pmenu $WIN.popupMenu
   set locklab [ConfigLock]
   if {[catch {
@@ -2374,6 +2475,7 @@ proc EG::Open {} {
   # Opens data file.
 
   fetchVars
+  if {[IsTestMode]} return
   set dir [file dirname $D(FILE)]
   set ::EG::D(filetmp) $::EG::D(FILE)
   set types {{{EG Data Files} {.egd} }}
@@ -2722,18 +2824,24 @@ proc EG::Init {} {
   # Open data file and initializes the app's data.
 
   global argv argc
+  variable TestMode
   variable InpItem
   variable InpDate
   fetchVars
   set fileegd [CurrentYear].egd
+  set i [lsearch -exact $argv -test]
+  if {$i>=0} {
+    set TestMode 1
+    set argv [lreplace $argv $i $i]
+  }
   set i1 [lsearch -exact $argv -item]
   set i2 [lsearch -exact $argv -date]
   if {$i1>=0 && $i2>=0} {
     set InpItem [lindex $argv $i1+1]
     set InpDate [lindex $argv $i2+1]
     set argv [lrange $argv 0 $i1-1]
-    set argc [llength $argv]
   }
+  set argc [llength $argv]
   set err no
   switch $argc {
     0 {
@@ -2841,6 +2949,9 @@ proc EG::Init {} {
   }
   obj basicFontSize $fs
   obj basicDefFont [list {*}[obj basicDefFont] -size $fs]
+  obj basicSmallFont [list {*}[obj basicSmallFont] -size [expr {$fs-2}]]
+  set D(MsgFont) [list -font [list {*}[obj basicSmallFont] -weight bold] \
+    -foreground $Colors(fgsel)]
   apave::initBaltip
   InitThemeEG
   if {$D(Hue)} {obj csToned $D(CS) $D(Hue) yes}
@@ -2863,7 +2974,6 @@ proc EG::Init {} {
     set ico [string map {- {}} $icon]
     image create photo $img -data [apave::iconData $ico small]
   }
-  obj basicSmallFont [list {*}[obj basicSmallFont] -size 9]
   apave::initStylesFS
   set fd [FirstWDay]
   set D(WeekDays) [list]
@@ -2901,6 +3011,7 @@ proc EG::_create {} {
   fetchVars
   obj untouchWidgets *.laBI*
   apave::APave create $EGOBJ $WIN
+  set fontSmall [list {*}[$EGOBJ basicSmallFont] -weight bold]
   $EGOBJ makeWindow $WIN.fra "EG - $D(FILE)"
   $EGOBJ paveWindow $WIN.fra {
     {Fratop - - 1 3 {-st we} }
@@ -2940,7 +3051,9 @@ proc EG::_create {} {
         -fg $::EG::Colors(fghot) -bg $::EG::Colors(bg)}"
       for {set i 0} {$i<7} {incr i} {
         %C ".LaBIh$i + L 1 1 {-st ews} {-t [lindex $::EG::D(WeekDays) $i]\
-        -anchor center -fg $::EG::Colors(fghot) -bg $::EG::Colors(bg)}"
+        -anchor center -fg $::EG::Colors(fghot) -bg $::EG::Colors(bg)\
+        -onevent {<ButtonPress-3> {EG::PopupOnWeekTitle $i %X %Y}}\
+        -tip {Right click to clear}}"
       }
       set n .laBIh
       # cells of items
@@ -2989,8 +3102,8 @@ proc EG::_create {} {
     {fraTtl + T 1 1 {-st nswe -cw 1}}
     {.LabTtl - - - - {pack -side left -expand 1 -fill x} {-anchor center}}
     {.EntTtl - - - - {pack forget -expand 1 -fill x -side left}
-      {-tvar ::EG::stat::aggregate -w 50 -takefocus 0
-      -onevent {<FocusOut> {EG::SaveAggrEG; EG::diagr::Draw}}
+      {-tvar ::EG::D(AggrEG) -w 50 -takefocus 0
+      -onevent {<FocusOut> {EG::CheckAggrEG; EG::diagr::Draw}}
       -tip "AggrEG formula\n___________________\nAfter change\npress Enter to save"}}
     #####-diagram
     {frar1 fraTtl T 1 7 {-st nwe}}
@@ -3018,9 +3131,9 @@ proc EG::_create {} {
     #####-status-bar
     {fras fral T 1 3 {-st we}}
     {.stat - - - - pack {-array {
-      {"Topic:" -font {-weight bold -size 9} -foreground $::EG::Colors(fghot)
+      {"Topic:" -font "$fontSmall" -foreground $::EG::Colors(fghot)
         -padding {0 0} -anchor center} 10
-      {" Day:" -font {-weight bold -size 9} -foreground $::EG::Colors(fghot)
+      {" Day:" -font "$fontSmall" -foreground $::EG::Colors(fghot)
         -padding {0 0} -anchor center} 7
       {"" -padding {0 0} -anchor w -expand 1} 1
     }}}
@@ -3049,6 +3162,10 @@ proc EG::_create {} {
     set geo [list -geometry [apave::checkGeometry $geo]]
   }
   after 100 EG::note::OpenNotes
+  if {[IsTestMode]} {
+    after 500 [list EG::Balloon \
+      "Test mode.\n\nClose this EG\nafter testing."]
+  }
   $EGOBJ showModal $WIN -onclose EG::Exit -escape no {*}$geo
 }
 #_______________________
@@ -3070,7 +3187,7 @@ proc EG::_run {} {
 
 # ________________________ Run this _________________________ #
 
-# source [apave::HomeDir]/PG/github/DEMO/expagog/demo.tcl ;#! for demo: COMMENT OUT
+# if {"-test" ni $::argv} {source [apave::HomeDir]/PG/github/DEMO/expagog/demo.tcl} ;#! for demo
 
 EG::_run
 

@@ -332,6 +332,8 @@ The *AggrEG* formula can include both names and topic numbers as *$N*, for examp
 
  <img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg22.png" class="media" alt="">
 
+If some appearance options (theme, colors, fonts, zoom) are changed, the *Test* button might help to see them in work. After testing, close the tested instance of *EG*.
+
 
  SAVING DATA
 =============

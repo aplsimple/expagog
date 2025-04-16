@@ -1,16 +1,21 @@
 # Last changes:
 
 
-Version `v1.1.0a5 (13 Apr'25)`
+Version `v1.1.0b3 (16 Apr'25)`
 
   - BUGFIX: color week cell of AggrEG diagram at options weeks=OFF, cumulate=OFF
   - BUGFIX: a sticker closed when its color chooser is open
+  - BUGFIX: Preferences' Zoom for status bar & "Find" dialogue
+  - NEW   : Preferences: "Test" button to test settings
+  - NEW   : popup menu of week day titles
   - NEW   : "Weekly" field (comments)
   - NEW   : repo.tcl: weekly comments
   - NEW   : tips of tab bar menu
   - DELETE: "Notes" field (general notes)
+  - CHANGE: handling AggrEG, more simple
   - CHANGE: checking geometry of color chooser in stickers
   - CHANGE: repo.tcl: color tag comments, AggrEG in table row
+  - CHANGE: packages: apave 4.6.1
 
 
 Version `v1.0 (9 Apr'25)`

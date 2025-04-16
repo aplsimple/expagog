@@ -14,7 +14,6 @@ namespace eval stat {
   variable win $::EG::WIN.stat
   variable date1 {}
   variable date2 {}
-  variable aggregate {}
   variable aggrdata; array set aggrdata {}
   variable maxdiff 0.02
   variable fieldwidth 11  ;# defined by " yyyy/mm/dd" fields
@@ -100,12 +99,8 @@ proc stat::PutLine {varn line {tag ""}} {
 proc stat::AggregateFormula {} {
   # Gets AggrEG formula.
 
-  variable aggregate
-  if {$aggregate eq {}} {
-    set aggregate [string trim [EG::ResourceData StatAggr] "{}"]
-  }
-  CheckAggrEG
-  return $aggregate
+  EG::CheckAggrEG
+  return $::EG::D(AggrEG)
 }
 #_______________________
 
@@ -315,7 +310,6 @@ proc stat::StartText {dotext} {
   variable Table1
   variable Table2
   variable aggrdata
-  variable aggregate
   array unset aggrdata
   array set aggrdata {}
   if {[obj csDark]} {
@@ -330,8 +324,8 @@ proc stat::StartText {dotext} {
   set Table1 [set Table2 {}]
   set font [list -family [obj basicTextFont]]
   if {$dotext} {
-    set aggregate [[$pobj TexAggr] get 1.0 end]
-    set aggregate [string map [list \n { }] [string trim $aggregate]]
+    set ::EG::D(AggrEG) [[$pobj TexAggr] get 1.0 end]
+    set ::EG::D(AggrEG) [string map [list \n { }] [string trim $::EG::D(AggrEG)]]
     if {$fontsize<8 || $fontsize>99} {set fontsize 11}
     set wtxt [$pobj Text]
     set font [list {*}[$wtxt cget -font]]
@@ -339,7 +333,7 @@ proc stat::StartText {dotext} {
     $pobj readonlyWidget $wtxt no
     $wtxt replace 1.0 end {}
   }
-  CheckAggrEG
+  EG::CheckAggrEG
   set tags [list \
     [list t "-foreground $::EG::Colors(fgit)"] \
     [list a "-background $bga"] \
@@ -674,28 +668,19 @@ proc stat::DoTable2 {} {
 }
 #_______________________
 
-proc stat::CheckAggrEG {} {
-  # Checks the aggregate formula and sets its default at need.
-
-  variable aggregate
-  if {[string trim $aggregate] eq {}} {set aggregate {EG}}
-}
-#_______________________
-
 proc stat::AggregateValue {ic} {
   # Gets agregate value (AggrEG) from *aggrdata* array and *aggregate* formula.
   #   ic - index of column in *aggrdata* array
 
-  variable aggregate
   variable aggrdata
-  CheckAggrEG
+  EG::CheckAggrEG
   set data [list]
   set ir 0
   foreach item $::EG::D(Items) {
     lappend data $aggrdata($ir,$ic)
     incr ir
   }
-  return [CalculateByFormula $aggregate $data]
+  CalculateByFormula $::EG::D(AggrEG) $data
 }
 #_______________________
 
@@ -715,8 +700,7 @@ proc stat::Legend2 {} {
   # Gets Table2's legend.
 
   variable maxdiff
-  variable aggregate
-  return " <t>AggrEG formula:</t> $aggregate\n\
+  return " <t>AggrEG formula:</t> $::EG::D(AggrEG)\n\
     <s>\n\
     Previous weeks   - total sum for weeks before \"Date (-4 week)\"\n\
     Date (-4 week)   - total sum for week \"Date1 -4 week\"\n\
@@ -825,7 +809,6 @@ proc stat::SaveOptions {} {
   variable fontsize
   EG::ResourceData StatGeom [wm geometry $win]
   EG::ResourceData StatFS $fontsize
-  EG::SaveAggrEG
   EG::SaveDataFile
 
 }
@@ -857,7 +840,6 @@ proc stat::_create {} {
   variable date1
   variable date2
   variable fontsize
-  variable aggregate
   catch {$pobj destroy}
   ::apave::APave create $pobj $win
   $pobj makeWindow $win.fra Statistics
@@ -902,7 +884,7 @@ proc stat::_create {} {
   set fontsize [EG::ResourceData StatFS]
   set geo [EG::ResourceData StatGeom]
   AggregateFormula
-  $pobj displayTaggedText [$pobj TexAggr] aggregate
+  $pobj displayTaggedText [$pobj TexAggr] ::EG::D(AggrEG)
   if {$geo ne {}} {set geo "-geometry $geo"}
   after 10 after idle {after 10 after idle {after 10 after idle {
     after 10 after idle EG::stat::OK}}}

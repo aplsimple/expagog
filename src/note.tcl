@@ -84,7 +84,7 @@ method SaveNoteText {} {
   # Saves a note's text.
 
   set conts [string trimright [[$Pobj Text] get 1.0 end]]\n
-  apave::writeTextFile $NoteFile conts
+  EG::WriteTextFile $NoteFile conts
 }
 #_______________________
 

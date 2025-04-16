@@ -74,3 +74,8 @@
  The <b>AggrEG formula</b> may include $1, $2.. or topic names for
  values, for example:
    EG*10 + Lives_saved*100 - Cigarettes_smoked*5 + $1
+ ____________________________________________________________
+
+ If some appearance options (theme, colors, fonts, zoom) are
+ changed, the <r>Test</r> button might help to see them in work.
+ After testing, close the tested instance of <b>EG</b>.

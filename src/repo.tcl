@@ -530,7 +530,7 @@ proc repo::Report {} {
       set $fn [RelativePath $outRepo $fname]
     }
   }
-  EG::stat::CheckAggrEG
+  EG::CheckAggrEG
   SavePreferences
   set Html [apave::readTextFile $tplRepo]
   if {$Html eq {}} {
