@@ -221,7 +221,7 @@ proc find::OK {} {
     lassign [split $flit \t] date item where fname
     set tID ti[incr treeid]
     set where [string map [list \n { }] $where]
-    $wtree insert {} end -id $tID -values [list $date $fname $where]
+    $wtree insert {} end -id $tID -values [list [file rootname $fname] $date $where]
     if {$treeid==1} {set tID1 $tID}
   }
   catch {
@@ -332,7 +332,7 @@ proc find::_create {} {
     {fra2.Lfra - - - - {pack forget -expand 1 -fill both} {-t Found: -labelanchor n}}
     {.Tree - - - - {pack -side left -fill both -expand 1} {
       -selectmode browse -show headings -columns {L1 L2 L3}
-      -columnoptions "L1 {-width 50} L2 {-width 50}"}}
+      -columnoptions "L1 {-width 20} L2 {-width 50}"}}
     {.sbv + L - - {pack -fill y}}
     {seh fra2 T 1 4 {-st ew -pady 4}}
     {frabot + T 1 4 {-st ew} {}}
@@ -349,8 +349,8 @@ proc find::_create {} {
     [$pobj LabAll] configure -state disabled
     [$pobj ChbAll] configure -state disabled
   }
-  $wtree heading #1 -text Date
-  $wtree heading #2 -text {Data file}
+  $wtree heading #1 -text File
+  $wtree heading #2 -text Date
   $wtree heading #3 -text {Found string}
   foreach ev {KeyPress ButtonPress} {
     bind $wtree <$ev> {+ EG::find::KeyOnTree %K %x %y %b}

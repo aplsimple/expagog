@@ -1777,7 +1777,7 @@ proc EG::FillBar {} {
   if {[set i [lsearch -exact $D(TabFiles) $D(FILE)]]>=0} {
     set curtab $i
   }
-  set bar1Opts [list -wbar $wframe -wbase $wbase -pady 2 -scrollsel 1 \
+  set bar1Opts [list -wbar $wframe -wbase $wbase -pady 2 -scrollsel no \
     -lablen 16 -tiplen 16 -padx 0 -bg [lindex [$EGOBJ csGet] 3] \
     -font TkTooltipFont -cdel {EG::OnTabDeletion %t} -cdel2 EG::UpdateBAR \
     -csel2 {EG::OnTabSelection %t} -popuptip ::EG::PopupTip]
