@@ -215,6 +215,7 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
   set maxsum -999999999
   set cumulatedsum 0
   set coldata [list]
+  array set WKcolor [list]
   # collect data
   foreach {dk data} $::EG::LS {
     set date [EG::ScanDatePG $dk]
@@ -246,9 +247,15 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
     foreach data $coldata {
       lassign $data x1 cnt cnt0 sum color day1 tagcmnt
       set iw [expr {$x1/$WeekColWidth}]
-      if {$tagcmnt ne {}} {
-        set tip [EG::FormatDate $day1]$UnderLine\n$tagcmnt
+      set colorname [EG::ColorName $color]
+      if {![info exists WKcolor($iw)] || $WKcolor($iw) eq {} ||
+      $colorname eq {Red} || ($colorname eq {Yellow} && $WKcolor($iw) ne {Red})} {
+        set WKcolor($iw) $colorname
+        set tip [EG::FormatDate $day1]
+        if {$tagcmnt ne {}} {append tip $UnderLine\n$tagcmnt}
         ::baltip::tip $C $tip -ctag WK$iw
+      } else {
+        set color {}
       }
       if {$cumulate} {
         set cumulatedsum [expr {$cumulatedsum + $sum}]

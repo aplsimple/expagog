@@ -56,7 +56,7 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
     }
   }
 
-  ## __________________ main constants __________________ ##
+  ## __________________ Main constants __________________ ##
 
   variable TITLE expagog
   variable WIN .eg
@@ -107,7 +107,7 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   set D(WeeklyITEM) {_TI_ 0} ;# item name & day for weekly text
   set D(WeeklyKEY) W ;# key for weekly text
 
-  ## ________________________ main variables ______________________ ##
+  ## ________________________ Main variables ______________________ ##
 
   variable EGD; set EGD [dict create] ;# EG data of current week
   set D(Zoom) 3       ;# "zoom" (affects font size)
@@ -138,7 +138,7 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   variable InpDate {} ;# input date to go to
   variable TestMode 0 ;# allows no changes to data
 
-  ## ________________________ pathes ________________________ ##
+  ## ________________________ Pathes ________________________ ##
 
   variable SCRIPT [info script]
   variable SCRIPTNORMAL [file normalize $SCRIPT]
@@ -455,6 +455,18 @@ proc EG::WriteTextFile {fname contVar} {
     apave::writeTextFile $fname tmpcont
   }
 }
+#_______________________
+
+proc EG::ColorName {color} {
+  # Gets a color name from color value.
+  #   color - color value
+
+  variable Colors
+  foreach cn {Red Yellow Green} {
+    if {$color eq $Colors($cn)} {return $cn}
+  }
+  return {}
+}
 
 # ________________________ Items _________________________ #
 
@@ -470,7 +482,6 @@ proc EG::CommandIt {wid type item wday P V} {
   if {$V ni {key %V}} {return 1}
   fetchVars
   if {$D(lockdata)} {
-    EG::ShowText $item $wday
     MessageState
     return 0
   }
@@ -581,7 +592,11 @@ proc EG::FocusedIt {{item ""} {wday ""} {dt ""}} {
     StatusBar $item $wday
     set cw [$EGOBJ LaBI$it]
     set cttl [$EGOBJ LaBIh$wday]
-    lassign [apave::InvertBg [$cw cget -bg]] fg
+    set bg [$cw cget -bg]
+    lassign [$EGOBJ csGet] - fg - bg2
+    if {$bg ne $bg2} {
+      lassign [apave::InvertBg $bg] fg  ;# item colored by polygons
+    }
     set fgttl $Colors(fghot)
     lassign $D(previtem) previtem prevttl prevfg prevfgttl
     set font [[$EGOBJ LaBIh] cget -font]
@@ -1289,14 +1304,14 @@ proc EG::AllWeekData {} {
         set i [expr {max($i1,$i2)}]
         if {$i>-1} {
           set ltext [string range %v 0 $i-1]
-          set ctext [string trim [fromEOL [string range %v $i end]]]
+          set ctext [string range [fromEOL [string range %v $i end]] 1 end]
         } else {
           set ltext %v
           set ctext {}
         }
         if {[string first $D(TAGS) $ltext]==0} {
           append tags { } [string range $ltext [string length $D(TAGS)] end]
-          set tagcmnt [string trim "$tagcmnt\n$ctext"]
+          set tagcmnt "[string trimleft $tagcmnt\n]$ctext"
           dict set DS {*}$item [list $cnt $cnt0 $sum [string trimleft $tags] $tagcmnt]
         }
       }
@@ -1326,9 +1341,9 @@ proc EG::Week1Data {inpdata {inpitem ""}} {
           set sum [expr {$sum + $isum}]
           set asum [expr {$asum + $isum}]
           append tags $tag
-          foreach clr {Green Yellow Red} {
+          foreach clr {Red Yellow Green} {
             if {[string first $clr $tag]>-1} {
-              set tagcmnt [string trim "$tagcmnt\n$cmnt"]
+              set tagcmnt "[string trimleft $tagcmnt\n]$cmnt"
               break
             }
           }
@@ -1342,9 +1357,10 @@ proc EG::Week1Data {inpdata {inpitem ""}} {
     set sum [stat::AggregateValue $col]
     if {$sum eq {}} {set sum 0}
   }
-  foreach clr {Green Yellow Red} {
+  foreach clr {Red Yellow Green} {
     if {[string first $clr $tags]>-1} {
       set color $Colors($clr)
+      break
     }
   }
   list $cnt $cnt0 $sum $color $tagcmnt
@@ -1633,12 +1649,14 @@ proc EG::ShowTable {{atStart 0}} {
           }
         }
       }
-      lassign [apave::InvertBg $bg] fg
-      set opts [list -bg $bg -fg $fg]
       if {$type eq {chk}} {
-        $w configure {*}$opts
+        $w configure -bg $bg
       } else {
-        $w configure {*}$opts -insertbackground $fg -validate key
+        lassign [$EGOBJ csGet] fg - bg2
+        if {$bg ne $bg2} {
+          lassign [apave::InvertBg $bg] fg  ;# cell commented
+        }
+        $w configure -bg $bg -fg $fg -insertbackground $fg -validate key
       }
     }
   }
@@ -2002,9 +2020,11 @@ proc EG::ConfigLock {} {
     set st normal
     set ttl {Lock changes}
   }
-  set wtxt [$EGOBJ Text]
-  $wtxt configure -state $st
-  $wtxt configure -fg [lindex [$EGOBJ csGet] 0]
+  foreach wt {Text TextR} {
+    set wtxt [$EGOBJ $wt]
+    $wtxt configure -state $st
+    $wtxt configure -fg [lindex [$EGOBJ csGet] 0]
+  }
   ::baltip::tip [$EGOBJ BuT_Tool_lock] $ttl
   return $ttl
 }
@@ -2658,7 +2678,7 @@ proc EG::Merge {{doadd no} args} {
 
 proc EG::About {} {
 
-  Help about -title About... -width 30 -height {10 18} -wrap none
+  Help about -title About... -width 30 -height {10 18} -wrap none -minsize {200 300}
 }
 #_______________________
 
@@ -3034,7 +3054,7 @@ proc EG::_create {} {
       sev 6
       Tool_date {EG::ChooseWeek -tip "Choose a week\nCtrl+D@@ -under 5"}
       Tool_home {EG::MoveToCurrentWeek -tip "To the current week\nCtrl+H@@ -under 5"}
-      Tool_find {EG::Find -tip "Search in texts\nCtrl+F@@ -under 5"}
+      Tool_find {EG::Find -tip "Find in texts\nCtrl+F@@ -under 5"}
       sev 6
       Tool_lock {EG::SwitchLock -tip "Unlock changes\nCtrl+L@@ -under 5"}
       lab {"" {-expand 1 -fill x}}

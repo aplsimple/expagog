@@ -312,7 +312,7 @@ proc find::_create {} {
   set chkList [string is true -strict $chkList]
   set chkCase [string is true -strict $chkCase]
   ::apave::APave create $pobj $win
-  $pobj makeWindow $win.fra {Search in texts}
+  $pobj makeWindow $win.fra Find
   $pobj paveWindow $win.fra {
     {lab1 - - - - {-st e -padx 2 -pady 4} {-t Find:}}
     {EntFind + L 1 3 {-st w -pady 4 -cw 1} {-tvar ::EG::find::findString -w 50}}

@@ -1,11 +1,12 @@
 # Last changes:
 
 
-Version `v1.1.0b4 (17 Apr'25)`
+Version `v1.1.0 (23 Apr'25)`
 
   - BUGFIX: color week cell of AggrEG diagram at options weeks=OFF, cumulate=OFF
   - BUGFIX: a sticker closed when its color chooser is open
   - BUGFIX: Preferences' Zoom for status bar & "Find" dialogue
+  - BUGFIX: locked weeks: comments on buttons moved to current cell
   - NEW   : Preferences: "Test" button to test settings
   - NEW   : popup menu of week day titles
   - NEW   : "Weekly" field (comments)

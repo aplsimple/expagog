@@ -185,7 +185,8 @@ proc pref::IsChangedMainSettings {} {
 
   fetchVars
   set res no
-  foreach k {FILE Items ItemsTypes egdDate1 egdDate2 Theme} {
+  foreach k {FILE Theme CS Zoom Items ItemsTypes egdDate1 egdDate2 DefFont TexFont
+  NoteOnTop} {
     set old $::EG::D($k)
     set new $DP($k)
     if {$k in {Items ItemsTypes}} {
