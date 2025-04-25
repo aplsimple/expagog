@@ -220,6 +220,8 @@ proc EG::fetchVars {} {
     variable AUTOBAK
     variable itwidth
     variable TestMode
+    variable InpItem
+    variable InpDate
   }
 }
 #_______________________
@@ -351,7 +353,7 @@ proc EG::CurrentYear {{fromdate1 no}} {
   #   fromdate1 - yes if get the year from the date entry
 
   if {$fromdate1} {
-    return [clock format [EG::ScanDate] -format %Y]
+    return [clock format [ScanDate] -format %Y]
   }
   return [clock format [Date1Seconds] -format %Y]
 }
@@ -466,6 +468,16 @@ proc EG::ColorName {color} {
     if {$color eq $Colors($cn)} {return $cn}
   }
   return {}
+}
+#_______________________
+
+proc EG::Oct2Dec {oct} {
+  # Converts octal to decimal.
+  #   oct - octal value
+
+  set res [string trimleft $oct 0]
+  if {![string is digit -strict $res]} {set res 0}
+  return $res
 }
 
 # ________________________ Items _________________________ #
@@ -612,7 +624,8 @@ proc EG::FocusedIt {{item ""} {wday ""} {dt ""}} {
   }
   set D(curritem) $item
   set D(currwday) $wday
-  EG::ShowText $item $wday
+  ShowText $item $wday
+  after idle EG::diagr::DayLine
 }
 #_______________________
 
@@ -966,7 +979,7 @@ proc EG::CalculatedValue {itemtype idx {reslist ""}} {
     } else {
       set val [DataValue v $itv $idx]
       if {$itt eq {time}} {
-        set val [EG::TimeValue $val]
+        set val [TimeValue $val]
       }
     }
     lappend data $val
@@ -1539,11 +1552,12 @@ proc EG::IsMoveWeek {} {
   if {$isBad1 || $isBad2} {
     EG::msg ok warn "\n\
       Cannot move to [string trim $D(Date1)]!\n\n\
-      In \"Preferences\", the week range is \[$D(egdDate1) - $D(egdDate2)\).\n"
+      In \"Preferences\", the week range is \[$D(egdDate1) - $D(egdDate2)\).\n" \
+      -timeout {9 ButOK}
     if {$isBad1} {
-      set date [EG::ScanDatePG $D(egdDate1)]
+      set date [ScanDatePG $D(egdDate1)]
     } else {
-      set date [EG::ScanDatePG $D(egdDate2)]
+      set date [ScanDatePG $D(egdDate2)]
       set date [clock add $date -7 days]
     }
     after idle [list EG::MoveToWeek 0 $date]
@@ -1585,7 +1599,7 @@ proc EG::MoveToDay {date} {
   # Move to specific day.
   #   date - date to move to
 
-  EG::CurrentItemDay "" [EG::FormatDatePG $date]
+  EG::CurrentItemDay "" [FormatDatePG $date]
   EG::MoveToWeek 0 $date
 }
 
@@ -1596,13 +1610,11 @@ proc EG::ShowTable {{atStart 0}} {
   #   atStart - 1 if run at starting EG
 
   fetchVars
-  variable InpItem
-  variable InpDate
   if {$atStart} {
     if {![IsTabFiles]} UpdateBAR
     if {$InpItem ne {} && $InpDate ne {}} {
       CurrentItemDay $InpItem $InpDate
-      MoveToWeek 0 [EG::ScanDatePG $InpDate]
+      MoveToWeek 0 [ScanDatePG $InpDate]
       return
     }
   }
@@ -1773,7 +1785,7 @@ proc EG::ColorItemLabels {{ispoly 0}} {
         set bg $Colors(bg)
       }
     }
-    set it [EG::NormItem $item]
+    set it [NormItem $item]
     [$EGOBJ LaBI$it] configure -fg $fg -bg $bg
   }
   FocusedIt
@@ -2383,7 +2395,7 @@ proc EG::CheckEgdDates {} {
   if {$D(egdDate1) eq {}} {
     set year [CurrentYear]
     set date1 [lindex [DatesKeys] 0]
-    catch {set year [clock format [EG::ScanDatePG $date1] -format %Y]}
+    catch {set year [clock format [ScanDatePG $date1] -format %Y]}
     set dt [FirstWDay [ScanDatePG $year/01/01]]
     set D(egdDate1) [FormatDatePG $dt]
   }
@@ -2787,7 +2799,7 @@ proc EG::CheckEgdDate1 {} {
   set dt [FirstWDay [ScanDatePG $D(NEWFILEDATE1)]]
   set D(NEWFILEDATE1) [FormatDatePG $dt]
   set dt [clock add $dt $::EG::diagr::NDays days]
-  set egdDate2 [EG::FormatDatePG $dt]
+  set egdDate2 [FormatDatePG $dt]
   if {$D(NEWFILEDATE1)>$D(NEWFILEDATE2) || $D(NEWFILEDATE2)>$egdDate2} {
     set D(NEWFILEDATE2) $egdDate2
     Message "Week range's Date2 is set to $egdDate2"
@@ -2845,8 +2857,6 @@ proc EG::Init {} {
 
   global argv argc
   variable TestMode
-  variable InpItem
-  variable InpDate
   fetchVars
   set fileegd [CurrentYear].egd
   set i [lsearch -exact $argv -test]
@@ -3160,6 +3170,7 @@ proc EG::_create {} {
   }
   update
   apave::setAppIcon $WIN $::EG::EGICON
+  CurrentItemDay $InpItem $InpDate
   ColorItemLabels
   [$EGOBJ LabWeekRange] configure -foreground $Colors(fgit) \
     -text "\[ $D(egdDate1)  -  $D(egdDate2) \)"
@@ -3170,7 +3181,7 @@ proc EG::_create {} {
   after idle EG::FillBar
   after idle after 100 "wm minsize $WIN $W $H; EG::HighlightEG"
   after idle after 400 \
-    "EG::FocusedIt; EG::CheckCurrentWeek; EG::diagr::Title;\
+    "EG::CheckCurrentWeek; EG::diagr::Title;\
     EG::ShowTable 1; EG::AfterWeekSwitch; after 300 {EG::diagr::Draw 1}"
   bind $WIN <F1> EG::Help
   bind $WIN <F5> EG::diagr::Draw

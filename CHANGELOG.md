@@ -1,12 +1,15 @@
 # Last changes:
 
 
-Version `v1.1.0 (23 Apr'25)`
+Version `v1.1.1 (25 Apr'25)`
 
   - BUGFIX: color week cell of AggrEG diagram at options weeks=OFF, cumulate=OFF
   - BUGFIX: a sticker closed when its color chooser is open
   - BUGFIX: Preferences' Zoom for status bar & "Find" dialogue
   - BUGFIX: locked weeks: comments on buttons moved to current cell
+  - BUGFIX: incorrect octals at going to 08/09 week (from "Find")
+  - NEW   : diagram vertical line for current day
+  - NEW   : find.tcl: tips on found list; number of found
   - NEW   : Preferences: "Test" button to test settings
   - NEW   : popup menu of week day titles
   - NEW   : "Weekly" field (comments)

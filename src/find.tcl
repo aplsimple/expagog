@@ -124,7 +124,7 @@ proc find::KeyOnTree {K X Y B} {
     lassign [split $cursel] date item
     set curlist [split $cursel \t]
     if {[llength $curlist]>1} {
-      set fname [Tab2Fname [lindex $curlist end]]
+      set fname [Tab2Fname [lindex $curlist 3]]
       if {[file exist $fname]} {
         if {[EG::IsTestMode]} return
         SaveOptions
@@ -196,7 +196,7 @@ proc find::OK {} {
   }
   foreach egdi $egdinfo {
     lassign $egdi fname egdvar
-    if {$egdvar eq {}} {set fname {}} {set fname "\t[Fname2Tab $fname]"}
+    if {$egdvar eq {}} {set fname {}} {set fname "[Fname2Tab $fname]"}
     set dkeys [EG::DatesKeys {} {} 0 $egdvar]
     EG::ForEach {} $dkeys {
       lassign [split %k {}] k d
@@ -218,10 +218,10 @@ proc find::OK {} {
   set foundList [lsort -dictionary -nocase $foundList]
   set treeid 0
   foreach flit $foundList {
-    lassign [split $flit \t] date item where fname
+    lassign [split $flit \t] date item word fname
     set tID ti[incr treeid]
-    set where [string map [list \n { }] $where]
-    $wtree insert {} end -id $tID -values [list [file rootname $fname] $date $where]
+    set word [string map [list \n { }] $word]
+    $wtree insert {} end -id $tID -values [list [file tail $fname] $date $word]
     if {$treeid==1} {set tID1 $tID}
   }
   catch {
@@ -229,11 +229,40 @@ proc find::OK {} {
     $wtree focus $tID1
     focus $wtree
   }
+  ::baltip::tip $wtree {::EG::find::treTip %i %c}
   set lfr [$pobj Lfra]
   if {![winfo ismapped $lfr]} {
     pack $lfr -expand 1 -fill both
   }
+  $lfr configure -text " Found: [llength $foundList] "
   EG::Message ""
+}
+#_______________________
+
+proc find::treTip {ID col} {
+  # Gets tip for treeview column.
+  #   ID - item's ID
+  #   col - column
+
+  variable foundList
+  set idx [string range $ID 2 end]
+  lassign [split [lindex $foundList $idx-1] \t] date item word fname where
+  switch -exact $col {
+    {#1} {
+      if {$fname eq {}} {
+        set res "Current"
+      } else {
+        set res $fname\n[Tab2Fname $fname]
+      }
+    }
+    {#2} {
+      set res [EG::FormatDate [EG::ScanDatePG $date]]
+    }
+    default {
+      set res $where
+    }
+  }
+  return $res
 }
 #_______________________
 
@@ -255,7 +284,7 @@ proc find::Found {item date where what fname} {
       if {$word1 ne {}} {
         foreach word2 [split $what] {
           if {[string match {*}$opt *$word2* $word1]} {
-            AddFoundInfo $item $date $word1 $fname
+            AddFoundInfo $item $date $word1 $fname $where
           }
         }
       }
@@ -268,16 +297,17 @@ proc find::Found {item date where what fname} {
 }
 #_______________________
 
-proc find::AddFoundInfo {item date where fname} {
+proc find::AddFoundInfo {item date word fname where} {
   # Logs found info to the found list.
   #   item - item name
   #   date - week date where search was successful
-  #   where - text where search was successful
+  #   word - word where search was successful
   #   fname - egd file name or {}
+  #   where - text where search was successful
 
   variable foundList
-  if {[lsearch -glob $foundList "$date\t$item\t*$fname"]<0} {
-    lappend foundList "$date\t$item\t$where$fname"
+  if {[lsearch -glob $foundList "$date\t$item\t*\t$fname\t*"]<0} {
+    lappend foundList "$date\t$item\t$word\t$fname\t$where"
   }
 }
 #_______________________
@@ -329,7 +359,7 @@ proc find::_create {} {
     {.LabAll + L 1 1 {-st e -padx 2} {-t {In all:}}}
     {.ChbAll + L 1 1 {-st w} {-var ::EG::find::chkAll}}
     {fra2 fra1 T 1 4 {-st nswe -pady 4 -rw 111}}
-    {fra2.Lfra - - - - {pack forget -expand 1 -fill both} {-t Found: -labelanchor n}}
+    {fra2.Lfra - - - - {pack forget -expand 1 -fill both} {-t Found -labelanchor n}}
     {.Tree - - - - {pack -side left -fill both -expand 1} {
       -selectmode browse -show headings -columns {L1 L2 L3}
       -columnoptions "L1 {-width 20} L2 {-width 50}"}}

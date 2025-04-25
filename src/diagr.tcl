@@ -38,6 +38,7 @@ namespace eval diagr {
   variable DayColWidth 3  ;# width of day column
   variable WeekColWidth [expr {$DayColWidth*7}]  ;# width of week column
   variable UnderLine "\n_______________ \n"
+  variable idDayLine {}
 
 }
 #_______________________
@@ -74,6 +75,7 @@ proc diagr::fetchVars {} {
     variable DayColWidth
     variable WeekColWidth
     variable UnderLine
+    variable idDayLine
   }
 }
 #_______________________
@@ -177,6 +179,24 @@ proc diagr::Title {{lab ""}} {
   }
   after 200 [list after idle \
     [list $w1 configure -text $lab -foreground $::EG::Colors(fgit)]]
+}
+#_______________________
+
+proc diagr::DayLine {} {
+  # Draws a vertical line of current day.
+
+  fetchVars
+  if {[catch {
+    set day1 [EG::ScanDatePG $::EG::D(egdDate1)]
+    set day2 [EG::ScanDate]
+    set dd [expr {($day2 - $day1)/86400}]
+    set x [expr {$dd*$DayColWidth + $X0 + $DayColWidth/2 + 1}]
+    catch {$C delete $idDayLine}
+    set idDayLine [$C create polygon $x 0 $x [expr {$BodyHeight + $BarHeight}]\
+      -outline $::EG::Colors(fgsel) -width 2 -dash {2 7}]
+  }]} {
+    after 200 EG::diagr::DayLine
+  }
 }
 
 # ________________________ Scroll _________________________ #
@@ -366,6 +386,7 @@ proc diagr::Draw {{atStart no}} {
   Title
   Layout
   EG::AllWeekData
+  after idle EG::diagr::DayLine
   $C configure -scrollregion [list 1 1 [ScrollSize w] [ScrollSize h]]
   switch -glob -- $::EG::Opcvar {
     All {
@@ -386,8 +407,8 @@ proc diagr::Draw {{atStart no}} {
   DrawDiagram $item
   if {$atStart} {
     # at start, scroll to current week
-    set w1 [clock format [EG::ScanDatePG $::EG::D(egdDate1)] -format %V]
-    set w2 [clock format [EG::ScanDate] -format %V]
+    set w1 [EG::Oct2Dec [clock format [EG::ScanDatePG $::EG::D(egdDate1)] -format %V]]
+    set w2 [EG::Oct2Dec [clock format [EG::ScanDate] -format %V]]
     set curweek [expr {$w2 - $w1 + 1}]
     foreach _ {1 2 3 4} {
       lassign [$C xview] fr1 fr2
