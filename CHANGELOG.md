@@ -1,7 +1,7 @@
 # Last changes:
 
 
-Version `v1.1.1 (25 Apr'25)`
+Version `v1.1.2 (26 Apr'25)`
 
   - BUGFIX: color week cell of AggrEG diagram at options weeks=OFF, cumulate=OFF
   - BUGFIX: a sticker closed when its color chooser is open
@@ -20,6 +20,7 @@ Version `v1.1.1 (25 Apr'25)`
   - CHANGE: handling AggrEG, more simple
   - CHANGE: checking geometry of color chooser in stickers
   - CHANGE: repo.tcl: color tag comments, AggrEG in table row
+  - CHANGE: some clearance
   - CHANGE: packages: apave 4.6.1
 
 

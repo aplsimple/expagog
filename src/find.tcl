@@ -291,7 +291,7 @@ proc find::Found {item date where what fname} {
     }
   } else {
     if {[string match {*}$opt *$findString* $where]} {
-      AddFoundInfo $item $date $where $fname
+      AddFoundInfo $item $date $where $fname $where
     }
   }
 }
@@ -307,6 +307,8 @@ proc find::AddFoundInfo {item date word fname where} {
 
   variable foundList
   if {[lsearch -glob $foundList "$date\t$item\t*\t$fname\t*"]<0} {
+    set word [string map [list \t { }] $word]
+    set where [string map [list \t { }] $where]
     lappend foundList "$date\t$item\t$word\t$fname\t$where"
   }
 }

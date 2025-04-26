@@ -492,11 +492,8 @@ proc EG::CommandIt {wid type item wday P V} {
   #   V - %V wildcard of entry command
 
   if {$V ni {key %V}} {return 1}
+  if {[LockedChanges]} {return 0}
   fetchVars
-  if {$D(lockdata)} {
-    MessageState
-    return 0
-  }
   Message ""
   set w [$EGOBJ $wid]
   set typ $type
@@ -835,10 +832,7 @@ proc EG::AddTag {tag {doit 0}} {
     after idle [list EG::AddTag $tag 1]
     return
   }
-  if {$D(lockdata)} {
-    MessageState
-    return
-  }
+  if {[LockedChanges]} return
   set wtxt [$EGOBJ Text]
   set text [$wtxt get 1.0 end]
   set ltext [split $text \n]
@@ -889,6 +883,7 @@ proc EG::ClearCells {ccur what} {
   #   what - what cells to clear
 
   fetchVars
+  if {[LockedChanges]} return
   switch $what {
     all {
       set c1 0
@@ -1394,7 +1389,7 @@ proc EG::GetAggrEG {date1} {
       set aeg [expr {$aeg + $sum}]
     }
   }
-  EG::Round $aeg 2
+  Round $aeg 2
 }
 #_______________________
 
@@ -1550,7 +1545,7 @@ proc EG::IsMoveWeek {} {
   set isBad1 [expr {$D1<$D(egdDate1)}]
   set isBad2 [expr {$D1>=$D(egdDate2)}]
   if {$isBad1 || $isBad2} {
-    EG::msg ok warn "\n\
+    msg ok warn "\n\
       Cannot move to [string trim $D(Date1)]!\n\n\
       In \"Preferences\", the week range is \[$D(egdDate1) - $D(egdDate2)\).\n" \
       -timeout {9 ButOK}
@@ -1599,8 +1594,8 @@ proc EG::MoveToDay {date} {
   # Move to specific day.
   #   date - date to move to
 
-  EG::CurrentItemDay "" [FormatDatePG $date]
-  EG::MoveToWeek 0 $date
+  CurrentItemDay "" [FormatDatePG $date]
+  MoveToWeek 0 $date
 }
 
 # ________________________ Show data _________________________ #
@@ -2040,6 +2035,17 @@ proc EG::ConfigLock {} {
   ::baltip::tip [$EGOBJ BuT_Tool_lock] $ttl
   return $ttl
 }
+#_______________________
+
+proc EG::LockedChanges {} {
+  # Checks if changes are locked & shows message if so.
+
+  if {[IsLockedBase] || $::EG::D(lockdata)} {
+    MessageState 1
+    return 1
+  }
+  return 0
+}
 
 # ________________________ Messages _________________________ #
 
@@ -2059,9 +2065,10 @@ proc EG::Message {msg {wait 0} {lab ""} {doit 0}} {
       $lab configure -text {}
       after idle [list EG::Message $msg $wait $lab [incr doit]]
       if {$wait>=0} {
-        ::baltip tip $lab $msg -font {-weight bold}
+        ::baltip tip $lab $msg -font [list {*}[obj basicDefFont] -weight bold]
         bind $lab <Button> [list EG::Message $msg $wait $lab]
-        bind $lab <Enter> [list $lab configure -text {}]
+        bind $lab <Enter> \
+          "$lab configure -text {}; catch {after cancel \$::EG::D(idafter)}"
       }
       return
     }
@@ -2081,23 +2088,22 @@ proc EG::CheckMessage {lab} {
   catch {  ;# the method can be called after destroying Puzzle object => catch
     if {[set len [string length $D(msg)]]} {
       set D(msg) [string range $D(msg) 0 $len-2]
-      EG::Message $D(msg) -1 $lab
+      Message $D(msg) -1 $lab
       after 30 "EG::CheckMessage $lab"
     }
   }
 }
 #_______________________
 
-proc EG::MessageState {} {
+proc EG::MessageState {{islock 0}} {
   # Shows current state (lock/unlock) of the week.
 
-  fetchVars
-  if {$D(lockdata)} {
+  if {$islock || $::EG::D(lockdata)} {
     set msg "The week data changes are locked."
   } else {
     set msg "The week data can be changed."
   }
-  EG::Message $msg
+  Message $msg
 }
 #_______________________
 
@@ -2856,7 +2862,6 @@ proc EG::Init {} {
   # Open data file and initializes the app's data.
 
   global argv argc
-  variable TestMode
   fetchVars
   set fileegd [CurrentYear].egd
   set i [lsearch -exact $argv -test]
