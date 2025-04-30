@@ -1,15 +1,26 @@
 # Last changes:
 
 
-Version `v1.1.2 (26 Apr'25)`
+Version `v1.2.0 (30 Apr'25)`
+
+  - BUGFIX: incorrect octals at going to 08/09 week (from "Find")
+  - BUGFIX: overlooked KP_Enter in table cells
+  - BUGFIX: find.tcl: searching with "*" and "?" in search values
+  - NEW   : color of "Lock" button at locking changes
+  - NEW   : diagram vertical mark for current day
+  - NEW   : find.tcl: tips on list; number of found; saved column widths
+  - NEW   : find.tcl: combobox of search values
+  - NEW   : find.tcl: search in "Weekly"
+  - CHANGE: find.tcl: "By words" search (words separated by spaces)
+  - CHANGE: some clearance
+
+
+Version `v1.1.0 (23 Apr'25)`
 
   - BUGFIX: color week cell of AggrEG diagram at options weeks=OFF, cumulate=OFF
   - BUGFIX: a sticker closed when its color chooser is open
   - BUGFIX: Preferences' Zoom for status bar & "Find" dialogue
   - BUGFIX: locked weeks: comments on buttons moved to current cell
-  - BUGFIX: incorrect octals at going to 08/09 week (from "Find")
-  - NEW   : diagram vertical line for current day
-  - NEW   : find.tcl: tips on found list; number of found
   - NEW   : Preferences: "Test" button to test settings
   - NEW   : popup menu of week day titles
   - NEW   : "Weekly" field (comments)
@@ -20,7 +31,6 @@ Version `v1.1.2 (26 Apr'25)`
   - CHANGE: handling AggrEG, more simple
   - CHANGE: checking geometry of color chooser in stickers
   - CHANGE: repo.tcl: color tag comments, AggrEG in table row
-  - CHANGE: some clearance
   - CHANGE: packages: apave 4.6.1
 
 

@@ -20,31 +20,11 @@ namespace eval find {
   variable Opcvar
   variable OpcItems
   variable fgeom {}
+  variable col1Width 100
+  variable col2Width 100
 }
-#_______________________
 
-proc find::opcPre {args} {
-
-  set clr [lindex $args 0]
-  if {$clr in {Red Yellow Green}} {
-    set bg $::EG::Colors($clr)
-    lassign [apave::InvertBg $bg] fg
-    return "-background $bg -foreground $fg"
-  }
-  return {}
-}
-#_______________________
-
-proc find::opcPost {} {
-
-  variable findString
-  variable Opcvar
-  if {$Opcvar ni [split $findString]} {
-    append findString " $Opcvar"
-    set findString [string trim $findString]
-  }
-}
-#_______________________
+# ________________________ Common _________________________ #
 
 proc find::Fname2Tab {fname} {
   # Translates file name to tab name.
@@ -78,6 +58,68 @@ proc find::Tab2Fname {tabname} {
 }
 #_______________________
 
+proc find::ClearCbx {cbx varname} {
+  # Clears a combobox's value and removes it from the combobox' list.
+  #   cbx - the combobox's path
+  #   varname - name of variable used in the current namespace
+
+  set val [string trim [$cbx get]]
+  set values [$cbx cget -values]
+  if {[set i [lsearch -exact $values $val]]>-1} {
+    set values [lreplace $values $i $i]
+    $cbx configure -values $values
+  }
+  set $varname $values
+}
+#_______________________
+
+proc find::treTip {ID col} {
+  # Gets tip for treeview column.
+  #   ID - item's ID
+  #   col - column
+
+  variable foundList
+  set idx [string range $ID 2 end]
+  lassign [split [lindex $foundList $idx-1] \t] date item word fname where
+  switch -exact $col {
+    {#1} {
+      if {$fname eq {}} {
+        set res "Current"
+      } else {
+        set res $fname\n[Tab2Fname $fname]
+      }
+    }
+    {#2} {
+      set res [EG::FormatDate [EG::ScanDatePG $date]]
+    }
+    default {
+      set res \"$word\"\n\n$where
+    }
+  }
+  return $res
+}
+#_______________________
+
+proc find::SaveOptions {} {
+  # Saves options and dialog's geometry.
+
+  variable win
+  variable pobj
+  variable chkList
+  variable chkCase
+  set findStrs {}
+  foreach fstr $::EG::D(FindStrs) {
+    if {$findStrs ne {}} {append findStrs \n}
+    append findStrs $fstr
+    if {[incr _cnt]==30} break
+  }
+  set wtree [$pobj Tree]
+  EG::ResourceData FindOptions [EG::toEOL $findStrs] $chkList $chkCase \
+    [wm geometry $win] [$wtree column #1 -width] [$wtree column #2 -width]
+}
+
+# ________________________ Option cascade _________________________ #
+
 proc find::FillOpcLists {} {
   # Fills option cascade list.
 
@@ -96,6 +138,77 @@ proc find::FillOpcLists {} {
   }
   lappend OpcItems $litems
   set Opcvar Red
+}
+#_______________________
+
+proc find::opcPre {args} {
+
+  set clr [lindex $args 0]
+  if {$clr in {Red Yellow Green}} {
+    set bg $::EG::Colors($clr)
+    lassign [apave::InvertBg $bg] fg
+    return "-background $bg -foreground $fg"
+  }
+  return {}
+}
+#_______________________
+
+proc find::opcPost {} {
+
+  variable findString
+  variable Opcvar
+  if {$Opcvar ni [split $findString]} {
+    append findString " $Opcvar"
+    set findString [string trim $findString]
+  }
+}
+
+# ________________________ Search _________________________ #
+
+proc find::Found {item date where what fname} {
+  # Search in string.
+  #   item - item name
+  #   date - date of week
+  #   where - string where to search
+  #   what - list of "what to find" words at searching by list
+  #   fname - egd file name or {}
+
+  variable chkCase
+  variable chkList
+  if {$chkCase} {set opt {}} {set opt -nocase}
+  if {$chkList} {
+    set what [string trim $what]
+    foreach word1 [split $where] {
+      if {$word1 ne {}} {
+        foreach word2 $what {
+          if {[string match {*}$opt $word2 $word1]} {
+            AddFoundInfo $item $date $word1 $fname $where
+          }
+        }
+      }
+    }
+  } else {
+    if {[string match {*}$opt *$what* $where]} {
+      AddFoundInfo $item $date $where $fname $where
+    }
+  }
+}
+#_______________________
+
+proc find::AddFoundInfo {item date word fname where} {
+  # Logs found info to the found list.
+  #   item - item name
+  #   date - week date where search was successful
+  #   word - word where search was successful
+  #   fname - egd file name or {}
+  #   where - text where search was successful
+
+  variable foundList
+  if {[lsearch -glob $foundList "$date\t$item\t*\t$fname\t*"]<0} {
+    set word [string map [list \t { }] $word]
+    set where [string map [list \t { }] $where]
+    lappend foundList "$date\t$item\t$word\t$fname\t$where"
+  }
 }
 #_______________________
 
@@ -136,27 +249,9 @@ proc find::KeyOnTree {K X Y B} {
     EG::MoveToWeek 0 [EG::ScanDatePG $date]
   }
 }
-#_______________________
 
-proc find::Help {} {
-  # Shows help on Find dialogue.
+# ________________________ Buttons _________________________ #
 
-  variable win
-  EG::Help find -width 57 -height 32 -parent $win
-}
-#_______________________
-
-proc find::SaveOptions {} {
-  # Saves options and dialog's geometry.
-
-  variable win
-  variable chkList
-  variable findString
-  variable chkCase
-  set fgeom [wm geometry $win]
-  EG::ResourceData FindOptions $findString $chkList $chkCase $fgeom
-}
-#_______________________
 
 proc find::OK {} {
 
@@ -168,20 +263,31 @@ proc find::OK {} {
   variable findString
   set findString [string trim $findString]
   SaveOptions
+  set cbx [$pobj Cbx1]
   if {$findString eq {}} {
     bell
     EG::Message "Enter what to search."
-    apave::focusByForce [$pobj EntFind]
+    apave::focusByForce $cbx
     return
   }
   EG::Message "Wait please..." 10
+  ClearCbx $cbx ::EG::D(FindStrs)
+  set ::EG::D(FindStrs) [linsert $::EG::D(FindStrs) 0 $findString]
+  $cbx configure -values $::EG::D(FindStrs)
   set wtree [$pobj Tree]
   set treeid 0
   set delti [list]
   foreach flit $foundList {lappend delti ti[incr treeid]}
   catch {$wtree delete $delti}
   set foundList [list]
-  if {$chkList} {set what [split $findString]} {set what {}}
+  if {$chkList} {
+    set what [list]
+    foreach wf [split $findString] {
+      lappend what [string map [list \\ \\\\ * \\* ? \\?] $wf]
+    }
+  } else {
+    set what [string map [list \\ \\\\ * \\* ? \\?] $findString]
+  }
   set egdinfo [list [list $::EG::D(FILE) {}]]
   if {$chkAll} {
     foreach tab [EG::BAR listTab] {
@@ -194,10 +300,25 @@ proc find::OK {} {
       }
     }
   }
+  lassign $::EG::D(WeeklyITEM) weeklyItem
   foreach egdi $egdinfo {
     lassign $egdi fname egdvar
-    if {$egdvar eq {}} {set fname {}} {set fname "[Fname2Tab $fname]"}
     set dkeys [EG::DatesKeys {} {} 0 $egdvar]
+    if {$egdvar eq {}} {
+      set fname {}
+      set egd $::EG::EGD
+    } else {
+      set fname "[Fname2Tab $fname]"
+      set egd [set $egdvar]
+    }
+    foreach date $dkeys {
+      set itemdata [dict get $egd $date]
+      if {[dict exists $itemdata $weeklyItem]} {
+        lassign [dict get $itemdata $weeklyItem] it value
+        set value [EG::fromEOL $value]
+        Found $it $date $value $what $fname ;# search in weekly
+      }
+    }
     EG::ForEach {} $dkeys {
       lassign [split %k {}] k d
       set typ %t
@@ -218,9 +339,9 @@ proc find::OK {} {
   set foundList [lsort -dictionary -nocase $foundList]
   set treeid 0
   foreach flit $foundList {
-    lassign [split $flit \t] date item word fname
+    lassign [split $flit \t] date item word fname where
     set tID ti[incr treeid]
-    set word [string map [list \n { }] $word]
+    set word [string trim [string map [list \n { } $::EG::D(TAGS) {}] $where]]
     $wtree insert {} end -id $tID -values [list [file tail $fname] $date $word]
     if {$treeid==1} {set tID1 $tID}
   }
@@ -230,87 +351,8 @@ proc find::OK {} {
     focus $wtree
   }
   ::baltip::tip $wtree {::EG::find::treTip %i %c}
-  set lfr [$pobj Lfra]
-  if {![winfo ismapped $lfr]} {
-    pack $lfr -expand 1 -fill both
-  }
-  $lfr configure -text " Found: [llength $foundList] "
+  [$pobj Lfra] configure -text " Found: [llength $foundList] "
   EG::Message ""
-}
-#_______________________
-
-proc find::treTip {ID col} {
-  # Gets tip for treeview column.
-  #   ID - item's ID
-  #   col - column
-
-  variable foundList
-  set idx [string range $ID 2 end]
-  lassign [split [lindex $foundList $idx-1] \t] date item word fname where
-  switch -exact $col {
-    {#1} {
-      if {$fname eq {}} {
-        set res "Current"
-      } else {
-        set res $fname\n[Tab2Fname $fname]
-      }
-    }
-    {#2} {
-      set res [EG::FormatDate [EG::ScanDatePG $date]]
-    }
-    default {
-      set res $where
-    }
-  }
-  return $res
-}
-#_______________________
-
-proc find::Found {item date where what fname} {
-  # Search in string.
-  #   item - item name
-  #   date - date of week
-  #   where - string where to search
-  #   what - list of "what to find" words at searching by list
-  #   fname - egd file name or {}
-
-  variable chkCase
-  variable chkList
-  variable findString
-  if {$chkCase} {set opt {}} {set opt -nocase}
-  if {$chkList} {
-    set what [string trim $what]
-    foreach word1 [split $where] {
-      if {$word1 ne {}} {
-        foreach word2 [split $what] {
-          if {[string match {*}$opt *$word2* $word1]} {
-            AddFoundInfo $item $date $word1 $fname $where
-          }
-        }
-      }
-    }
-  } else {
-    if {[string match {*}$opt *$findString* $where]} {
-      AddFoundInfo $item $date $where $fname $where
-    }
-  }
-}
-#_______________________
-
-proc find::AddFoundInfo {item date word fname where} {
-  # Logs found info to the found list.
-  #   item - item name
-  #   date - week date where search was successful
-  #   word - word where search was successful
-  #   fname - egd file name or {}
-  #   where - text where search was successful
-
-  variable foundList
-  if {[lsearch -glob $foundList "$date\t$item\t*\t$fname\t*"]<0} {
-    set word [string map [list \t { }] $word]
-    set where [string map [list \t { }] $where]
-    lappend foundList "$date\t$item\t$word\t$fname\t$where"
-  }
 }
 #_______________________
 
@@ -323,6 +365,15 @@ proc find::Cancel {args} {
 }
 #_______________________
 
+proc find::Help {} {
+  # Shows help on Find dialogue.
+
+  variable win
+  EG::Help find -width 57 -height 32 -parent $win
+}
+
+# ________________________ Main _________________________ #
+
 proc find::_create {} {
   # Creates and opens Find dialog.
 
@@ -331,6 +382,8 @@ proc find::_create {} {
   variable findString
   variable chkList
   variable chkCase
+  variable col1Width
+  variable col2Width
   if {[winfo exists $win]} {
     focus $win
     catch {
@@ -340,19 +393,26 @@ proc find::_create {} {
     }
     return
   }
-  lassign [EG::ResourceData FindOptions] findString chkList chkCase fgeom
+  lassign [EG::ResourceData FindOptions] findString chkList chkCase fgeom \
+    col1Width col2Width
+  if {![string is digit -strict $col1Width]} {set col1Width 100}
+  if {![string is digit -strict $col2Width]} {set col2Width 100}
+  set ::EG::D(FindStrs) [split [EG::fromEOL $findString] \n]
+  set findString [lindex $::EG::D(FindStrs) 0]
   set chkList [string is true -strict $chkList]
   set chkCase [string is true -strict $chkCase]
   ::apave::APave create $pobj $win
   $pobj makeWindow $win.fra Find
   $pobj paveWindow $win.fra {
     {lab1 - - - - {-st e -padx 2 -pady 4} {-t Find:}}
-    {EntFind + L 1 3 {-st w -pady 4 -cw 1} {-tvar ::EG::find::findString -w 50}}
+    {Cbx1 + L 1 3 {-st w -pady 4 -cw 1}
+      {-tvar ::EG::find::findString -w 50 -h 10 -values {$::EG::D(FindStrs)}
+      -clearcom {EG::find::ClearCbx %w ::EG::D(FindStrs)}}}
     {lab2 lab1 T 1 1 {-st e -padx 2 -pady 4} {-t Tags:}}
     {Opc1 + L 1 1 {-st w -pady 4} {::EG::find::Opcvar ::EG::find::OpcItems {-width 10}
       {EG::find::opcPre {%a}} -command EG::find::opcPost}}
     {fra1 lab2 T 1 4 {-st ew}}
-    {.lab3 - - - - {-st e -padx 2} {-t {As tags:}}}
+    {.lab3 - - - - {-st e -padx 2} {-t {By words:}}}
     {.chb + L 1 1 {-st w} {-var ::EG::find::chkList}}
     {.h_ + L 1 1 {-st ew -padx 9}}
     {.lab4 + L 1 1 {-st e -padx 2} {-t {Match case:}}}
@@ -361,10 +421,9 @@ proc find::_create {} {
     {.LabAll + L 1 1 {-st e -padx 2} {-t {In all:}}}
     {.ChbAll + L 1 1 {-st w} {-var ::EG::find::chkAll}}
     {fra2 fra1 T 1 4 {-st nswe -pady 4 -rw 111}}
-    {fra2.Lfra - - - - {pack forget -expand 1 -fill both} {-t Found -labelanchor n}}
+    {fra2.Lfra - - - - {pack -expand 1 -fill both} {-t Found -labelanchor n}}
     {.Tree - - - - {pack -side left -fill both -expand 1} {
-      -selectmode browse -show headings -columns {L1 L2 L3}
-      -columnoptions "L1 {-width 20} L2 {-width 50}"}}
+      -selectmode browse -show headings -columns {L1 L2 L3}}}
     {.sbv + L - - {pack -fill y}}
     {seh fra2 T 1 4 {-st ew -pady 4}}
     {frabot + T 1 4 {-st ew} {}}
@@ -376,14 +435,16 @@ proc find::_create {} {
       -com EG::find::Cancel}}
   }
   EG::TabFilesArray
-  set wtree [$pobj Tree]
   if {![EG::IsTabFiles]} {
     [$pobj LabAll] configure -state disabled
     [$pobj ChbAll] configure -state disabled
   }
+  set wtree [$pobj Tree]
   $wtree heading #1 -text File
   $wtree heading #2 -text Date
   $wtree heading #3 -text {Found string}
+  $wtree column #1 -minwidth 4 -width $col1Width -stretch 0
+  $wtree column #2 -minwidth 4 -width $col2Width -stretch 0
   foreach ev {KeyPress ButtonPress} {
     bind $wtree <$ev> {+ EG::find::KeyOnTree %K %x %y %b}
   }

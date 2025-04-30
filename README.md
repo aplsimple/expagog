@@ -175,7 +175,7 @@ The search can be performed for text comments of cells and for text topics (if t
 
 Enter the desired value in the search entry and click *OK* button. A list of found text matches will be displayed.
 
-If you need to search by a list of tags (i.e. just word by word), turn on the *As tags* switch.
+If you need to search by a list of tags (i.e. just word by word), turn on the *By words* switch. The words are considered to be separated by spaces.
 
 The *Match case* mode allows you to search for case-sensitive text.
 

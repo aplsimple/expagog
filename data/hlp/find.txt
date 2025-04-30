@@ -1,17 +1,17 @@
- The <r>Search</r> dialogue is used to find information of
- cell texts and move to appropriate weeks.
+ The <r>Find</r> dialogue is used to find information of cell
+ texts and move to appropriate weeks.
  _______________________________________________________
 
  Available are the search options:
 
-   <b>Find</b> entry - what to search
+   <b>Find</b> value - what to search
 
    <b>Tags</b> list  - to add colors and keywords to the entry;
                 these are set in <b>Preferences</b> dialogue
 
-   <b>As tags</b>    - to search separate words of the entry
+   <b>By words</b>   - to search the <b>Find</b> words, word by word
 
-   <b>Match case</b> - to switch ON/OFF "case sensitive" search
+   <b>Match case</b> - to switch ON/OFF <b>case sensitive</b> search
 
    <b>In all</b>     - if ON, searching in all bar tabs
  _______________________________________________________
@@ -21,6 +21,10 @@
  Click any of them to move to its appropriate week.
  _______________________________________________________
 
+ The current search value is saved to <b>Find</b> combobox at
+ searches. The maximum number of saved values is 30.
+ To remove the current search value from <b>Find</b> combobox,
+ use the context menu of the combobox.
+
  The dialogue's geometry and options are saved to be
  restored in the next search sessions.
-

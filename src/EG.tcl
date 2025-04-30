@@ -127,6 +127,7 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   set D(TexFont) {}   ;# text font
   set D(TabFiles) {}  ;# file names of tab bar
   set D(AggrEG) EG    ;# aggregate formula
+  set D(FindStrs) {}  ;# list of strings to find
   variable C          ;# canvas' path
   variable Opcvar     ;# option cascade var
   variable OpcItems   ;# option cascade list
@@ -383,16 +384,6 @@ proc EG::FirstCell {} {
 }
 #_______________________
 
-proc EG::ErrorInput {type input} {
-  # Message about mistaken input.
-  #   type - format
-  #   input - value
-
-  Message "Mistaken input for \"$type\" format: $input" 10
-  return 0
-}
-#_______________________
-
 proc EG::MonthShort {month} {
   # Gets short month name.
   #   month - month number
@@ -482,7 +473,7 @@ proc EG::Oct2Dec {oct} {
 
 # ________________________ Items _________________________ #
 
-proc EG::CommandIt {wid type item wday P V} {
+proc EG::ValidIt {wid type item wday P V} {
   # Handles item value changed in its widget.
   #   wid - item widget
   #   type - item type
@@ -497,6 +488,7 @@ proc EG::CommandIt {wid type item wday P V} {
   Message ""
   set w [$EGOBJ $wid]
   set typ $type
+  set P [string trimleft $P]
   if {$P ne $EMPTY} {
     set input $P
     switch -glob $type {
@@ -544,12 +536,12 @@ proc EG::CommandIt {wid type item wday P V} {
         || ($i>-1 && $j>0 && ![string is double $P])
         || [llength [split $P -+]]>1)} {
           set input [string map [list \n {}] [string range $input 0 99]]
-          return [ErrorInput $type $input]
+          return [MessageErrorInput $type $input]
         }
       }
       default {
         if {[string length $input] > [string length $type]} {
-          return [ErrorInput $type $input]
+          return [MessageErrorInput $type $input]
         }
       }
     }
@@ -761,7 +753,7 @@ proc EG::KeyPress {wid K s item wday} {
         incr i -1
       }
     }
-    Down - Return {
+    Down - Return - KP_Enter {
       if {$i>=$llen} {
         set i 0
         if {$wday<6} {incr wday} {set wday 0}
@@ -1134,7 +1126,7 @@ proc EG::DataValue {styp item {wday ""} {egdvar EGD}} {
 
 proc EG::StoreItem {} {
   # Formats item cell value and saves it.
-  # See also: CommandIt
+  # See also: ValidIt
 
   fetchVars
   lassign $D(toformat) w item wday type typ
@@ -2023,16 +2015,21 @@ proc EG::ConfigLock {} {
   if {$D(lockdata)} {
     set st disabled
     set ttl {Unlock changes}
+    set bg [set bg2 $Colors(Red)]
   } else {
     set st normal
     set ttl {Lock changes}
+    set bg $Colors(bg)
+    set bg2 $Colors(bg2)
   }
   foreach wt {Text TextR} {
     set wtxt [$EGOBJ $wt]
     $wtxt configure -state $st
     $wtxt configure -fg [lindex [$EGOBJ csGet] 0]
   }
-  ::baltip::tip [$EGOBJ BuT_Tool_lock] $ttl
+  set but [$EGOBJ BuT_Tool_lock]
+  $but configure -bg $bg -activebackground $bg2
+  ::baltip::tip $but $ttl
   return $ttl
 }
 #_______________________
@@ -2104,6 +2101,16 @@ proc EG::MessageState {{islock 0}} {
     set msg "The week data can be changed."
   }
   Message $msg
+}
+#_______________________
+
+proc EG::MessageErrorInput {type input} {
+  # Message about mistaken input.
+  #   type - format
+  #   input - value
+
+  Message "Mistaken input for \"$type\" format: $input" 10
+  return 0
 }
 #_______________________
 
@@ -3111,7 +3118,7 @@ proc EG::_create {} {
               -validate key -validatecommand"
           }
           set ::EG::D(fld$it,$i) $n
-          set lwid ".$n + L 1 1 {-st ewn} {$atr {EG::CommandIt $n {$typ} {$item}\
+          set lwid ".$n + L 1 1 {-st ewn} {$atr {EG::ValidIt $n {$typ} {$item}\
             $i %P %V} -onevent {<FocusIn> {EG::FocusedIt {$item} $i; EG::SelIt}\
             <FocusOut> {EG::StoreItem; EG::SelIt -1}\
             <KeyPress> {EG::KeyPress %W %K %s {$item} $i}\
