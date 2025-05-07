@@ -1,11 +1,11 @@
 # Last changes:
 
 
-Version `v1.2.0 (30 Apr'25)`
+Version `v1.2.1 (7 May'25)`
 
   - BUGFIX: incorrect octals at going to 08/09 week (from "Find")
   - BUGFIX: overlooked KP_Enter in table cells
-  - BUGFIX: find.tcl: searching with "*" and "?" in search values
+  - BUGFIX: find.tcl: searching with "*?[]" in search values
   - NEW   : color of "Lock" button at locking changes
   - NEW   : diagram vertical mark for current day
   - NEW   : find.tcl: tips on list; number of found; saved column widths

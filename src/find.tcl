@@ -280,13 +280,14 @@ proc find::OK {} {
   foreach flit $foundList {lappend delti ti[incr treeid]}
   catch {$wtree delete $delti}
   set foundList [list]
+  set escmap [list \\ \\\\ * \\* ? \\? \[ \\\[ \] \\\]]
   if {$chkList} {
     set what [list]
     foreach wf [split $findString] {
-      lappend what [string map [list \\ \\\\ * \\* ? \\?] $wf]
+      lappend what [string map $escmap $wf]
     }
   } else {
-    set what [string map [list \\ \\\\ * \\* ? \\?] $findString]
+    set what [string map $escmap $findString]
   }
   set egdinfo [list [list $::EG::D(FILE) {}]]
   if {$chkAll} {
