@@ -3,7 +3,25 @@
 
 I don't really know myself. Sometimes it's easier to do something than to tell you what it is and what it's for.
 
-The name *expagog* may be interpreted in different ways, but there is certainly a pedagogical component in it.
+Anyhow, screenshots first:
+
+<img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg1.png" class="media" alt="">
+
+<img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg3.png" class="media" alt="">
+
+<img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg4.png" class="media" alt="">
+
+<img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg5.png" class="media" alt="">
+
+<img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg6.png" class="media" alt="">
+
+<img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg2.png" class="media" alt="">
+
+<img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg22.png" class="media" alt="">
+
+---
+
+Well, the name *expagog* may be interpreted in different ways, but there is certainly a pedagogical component in it.
 
 *Ah, pedagogy! How boring it is, Sasha, give us something more interesting!*
 

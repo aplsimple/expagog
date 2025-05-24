@@ -710,7 +710,7 @@ proc EG::KeyPress {wid K s item wday} {
       o - O {set com Open}
       s - S {set com Save}
       d - D {set com ChooseWeek}
-      h - H {set com MoveToCurrentWeek}
+      h - H {set com MoveToDay}
       l - L {set com SwitchLock}
       f - F {set com Find}
     }
@@ -1575,19 +1575,12 @@ proc EG::MoveToWeek {wdays {dt ""} {doit no}} {
 }
 #_______________________
 
-proc EG::MoveToCurrentWeek {} {
-  # Moves to current week.
-
-  MoveToWeek 0 [Date1Seconds]
-}
-#_______________________
-
-proc EG::MoveToDay {date} {
+proc EG::MoveToDay {{dt ""}} {
   # Move to specific day.
-  #   date - date to move to
+  #   dt - date to move to
 
-  CurrentItemDay "" [FormatDatePG $date]
-  MoveToWeek 0 $date
+  CurrentItemDay "" [FormatDatePG $dt]
+  MoveToWeek 0 $dt
 }
 
 # ________________________ Show data _________________________ #
@@ -1602,8 +1595,10 @@ proc EG::ShowTable {{atStart 0}} {
     if {$InpItem ne {} && $InpDate ne {}} {
       CurrentItemDay $InpItem $InpDate
       MoveToWeek 0 [ScanDatePG $InpDate]
-      return
+    } else {
+      MoveToDay
     }
+    return
   }
   foreach item $D(Items) type $D(ItemsTypes) {
     # cells
@@ -3075,7 +3070,7 @@ proc EG::_create {} {
       Tool_next2 {{EG::MoveToWeek 28} -tip "Next 4 weeks@@ -under 5"}
       sev 6
       Tool_date {EG::ChooseWeek -tip "Choose a week\nCtrl+D@@ -under 5"}
-      Tool_home {EG::MoveToCurrentWeek -tip "To the current week\nCtrl+H@@ -under 5"}
+      Tool_home {EG::MoveToDay -tip "To the current day\nCtrl+H@@ -under 5"}
       Tool_find {EG::Find -tip "Find in texts\nCtrl+F@@ -under 5"}
       sev 6
       Tool_lock {EG::SwitchLock -tip "Unlock changes\nCtrl+L@@ -under 5"}

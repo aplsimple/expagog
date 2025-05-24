@@ -3,6 +3,24 @@
 
 А я и сам толком не знаю. Иногда кое-что легче сделать, чем рассказать, что это и для чего это.
 
+Ну да что там, сначала скриншоты:
+
+<img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg1.png" class="media" alt="">
+
+<img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg3.png" class="media" alt="">
+
+<img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg4.png" class="media" alt="">
+
+<img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg5.png" class="media" alt="">
+
+<img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg6.png" class="media" alt="">
+
+<img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg2.png" class="media" alt="">
+
+<img src="https://github.com/aplsimple/expagog/releases/download/Screens_of_EG-1.0/eg22.png" class="media" alt="">
+
+---
+
 Можно по-разному трактовать и само название *expagog*, но педагогическая составляющая в нем определенно есть.
 
 *А-а, педагогика! Как это скучно, Саша, подай нам что-нибудь поинтереснее!*
@@ -77,7 +95,7 @@ A вот вам и узда для авантюр - *expagog*. Чтобы был
 
 **Комментарий к ячейке** - произвольный текст для текущей ячейки; может содержать теги; комментарии можно искать с помощью кнопки *Find*.
 
-**Общие заметки** - произвольный текст под диаграммой, содержащий замечания и выводы по текущей базе, диаграмме и пр.
+**Еженедельник** - произвольный текст под диаграммой, содержащий замечания и выводы по текущей неделе.
 
 **Статистика** - сводные данные по текущей базе; содержит два раздела данных - *Текущая неделя и план на следующую* и *Предыдущие, текущие и последующие недели*.
 

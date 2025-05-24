@@ -1,6 +1,13 @@
 # Last changes:
 
 
+Version `v1.2.2 (24 May'25)`
+
+  - BUGFIX: initiating current week's schedule if previous week is empty
+  - CHANGE: "Home" action: go to current day i/o current week
+  - CHANGE: docs, a bit
+
+
 Version `v1.2.1 (7 May'25)`
 
   - BUGFIX: incorrect octals at going to 08/09 week (from "Find")
