@@ -91,7 +91,7 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   set D(Items)      {Dist Time Speed Math DEF Eco R}
   set D(ItemsTypes) [list 999.99 time {calc:99.99:$1/$2} time time chk chk]
   set D(Icons) {hamburger previous previous2 next next2 date home exit
-    SaveFile info lock find}
+    SaveFile info lock find print}
   set D(DateUser) "%e %b %Y" ;# date format for head date
   set D(DateUser2) "%e %b"   ;# short date format for status bar
   set D(DateUser3) "%e %B %Y, %A"   ;# full date format for text title
@@ -2458,6 +2458,8 @@ proc EG::Actions {} {
     $pmenu add command -label $locklab -image mnu_lock -compound left \
       -command EG::SwitchLock -accelerator Ctrl+L
     $pmenu add separator
+    $pmenu add command -label Diagram -image mnu_diagram -compound left \
+      -command EG::diagr::Draw -accelerator F5
     $pmenu add command -label Statistics... -image mnu_info -compound left \
       -command EG::stat::_run -accelerator F6
     $pmenu add command -label Report... -image mnu_print -compound left \
@@ -3005,7 +3007,7 @@ proc EG::Init {} {
   foreach icon $D(Icons) {
     image create photo Tool_$icon -data [apave::iconData $icon $ICONTYPE]
   }
-  foreach icon {none lamp ques yes no -info -color -lock -find -config
+  foreach icon {none lamp ques yes no -info -color -lock -find -config -diagram
   -help -exit -OpenFile -SaveFile -double -more -file -print -download -undo} {
     set img [string map {- mnu_} $icon]
     set ico [string map {- {}} $icon]
@@ -3055,10 +3057,11 @@ proc EG::_create {} {
     #####-tool-bar
     {.tool - - - - {pack -side top} {-relief flat -borderwidth 0 -array {
       Tool_hamburger {EG::Actions -tip "Actions\nF10@@ -under 5"}
-      sev 8
+      sev 4
       Tool_SaveFile {{after idle EG::SaveAll} -tip "Save data\nCtrl+S@@ -under 5"}
       Tool_info {EG::stat::_run -tip "Statistical info\nF6@@ -under 5"}
-      sev 6
+      Tool_print {EG::Report -tip "Report\nF7@@ -under 5"}
+      sev 4
       Tool_previous2 {{EG::MoveToWeek -28} -tip "Previous 4 weeks@@ -under 5"}
       Tool_previous {{EG::MoveToWeek -7} -tip "Previous week@@ -under 5"}
       h_ 1
@@ -3068,11 +3071,11 @@ proc EG::_create {} {
       h_ 1
       Tool_next {{EG::MoveToWeek 7} -tip "Next week@@ -under 5"}
       Tool_next2 {{EG::MoveToWeek 28} -tip "Next 4 weeks@@ -under 5"}
-      sev 6
+      sev 4
       Tool_date {EG::ChooseWeek -tip "Choose a week\nCtrl+D@@ -under 5"}
       Tool_home {EG::MoveToDay -tip "To the current day\nCtrl+H@@ -under 5"}
       Tool_find {EG::Find -tip "Find in texts\nCtrl+F@@ -under 5"}
-      sev 6
+      sev 4
       Tool_lock {EG::SwitchLock -tip "Unlock changes\nCtrl+L@@ -under 5"}
       lab {"" {-expand 1 -fill x}}
       Tool_exit {EG::Exit -tip "Exit@@ -under 5"}

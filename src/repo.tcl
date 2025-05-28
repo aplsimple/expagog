@@ -19,6 +19,7 @@ namespace eval repo {
   variable icoRepo {../../../zoo/favicon.jpg}
   variable file1Repo {../../../zoo/funcs.js}
   variable file2Repo {../../zoo/this.js}
+  variable diagrRepo {}
   variable headRepo {}
   variable blackComment {}
   variable redComment {}
@@ -37,6 +38,7 @@ namespace eval repo {
   variable RedColor #be0000
   variable YellowColor #6b6b00
   variable GreenColor #115111
+  variable doDiagr 1
 }
 
 # ________________________ Common _________________________ #
@@ -54,6 +56,7 @@ proc repo::fetchVars {} {
     variable icoRepo
     variable file1Repo
     variable file2Repo
+    variable diagrRepo
     variable headRepo
     variable blackComment
     variable redComment
@@ -71,6 +74,7 @@ proc repo::fetchVars {} {
     variable RedColor
     variable YellowColor
     variable GreenColor
+    variable doDiagr
   }
 }
 
@@ -508,6 +512,7 @@ proc repo::FillFields {} {
     }
   }
   lappend pairs Notes $Notes
+  lappend pairs Diagram "<img src=\"$diagrRepo\">"
   set Html [PutValue $Html {*}$pairs]
 }
 
@@ -523,6 +528,17 @@ proc repo::Report {} {
     return
   }
   Message "Making report... Wait please." 10
+  set diagrRepo [file rootname $outRepo].png
+  if {$doDiagr} {
+    catch {
+      # save the diagram to a file, to show it in the report
+      EG::diagr::Draw
+      set img [canvas::snap $::EG::C]
+      $img write $diagrRepo
+      set diagrRepo [file tail $diagrRepo]
+      EG::diagr::Draw yes ;# the diagram is scrolled by canvas::snap
+    }
+  }
   foreach fn {cssRepo icoRepo file1Repo file2Repo} {
     set fname [set $fn]
     if {[string first .. $fname]!=0} {
@@ -563,16 +579,25 @@ proc repo::_create {} {
 
   fetchVars
   catch {$pobj destroy}
+  if {[catch {package require canvas::snap}]} {
+    set diagrst disabled
+    set doDiagr 0
+  } else {
+    set diagrst normal
+  }
   ::apave::APave create $pobj $win
   $pobj makeWindow $win.fra Report
   $pobj paveWindow $win.fra {
     {fra1 - - - - {-st nsew}}
     {.v_ - - - - {-pady 8}}
-    {.lab1 + T 1 1 {-st es -cw 1 -padx 4} {-t {From template file:} -anchor e}}
+    {.lab0 + T 1 1 {-st es -cw 1 -padx 4} {-t {From template file:} -anchor e}}
     {.filIn + L 1 1 {-st swe} {-w 63 -tvar ::EG::repo::tplRepo
       -tip "expagog/data/tpl/repo.html\nby default"}}
-    {.lab2 .lab1 T 1 1 {-st es -padx 4} {-t {To resulting .html:} -anchor e}}
+    {.lab1 .lab0 T 1 1 {-st es -padx 4} {-t {To resulting .html:} -anchor e}}
     {.fisOut + L 1 1 {-st swe} {-w 63 -tvar ::EG::repo::outRepo}}
+    {.v_1 .lab1 T 1 1 {-pady 8}}
+    {.lab2 + T 1 1 {-st en} {-t {Update diagram:} -anchor e}}
+    {.chbDiagr + L 2 99 {-st nw} {-var ::EG::repo::doDiagr -state $diagrst}}
     {.v_2 .lab2 T 1 1 {-pady 8}}
     {.lab3 + T 1 1 {-st es -padx 4} {-t {Css file:} -anchor e}}
     {.filCss + L 1 1 {-st swe} {-w 63 -tvar ::EG::repo::cssRepo

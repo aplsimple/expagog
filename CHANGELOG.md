@@ -1,18 +1,24 @@
 # Last changes:
 
 
-Version `v1.2.2 (24 May'25)`
+Version `v1.3.0 (28 May'25)`
 
   - BUGFIX: initiating current week's schedule if previous week is empty
+  - BUGFIX: find.tcl: searching with "*?[]" in search values
+  - NEW   : "Diagram" item in menu
+  - NEW   : "Report" item in toolbar
+  - NEW   : diagram in report (needs *tklib* package)
+  - NEW   : week numbers in diagram
+  - CHANGE: diagr::Draw saves current cell's value, to count it in diagram
+  - CHANGE: Statistics: current date range shown as [Date1..Date2)
   - CHANGE: "Home" action: go to current day i/o current week
   - CHANGE: docs, a bit
 
 
-Version `v1.2.1 (7 May'25)`
+Version `v1.2.0 (30 Apr'25)`
 
   - BUGFIX: incorrect octals at going to 08/09 week (from "Find")
   - BUGFIX: overlooked KP_Enter in table cells
-  - BUGFIX: find.tcl: searching with "*?[]" in search values
   - NEW   : color of "Lock" button at locking changes
   - NEW   : diagram vertical mark for current day
   - NEW   : find.tcl: tips on list; number of found; saved column widths

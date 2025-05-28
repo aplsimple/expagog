@@ -505,7 +505,8 @@ proc stat::DoTable1 {} {
   set reslen [expr {$reslen0 + 79}]
   set resfill [string repeat { } $reslen]
   set fmtx [string repeat x $reslen]
-  PutLine Table1 "<t>Current      : from Date1</t> $date1 <t>to Date2</t> $date2\n"
+  PutLine Table1 "<t>Current      : from Date1 \[</t> $date1 <t>to Date2</t> $date2\
+    <t>\)</t>\n"
   PutLine Table1 "<t>Data range   : \[</t> $aggrdata(Date1st) <t>-</t>\
     $aggrdata(DateLast) <t>\)</t>"
   PutLine Table1 "<t>Data days    :</t> $aggrdata(daysAll)\n"
@@ -846,15 +847,16 @@ proc stat::_create {} {
   $pobj paveWindow $win.fra {
     {fra1 - - - - {-st nsew -cw 1}}
     {.v_ - - - - {-pady 8}}
-    {.lab1 + T 1 1 {-st es} {-t Current: -anchor e}}
+    {.lab1 + T 1 1 {-st es} {-t "Current: \[" -anchor e}}
     {.entDat1 + L 1 1 {-st ws -padx 4} {-w 11 -justify center
       -tvar ::EG::stat::date1 -tip "Click and choose a week@@ -under 5"
       -state disabled -onevent {<Button> {EG::stat::ChooseWeek date1 %w}}}}
     {.fradat2 + L 1 99 {-st ws -padx 0}}
-    {.fradat2.lab2 - - - - {-st ws} {-t to -anchor e}}
+    {.fradat2.lab1 - - - - {-st ws} {-t to -anchor e}}
     {.fradat2.entDat2 + L 1 1 {-st ws -padx 4} {-w 11 -justify center
       -tvar ::EG::stat::date2 -tip "Click and choose a week@@ -under 5"
       -state disabled -onevent {<Button> {EG::stat::ChooseWeek date2 %w}}}}
+    {.fradat2.lab2 + L 1 1 {-st ws} {-t \) -anchor e}}
     {.v_2 .lab1 T 1 1 {-pady 8}}
     {.lab3 + T 1 1 {-st es} {-t AggrEG -anchor e}}
     {.TexAggr + L 2 99 {-st nswe} {-w 70 -h 2 -tabnext *.entfs}}

@@ -39,6 +39,7 @@ namespace eval diagr {
   variable WeekColWidth [expr {$DayColWidth*7}]  ;# width of week column
   variable UnderLine "\n_______________ \n"
   variable idDayLine {}
+  variable WKcolor
 
 }
 #_______________________
@@ -76,6 +77,7 @@ proc diagr::fetchVars {} {
     variable WeekColWidth
     variable UnderLine
     variable idDayLine
+    variable WKcolor
   }
 }
 #_______________________
@@ -104,6 +106,9 @@ proc diagr::initVars {} {
   set ywday1 [EG::ScanDatePG $::EG::D(egdDate1)]
   set ydate1 [clock add $ywday1 6 days]
   foreach id $idlist {$C delete $id}
+  set idlist [list]
+  catch {array unset WKcolor}
+  array set WKcolor [list]
 }
 
 # ________________________ Lay out _________________________ #
@@ -123,8 +128,9 @@ proc diagr::Layout {} {
       -outline $HotColor -fill $ColorBg2 -tag WK$iw]
     set dt [clock add $ydate1 [expr {$iw*7}] days]
     set day1 [EG::FirstWDay $dt]
-    lappend x1list [list $x1 [EG::FormatDatePG $day1]]
-    ::baltip::tip $C [EG::FormatDate $day1] -ctag WK$iw
+    set tip [EG::FormatDate $day1]
+    lappend x1list [list $x1 [EG::FormatDatePG $day1] $day1 $tip]
+    ::baltip::tip $C $tip -ctag WK$iw
     $C bind $weekid <Button-1> [list EG::MoveToDay $day1]
     lappend idlist $weekid
     set m [clock format $dt -format %N]
@@ -235,7 +241,6 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
   set maxsum -999999999
   set cumulatedsum 0
   set coldata [list]
-  array set WKcolor [list]
   # collect data
   foreach {dk data} $::EG::LS {
     set date [EG::ScanDatePG $dk]
@@ -272,7 +277,8 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
       $colorname eq {Red} || ($colorname eq {Yellow} && $WKcolor($iw) ne {Red})} {
         set WKcolor($iw) $colorname
         set tip [EG::FormatDate $day1]
-        if {$tagcmnt ne {}} {append tip $UnderLine\n$tagcmnt}
+        if {$tagcmnt ne {}} {append tip [string trimright $UnderLine\n$tagcmnt]}
+        lset x1list $iw 3 $tip
         ::baltip::tip $C $tip -ctag WK$iw
       } else {
         set color {}
@@ -376,12 +382,41 @@ proc diagr::DrawColumn {item idx x1 colWidth colHeight color colorCol ispoly} {
 }
 #_______________________
 
-proc diagr::Draw {{atStart no}} {
-  # Runs drawing diagram.
+proc diagr::DrawWeekNN {} {
+  # Draws week numbers.
+
+  fetchVars
+  set sh 10
+  set y1 [expr {$Y1 + $sh}]
+  set fs [dict get $::apave::FONTMAIN -size]
+  set font $::apave::FONTMAIN
+  lassign [apave::InvertBg $ColorBg2] defcolor
+  append font " -size [expr {int($fs/2)}]"
+  for {set iw 0} {$iw < $NWeeks} {incr iw} {
+    lassign [lindex $x1list $iw] x1 - day1 tip
+    set wN [clock format $day1 -format %V]
+    incr x1 $sh
+    set fcolor $defcolor
+    catch {
+      if {[set bg $::EG::Colors($WKcolor($iw))] ne {}} {
+        lassign [apave::InvertBg $bg] fcolor
+      }
+    }
+    set id [$C create text $x1 $y1 -text $wN -font $font -fill $fcolor -tag WN$iw]
+    lappend idlist $id
+    $C bind $id <Button-1> [list EG::MoveToDay $day1]
+    ::baltip::tip $C $tip -ctag WN$iw
+  }
+}
+#_______________________
+
+proc diagr::Drawing {atStart} {
+  # Runs drawing diagram/polygon.
   #   atStart - yes if run at start of EG
 
   initVars
   fetchVars
+  EG::StoreItem
   if {!$atStart} EG::SaveAllData
   Title
   Layout
@@ -407,6 +442,7 @@ proc diagr::Draw {{atStart no}} {
   DrawDiagram $item
   if {$atStart} {
     # at start, scroll to current week
+    Scroll -8 pages
     set w1 [EG::Oct2Dec [clock format [EG::ScanDatePG $::EG::D(egdDate1)] -format %V]]
     set w2 [EG::Oct2Dec [clock format [EG::ScanDate] -format %V]]
     set curweek [expr {$w2 - $w1 + 1}]
@@ -421,4 +457,14 @@ proc diagr::Draw {{atStart no}} {
     }
   }
   return 1
+}
+#_______________________
+
+proc diagr::Draw {{atStart no}} {
+  # Draws diagram/polygon.
+  #   atStart - yes if run at start of EG
+
+  set res [Drawing $atStart]
+  DrawWeekNN
+  return $res
 }
