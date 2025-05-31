@@ -75,35 +75,35 @@ However, get to the point.
 
 **Switchable topic** - in this topic, information is not entered from the keyboard, but switches from the *?* icon to the *yes / lamp / no* icons, according to the traffic light principle (*green / yellow / red*).
 
-**Format** - sets the type of topic values; possible formats: number (*99.9*), time (*time*), switch (*chk*), calculated (*calc*), text (*xxx*).
+**Format** - sets the type of topic values. Possible formats: number (*99.9*), time (*time*), switch (*chk*), calculated (*calc*), text (*xxx*).
 
 **EG** (the last topic in the list) is a user's overall estimate for the day he/she have lived.
 
-**AggrEG** is an aggregate estimate calculated by a user-defined formula, setting the *weight* of topics; the weight can be negative (e.g. for topics like "cigarettes"); AggrEG reflects the overall quality of a day / week / month / year.
+**AggrEG** is an aggregate estimate calculated by a user-defined formula, setting the *weight* of topics. The weight can be negative (e.g. for topics like "cigarettes"). AggrEG reflects the overall quality of a day / week / month / year.
 
 **Cell** is located at the intersection of the *subject* row with the *week day* column.
 
-**Cell value** - for topics such as numbers and time, these are their values; for the switch, these are 2 (*yes*), 1 (*lamp*), 0 (*?*) or -1 (*no*); for text, it is always 1 plus the number of initial *+* minus the number of *-* (for example, value of *++ wow!* is 3); value sums less than zero are reset to 0 (there is no negative sum in *EG*).
+**Cell value** - for topics such as numbers and time, these are their values. For the switch, these are 2 (*yes*), 1 (*lamp*), 0 (*?*) or -1 (*no*); for text, it is always 1 plus the number of initial *+* minus the number of *-* (for example, value of *++ wow!* is 3). The sums of values less than zero are reset to 0 (there is no negative sum in *EG*).
 
-**Schedule** is set in the form of question marks (*?*) in the cells of the table; these are the points of your adventures desirable to fulfill, for example, a point of *Feat* on Wednesdays; the value of *?* is 0, so it *spoils the statistics* if the cell experiment has not been fulfilled.
+**Schedule** is set in the form of question marks (*?*) in the cells of the table. These are the points of your adventures desirable to fulfill, for example, a point of *Feat* on Wednesdays. The value of *?* is 0, so it *spoils the statistics* if the cell experiment has not been fulfilled.
 
 **Chart** has two types: a histogram and a graph.
 
-**Cumulative chart** is a chart, each point of which is obtained by summing the values of the previous period; the last value is the sum of all values.
+**Cumulative chart** is a chart, each point of which is obtained by summing the values of the previous period. The last value is the sum of all values.
 
-**Tag** is a keyword that marks a cell; tags are available through the context menu of cells; marks can be searched with *Find* tool.
+**Tag** is a keyword that marks a cell. Tags are available through the context menu of cells and can be searched with *Find* tool.
 
-**Cell comment** is arbitrary notes on the current cell, under the table; it can contain tags and be searched with *Find* tool.
+**Cell comment** is arbitrary notes on the current cell, under the table. It can contain tags and be searched with *Find* tool.
 
 **Weekly** is arbitrary notes on the current week, under the diagram.
 
-**Statistics** - summary data on the current database; contains two sections of data - *Current week and plan for the next* and *Previous, current and subsequent weeks*.
+**Statistics** - summary data on the current database. Contains two sections of data - *Current week and plan for the next* and *Previous, current and subsequent weeks*.
 
 **Cells / Cells0** - in statistics, they mean the total number of non-empty cells and the number of non-empty cells with a value of 0.
 
-**Report** is an html file that contains data from the current database, including statistics; it can be used for *external use.*
+**Report** is an html file that contains data from the current database, including statistics. It can be used for *external use*. It's created from one of four templates.
 
-**Sticker** is a short note that can be useful when working with *EG* - estimate criteria, value equivalents, ideas for experiments etc.; stickers can be colored and placed anywhere on the screen; open stickers are present in the report.
+**Sticker** is a short note that can be useful when working with *EG* - estimate criteria, value equivalents, ideas for experiments etc. Stickers can be colored and placed anywhere on the screen. Open stickers are present in the report.
 
 
  GENERAL USAGE PROCEDURE
