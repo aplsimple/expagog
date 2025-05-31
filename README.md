@@ -257,9 +257,11 @@ The *Report* dialogue with the report settings will open.
 
 Main settings:
 
-   - *From template file* - the source template in html format
+   - *From template file* - the source template in html format; there are 4 templates -       all data (repo.html), statistics only (repo_statistics.html), tables only     (repo_tables.html) and texts only (repo_texts.html); you can also design and use your own templates
 
    - *To resulting .html* - the report in html format
+
+   - *Include diagram* - if ON, the current diagram will be in the report
 
 Preferences of the report heading:
 

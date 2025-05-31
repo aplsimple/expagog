@@ -1,6 +1,17 @@
 # Last changes:
 
 
+Version `v1.3.1 (31 May'25)`
+
+  - BUGFIX: default color scheme -> texts aren't monotyped
+  - BUGFIX: focus entry at opening Report dialog
+  - NEW   : data/tpl/repo*.html - 4 report templates
+  - CHANGE: date format full: no year by default
+  - CHANGE: report's diagram setting: 1. saved; 2. if off, no diagram at all
+  - CHANGE: dates in Statistics & Preferences: readonly, not disabled
+  - CHANGE: clearance & docs, a bit
+  - CHANGE: packages: apave 4.6.2
+
 Version `v1.3.0 (28 May'25)`
 
   - BUGFIX: initiating current week's schedule if previous week is empty

@@ -1,10 +1,16 @@
  <r>The report settings are:</r>
 
- <b>From template file</b> - source file; this is a template that
-                      can be modified to fit your needs;
-                      default - <b>expagog/data/tpl/repo.html</b>
+ <b>From template file</b> - one of two default templates:
+     all data        - <b>repo.html</b>
+     statistics only - <b>repo_statistics.html</b>
+     tables only     - <b>repo_tables.html</b>
+     texts only      - <b>repo_texts.html</b>
+     (you can also design and use your own templates)
 
  <b>To resulting .html</b> - resulting file
+
+ <b>Include diagram</b>    - if ON, the current diagram will be
+                      in the report
 
  <b>Css file</b>  - file of CSS
  <b>Icon file</b> - icon file of yours

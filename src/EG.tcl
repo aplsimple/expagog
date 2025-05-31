@@ -93,8 +93,8 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   set D(Icons) {hamburger previous previous2 next next2 date home exit
     SaveFile info lock find print}
   set D(DateUser) "%e %b %Y" ;# date format for head date
-  set D(DateUser2) "%e %b"   ;# short date format for status bar
-  set D(DateUser3) "%e %B %Y, %A"   ;# full date format for text title
+  set D(DateUser2) "%e %b"   ;# date format for status bar
+  set D(DateUser3) "%e %B, %A"   ;# date format for text title
   set D(DatePG) %Y/%m/%d  ;# internal date format
   set D(Theme) darkbrown  ;# used theme
   set D(CS) 29       ;# used color scheme
@@ -2979,13 +2979,11 @@ proc EG::Init {} {
       }
     }
   }
-  if {[set D(TexFont) [ResourceData TexFont]] ne {}} {
-    if {[catch {dict set D(TexFont) -size $fs}]} {
-      set D(TexFont) {}
-    } else {
-      obj basicTextFont $D(TexFont)
-    }
+  if {[set D(TexFont) [ResourceData TexFont]] eq {}
+  || [catch {dict set D(TexFont) -size $fs}]} {
+    set D(TexFont) [obj basicTextFont]
   }
+  obj basicTextFont $D(TexFont)
   obj basicFontSize $fs
   obj basicDefFont [list {*}[obj basicDefFont] -size $fs]
   obj basicSmallFont [list {*}[obj basicSmallFont] -size [expr {$fs-2}]]

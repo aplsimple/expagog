@@ -426,11 +426,11 @@ proc pref::General_Tab {} {
     {.fraegdD.labegdD1 - - - - {-st se} {-t "Week range:   \["}}
     {.fraegdD.EntegdD1 + L 1 1 {-st sw -padx 0} {-tvar ::EG::pref::DP(egdDate1)
       -w 11 -justify center -tip "Included for data\n(click to choose)"
-      -state disabled -onevent {<Button> {::EG::pref::SelEgdDate 1}}}}
+      -state readonly -takefocus 0 -onevent {<Button> {::EG::pref::SelEgdDate 1}}}}
     {.fraegdD.labspc + L 1 1 {} {-t {  -  }}}
     {.fraegdD.EntegdD2 + L 1 1 {-st sw -padx 0} {-tvar ::EG::pref::DP(egdDate2)
       -w 11 -justify center -tip "Excluded for data\n(click to choose)"
-      -state disabled -onevent {<Button> {::EG::pref::SelEgdDate 2}}}}
+      -state readonly -takefocus 0 -onevent {<Button> {::EG::pref::SelEgdDate 2}}}}
     {.fraegdD.labspc2 + L 1 1 {-st sw} {-t \)}}
     {.h_c .h_b T 1 1 {-pady 8}}
     {.labD1 + T 1 1 {-st e -pady 1 -padx 3} {-t {Date format long:}}}

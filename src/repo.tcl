@@ -1,4 +1,3 @@
-#! /usr/bin/env tclsh
 ###########################################################
 # Name:    repo.tcl
 # Author:  Alex Plotnikov  (aplsimple@gmail.com)
@@ -25,7 +24,7 @@ namespace eval repo {
   variable redComment {}
   variable Year {}
   variable fieldVars {jsRepo cssRepo icoRepo file1Repo file2Repo \
-    headRepo blackComment redComment Year}
+    headRepo blackComment redComment Year doDiagr}
   variable settingVars [list tplRepo outRepo {*}$fieldVars]
   variable settingsKey RepoPreferences
   variable Html
@@ -90,7 +89,8 @@ proc repo::ReadPreferences {} {
       set $sv [EG::fromEOL [set $sv]]
     }
   }
-  set Year [file root [file tail $::EG::D(FILE)]] ;# [EG::CurrentYear yes]
+  set Year [file root [file tail $::EG::D(FILE)]]
+  set doDiagr [string is true $doDiagr]
 }
 #_______________________
 
@@ -439,10 +439,8 @@ proc repo::PutItemData {date1 tplweek itemdata} {
   incr idxAEG
   set aeg <$font>$aeg</font>
   if {[set weeklyKeyVal $weekly] ne {}} {
-    set weekly {<pre class="code">}
-    append weekly "\n<hr>"
+    if {$textval eq {}} {set weekly {}} {set weekly \n<hr>}
     append weekly [EG::fromEOL [lindex $weeklyKeyVal 1]]
-    append weekly </pre>
   }
   set outweek [PutValue $outweek Weekly $weekly]
   set outweek [PutValue $outweek AggrEGvalue $aeg]
@@ -512,7 +510,12 @@ proc repo::FillFields {} {
     }
   }
   lappend pairs Notes $Notes
-  lappend pairs Diagram "<img src=\"$diagrRepo\">"
+  if {$doDiagr} {
+    set diagram "<br><br><img src=\"$diagrRepo\"><br><br><br>"
+  } else {
+    set diagram {}
+  }
+  lappend pairs Diagram $diagram
   set Html [PutValue $Html {*}$pairs]
 }
 
@@ -591,12 +594,12 @@ proc repo::_create {} {
     {fra1 - - - - {-st nsew}}
     {.v_ - - - - {-pady 8}}
     {.lab0 + T 1 1 {-st es -cw 1 -padx 4} {-t {From template file:} -anchor e}}
-    {.filIn + L 1 1 {-st swe} {-w 63 -tvar ::EG::repo::tplRepo
+    {.FilIn + L 1 1 {-st swe} {-w 63 -tvar ::EG::repo::tplRepo
       -tip "expagog/data/tpl/repo.html\nby default"}}
     {.lab1 .lab0 T 1 1 {-st es -padx 4} {-t {To resulting .html:} -anchor e}}
     {.fisOut + L 1 1 {-st swe} {-w 63 -tvar ::EG::repo::outRepo}}
     {.v_1 .lab1 T 1 1 {-pady 8}}
-    {.lab2 + T 1 1 {-st en} {-t {Update diagram:} -anchor e}}
+    {.lab2 + T 1 1 {-st en} {-t {Include diagram:} -anchor e}}
     {.chbDiagr + L 2 99 {-st nw} {-var ::EG::repo::doDiagr -state $diagrst}}
     {.v_2 .lab2 T 1 1 {-pady 8}}
     {.lab3 + T 1 1 {-st es -padx 4} {-t {Css file:} -anchor e}}
@@ -640,7 +643,7 @@ proc repo::_create {} {
   $pobj displayTaggedText [$pobj TexBlack] blackComment
   $pobj displayTaggedText [$pobj TexRed] redComment
   set res [$pobj showModal $win -parent $::EG::WIN -resizable 0 \
-     -focus Tab -onclose destroy]
+     -focus [$pobj chooserPath FilIn] -onclose destroy]
   catch {destroy $win}
   catch {$pobj destroy}
 }

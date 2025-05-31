@@ -1,4 +1,3 @@
-#! /usr/bin/env tclsh
 ###########################################################
 # Name:    stat.tcl
 # Author:  Alex Plotnikov  (aplsimple@gmail.com)
@@ -849,13 +848,13 @@ proc stat::_create {} {
     {.v_ - - - - {-pady 8}}
     {.lab1 + T 1 1 {-st es} {-t "Current: \[" -anchor e}}
     {.entDat1 + L 1 1 {-st ws -padx 4} {-w 11 -justify center
-      -tvar ::EG::stat::date1 -tip "Click and choose a week@@ -under 5"
-      -state disabled -onevent {<Button> {EG::stat::ChooseWeek date1 %w}}}}
+      -tvar ::EG::stat::date1 -tip "Click to choose a week@@ -under 5"
+      -state readonly -takefocus 0 -onevent {<Button> {EG::stat::ChooseWeek date1 %w}}}}
     {.fradat2 + L 1 99 {-st ws -padx 0}}
     {.fradat2.lab1 - - - - {-st ws} {-t to -anchor e}}
     {.fradat2.entDat2 + L 1 1 {-st ws -padx 4} {-w 11 -justify center
-      -tvar ::EG::stat::date2 -tip "Click and choose a week@@ -under 5"
-      -state disabled -onevent {<Button> {EG::stat::ChooseWeek date2 %w}}}}
+      -tvar ::EG::stat::date2 -tip "Click to choose a week@@ -under 5"
+      -state readonly -takefocus 0 -onevent {<Button> {EG::stat::ChooseWeek date2 %w}}}}
     {.fradat2.lab2 + L 1 1 {-st ws} {-t \) -anchor e}}
     {.v_2 .lab1 T 1 1 {-pady 8}}
     {.lab3 + T 1 1 {-st es} {-t AggrEG -anchor e}}
