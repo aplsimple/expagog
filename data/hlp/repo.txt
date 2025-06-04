@@ -14,7 +14,6 @@
 
  <b>Css file</b>  - file of CSS
  <b>Icon file</b> - icon file of yours
- _________________________________________________________
 
  <r>Optionally</r> are also available:
 
@@ -22,10 +21,9 @@
  <b>2nd .js file</b> - another optional JavaScript file
  <b>JS code</b>      - JavaScript code to be executed at opening
                 the report by a browser
- _________________________________________________________
 
- To fill <r>Headings</r> the following data can be added:
+ <b>Title</b>        - report title
+ <b>Normal note</b>  - text to be shown as normal
+ <b>Red note</b>     - text to be shown as highlighted
 
- <b>Title</b>  - report title
- <b>Normal</b> - text to be shown as normal
- <b>Red</b>    - text to be shown as highlighted
+ To include <r>notes</r> in the report, switch <b>Include notes</b> ON.

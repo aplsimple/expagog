@@ -1,6 +1,18 @@
 # Last changes:
 
 
+Version `v1.3.2 (4 Jun'25)`
+
+  - BUGFIX: at selecting date from date chooser: current cell change moved too
+  - NEW   : *Report* dialog: "Include notes" setting
+  - NEW   : *Statistics* dialog: F7 key to report
+  - NEW   : statistics: AggrEG under table 1 (week data)
+  - DELETE: data/tpl/stat.html
+  - CHANGE: save cell's change at moving to other week
+  - CHANGE: *Statistics* dialog: "Report" dialog to report
+  - CHANGE: date chooser selects date, not week
+
+
 Version `v1.3.1 (31 May'25)`
 
   - BUGFIX: default color scheme -> texts aren't monotyped
@@ -43,7 +55,7 @@ Version `v1.1.0 (23 Apr'25)`
 
   - BUGFIX: color week cell of AggrEG diagram at options weeks=OFF, cumulate=OFF
   - BUGFIX: a sticker closed when its color chooser is open
-  - BUGFIX: Preferences' Zoom for status bar & "Find" dialogue
+  - BUGFIX: Preferences' Zoom for status bar & "Find" dialog
   - BUGFIX: locked weeks: comments on buttons moved to current cell
   - NEW   : Preferences: "Test" button to test settings
   - NEW   : popup menu of week day titles
@@ -63,10 +75,10 @@ Version `v1.0 (9 Apr'25)`
   - BUGFIX: diagram: switching "weeks" => \n added to comments
   - BUGFIX: calendar: highlighthing weeks with data (on other years)
   - BUGFIX: repo::RelativePath: last doctest failed
-  - NEW   : *Merge* dialogue
-  - NEW   : *Preferences* dialogue: week range
-  - NEW   : *New file* dialogue: week range
-  - NEW   : *Preferences* dialogue: fonts (default & text)
+  - NEW   : *Merge* dialog
+  - NEW   : *Preferences* dialog: week range
+  - NEW   : *New file* dialog: week range
+  - NEW   : *Preferences* dialog: fonts (default & text)
   - NEW   : week range title above diagram
   - NEW   : tab bar for multiple open egd files
   - NEW   : find.tcl: "In all" to search in multiple open egd files

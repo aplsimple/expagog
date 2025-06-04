@@ -169,17 +169,7 @@ proc stat::StatData {} {
     set k [string index %k 0]
     if {$k eq {v}} {
       set typ [string range %t 0 3]
-      switch -glob $typ {
-        time {set val [EG::TimeValue %v]}
-        chk* {set val [EG::ButtonValue %v]}
-        calc* - 9* {
-          set val %v
-          if {$val eq $::EG::EMPTY} {set val 0}
-        }
-        default {  ;# pure text
-          set val [EG::TextValue %v]
-        }
-      }
+      set val [EG::ItemValue $typ %v]
       set item [list %d %i]
       if {[dict exists $DS {*}$item]} {
         set res [dict get $DS {*}$item]
@@ -483,11 +473,46 @@ proc stat::Table2Value {nrow ncol nsum nprevsum nitemtype nchprev nrlen nres} {
 }
 #_______________________
 
+proc stat::Table1LinePart1 {resfill item} {
+  # Gets part 1 of table-1 line.
+  #   resfill - filling string
+  #   item - item name
+
+  return <t>[string range $resfill$item end-$::EG::NAMEWIDTH end]\ |</t>
+}
+#_______________________
+
+proc stat::Table1LinePart2 {resfill item namlen} {
+  # Gets part 2 of table-1 line.
+  #   resfill - filling string
+  #   item - item name
+  #   namlen - name length
+
+  return " <t>| [string range $item$resfill 0 $namlen]</t> "
+}
+#_______________________
+
+proc stat::Table1LinePart3 {itemtype cnt cnt0 sum avg fmt2} {
+  #   # Gets part 3 of table-1 line.
+  #   itemtype - item type
+  #   cnt - Count value
+  #   cnt0 - Count0 value
+  #   sum - sum value
+  #   avg - average value
+  #   fmt2 - format for average value
+
+  set sum [TableValue $itemtype $sum 7]
+  set avg [TableValue $fmt2 $avg 9]
+  return "[FmtCnt $cnt]   [FmtCnt $cnt0]$sum$avg"
+}
+#_______________________
+
 proc stat::DoTable1 {} {
   # Makes 1st table (data on counts, totals and averages).
 
   variable date1
   variable date2
+  variable fmt1
   variable fmt2
   variable fmtX
   variable DS
@@ -518,11 +543,13 @@ proc stat::DoTable1 {} {
   PutLine Table1 $under t
   set weekdata [WeekData $d1 $d2]
   set lastweek [EG::WeekValue $d1]
+  array set wddata {}
   foreach item $::EG::D(Items) itemtype $::EG::D(ItemsTypes) result $weekdata {
-    set res "<t>[string range $resfill$item end-$::EG::NAMEWIDTH end] |</t>"
+    set res [Table1LinePart1 $resfill $item]
     foreach wd {0 1 2 3 4 5 6} {
       if {[dict exists $lastweek $item v$wd]} {
         set v [string trim [dict get $lastweek $item v$wd]]
+        set vdec [EG::ItemValue $itemtype $v]
         if {$itemtype eq {chk} && $v ne {?}} {
           set v [EG::ButtonValue $v]
         }
@@ -530,15 +557,15 @@ proc stat::DoTable1 {} {
         set v [string range "     $v" end-4 end]
       } else {
         set v {     }
+        set vdec 0
       }
       append res " $v"
+      set wddata($wd,$item) $vdec
     }
-    append res " <t>| [string range $item$resfill 0 $namlen]</t> "
+    append res [Table1LinePart2 $resfill $item $namlen]
     lassign $result cnt cnt0 sum avg
     if {[string is double -strict $avg]} {
-      set sum [TableValue $itemtype $sum 7]
-      set avg [TableValue $fmt2 $avg 9]
-      append res "[FmtCnt $cnt]   [FmtCnt $cnt0]$sum$avg"
+      append res [Table1LinePart3 $itemtype $cnt $cnt0 $sum $avg $fmt2]
     } else {
       append res [Fmt $result $fmtx]
     }
@@ -550,6 +577,32 @@ proc stat::DoTable1 {} {
     if {$NN%2} {set tag {}} {set tag h}
     PutLine Table1 $line $tag
   }
+  PutLine Table1 $under t
+  set res [Table1LinePart1 $resfill AggrEG]
+  set sum 0
+  foreach wd {0 1 2 3 4 5 6} {
+    set data [list]
+    foreach item $::EG::D(Items) {
+      lappend data $wddata($wd,$item)
+    }
+    set v [CalculateByFormula $::EG::D(AggrEG) $data 0.0]
+    set sum [expr {$sum + $v}]
+    set v [Fmt $v $fmt1]
+    if {$wd==0 || $v==$prev || $v==0.0} {
+      set tag [set untag {}]
+    } elseif {$v > $prev} {
+      set tag <g>
+      set untag </g>
+    } else {
+      set tag <r>
+      set untag </r>
+    }
+    append res $tag[string range "     $v" end-5 end]$untag
+    set prev $v
+  }
+  append res [Table1LinePart2 $resfill AggrEG $namlen]
+  append res [Table1LinePart3 $fmt2 7 0 $sum [expr {$sum/7}] $fmt2]
+  PutLine Table1 "    [string trimright $res]"
   PutLine Table1 $under t
 }
 #_______________________
@@ -748,22 +801,15 @@ proc stat::ChooseWeek {dtvar ent} {
 proc stat::Report {} {
   # Outputs text to html.
 
-  variable Table1
-  variable Table2
-  set fname1 [file normalize [file join $::EG::DATATPL stat.html]]
-  set fname2 [file normalize [file join $::EG::USERDIR EGstat.html]]
-  set html [apave::readTextFile $fname1]
-  set html [string map [list TBL1 ${Table1} TBL2 ${Table2} \
-    LEG1 [Legend1] LEG2 [Legend2]] $html]
-  foreach {nam val} {t "<font color=#76361c>" g "<font color=#115111>" \
-  r "<font color=#be0000>" s "<font size=1>" \
-  h "<font style=\"background-color:#e9e9e9\">" a ""} {
-    set html [string map [list <$nam> $val] $html]
-    if {$val ne {}} {set val </font>}
-    set html [string map [list </$nam> $val] $html]
-  }
-  apave::writeTextFile $fname2 html
-  openDoc $fname2
+  variable win
+  EG::Source repo
+  set savedtpl $::EG::repo::tplRepo
+  set savednotes $::EG::repo::doNotes
+  set tpl [file join $::EG::DATATPL repo_statistics.html]
+  EG::repo::_run $tpl 0 $win yes
+  set ::EG::repo::tplRepo $savedtpl
+  set ::EG::repo::doNotes $savednotes
+  EG::repo::SavePreferences
 }
 #_______________________
 
@@ -882,6 +928,7 @@ proc stat::_create {} {
   }
   bind $win <F1> "[$pobj ButHelp] invoke"
   bind $win <F6> "[$pobj ButOK] invoke"
+  bind $win <F7> "[$pobj ButExpo] invoke"
   set fontsize [EG::ResourceData StatFS]
   set geo [EG::ResourceData StatGeom]
   AggregateFormula

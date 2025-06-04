@@ -719,7 +719,7 @@ proc EG::KeyPress {wid K s item wday} {
       return break
     }
   } elseif {[ItemType $item] eq {chk}} {
-    switch -- $K {
+    switch -exact -- $K {
       Delete - BackSpace {
         $wid configure -image none
         StoreData v {} $item $wday
@@ -732,11 +732,11 @@ proc EG::KeyPress {wid K s item wday} {
         $wid configure -image lamp
         StoreData v L $item $wday
       }
-      0 {
+      0 - ? - question {
         $wid configure -image ques
         StoreData v $EMPTY $item $wday
       }
-      - - minus - KP_Subtract {
+      {-} - minus - KP_Subtract {
         $wid configure -image no
         StoreData v N $item $wday
       }
@@ -754,6 +754,7 @@ proc EG::KeyPress {wid K s item wday} {
       }
     }
     Down - Return - KP_Enter {
+      StoreItem
       if {$i>=$llen} {
         set i 0
         if {$wday<6} {incr wday} {set wday 0}
@@ -997,6 +998,25 @@ proc EG::TextValue {tval} {
   }
   return $val
 }
+#_______________________
+
+proc EG::ItemValue {typ val} {
+  # Gets item's value depending on its type.
+  #   typ - type of value
+  #   val - value
+
+  switch -glob $typ {
+    time {set val [EG::TimeValue $val]}
+    chk* {set val [EG::ButtonValue $val]}
+    calc* - 9* {
+      if {$val eq $::EG::EMPTY} {set val 0}
+    }
+    default {  ;# pure text
+      set val [EG::TextValue $val]
+    }
+  }
+  return $val
+}
 
 ## ________________________ Scanning _________________________ ##
 
@@ -1139,6 +1159,18 @@ proc EG::StoreItem {} {
 }
 #_______________________
 
+proc EG::StoreData {styp val {item ""} {wday ""}} {
+  # Remembers data.
+  #   styp - store type (v - cell value, t - text, and others)
+  #   val - data
+  #   item  - item name
+  #   wday - week day
+
+  StoreValue $styp $val $item $wday
+  ShowTable
+}
+#_______________________
+
 proc EG::StoreValue {styp val {item ""} {wday ""}} {
   # Remembers value.
   #   styp - store type (v - cell value, t - text, and others)
@@ -1150,7 +1182,7 @@ proc EG::StoreValue {styp val {item ""} {wday ""}} {
   set val [string trimright $val]
   # save text
   set key [DataKey $styp $item $wday]
-  if {$val ne {}} {
+  if {$val ne {} && ($styp ne {v} || $item in $D(Items))} {
     dict set EGD {*}$key $val
   } else {
     catch {
@@ -1161,18 +1193,6 @@ proc EG::StoreValue {styp val {item ""} {wday ""}} {
       }
     }
   }
-}
-#_______________________
-
-proc EG::StoreData {styp val {item ""} {wday ""}} {
-  # Remembers data.
-  #   styp - store type (v - cell value, t - text, and others)
-  #   val - data
-  #   item  - item name
-  #   wday - week day
-
-  StoreValue $styp $val $item $wday
-  ShowTable
 }
 #_______________________
 
@@ -1430,14 +1450,12 @@ proc EG::ChooseWeek {{dtvar ""}} {
 
   fetchVars
   if {$dtvar eq {}} {set dtvar ::EG::D(Date1)}
+  focus [$EGOBJ EntDate]
   set dt [ChooseDay $dtvar]
   if {$dt ne {}} {
-    AfterWeekSwitch
-    set $dtvar [FormatDate $dt]
-  }
-  if {[IsMoveWeek]} {
-    CheckCurrentWeek
-    ShowTable
+    MoveToDay $dt
+  } else {
+    FocusedIt
   }
 }
 #_______________________
@@ -1465,7 +1483,7 @@ proc EG::IsTestMode {} {
 }
 #_______________________
 
-proc EG::CheckCurrentWeek {} {
+proc EG::ScheduleWeek {} {
   # Checks if the week is current and empty (no values set).
   # If so, fills it with "pending values" (0 for number, 0:00 for time,
   # ques icon for chk).
@@ -1562,12 +1580,13 @@ proc EG::MoveToWeek {wdays {dt ""} {doit no}} {
 
   fetchVars
   if {$wdays} {
+    StoreItem
     if {$dt eq {}} {set dt [ScanDate]}
     set dt [clock add $dt $wdays day]
   }
   set D(Date1) [FormatDate $dt]
   if {$doit || [IsMoveWeek]} {
-    CheckCurrentWeek
+    ScheduleWeek
     ShowTable
     AfterWeekSwitch
     FocusedIt {} {} $dt
@@ -1770,7 +1789,6 @@ proc EG::ColorItemLabels {{ispoly 0}} {
     set it [NormItem $item]
     [$EGOBJ LaBI$it] configure -fg $fg -bg $bg
   }
-  FocusedIt
 }
 
 # ________________________ Bar of tabs _________________________ #
@@ -1988,6 +2006,7 @@ proc EG::opcPost {} {
     diagr::Title Polygons
     ColorItemLabels yes
   }
+  FocusedIt
 }
 
 # ________________________ Locks _________________________ #
@@ -3189,7 +3208,7 @@ proc EG::_create {} {
   after idle EG::FillBar
   after idle after 100 "wm minsize $WIN $W $H; EG::HighlightEG"
   after idle after 400 \
-    "EG::CheckCurrentWeek; EG::diagr::Title;\
+    "EG::ScheduleWeek; EG::diagr::Title;\
     EG::ShowTable 1; EG::AfterWeekSwitch; after 300 {EG::diagr::Draw 1}"
   bind $WIN <F1> EG::Help
   bind $WIN <F5> EG::diagr::Draw

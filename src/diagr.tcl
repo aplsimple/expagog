@@ -109,6 +109,15 @@ proc diagr::initVars {} {
   catch {array unset WKcolor}
   array set WKcolor [list]
 }
+#_______________________
+
+proc diagr::MoveToDay {day1} {
+  # Moves to a day at clicking diagram, storing current cell at that
+  #   day1 - day to go on
+  
+  EG::StoreItem
+  EG::MoveToDay $day1
+}
 
 # ________________________ Lay out _________________________ #
 
@@ -130,7 +139,7 @@ proc diagr::Layout {} {
     set tip [EG::FormatDate $day1]
     lappend x1list [list $x1 [EG::FormatDatePG $day1] $day1 $tip]
     ::baltip::tip $C $tip -ctag WK$iw
-    $C bind $weekid <Button-1> [list EG::MoveToDay $day1]
+    $C bind $weekid <Button-1> [list EG::diagr::MoveToDay $day1]
     lappend idlist $weekid
     set m [clock format $dt -format %N]
     if {$m != $month} {
@@ -319,7 +328,7 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
       if {$ispoly} {append tip \n\"$item\"}
       append tip "\nSum: [EG::Round $sum 2]\nCells: $cnt"
       ::baltip::tip $C $tip -ctag $tag -per10 4000
-      $C bind $tag <Button-1> [list EG::MoveToDay $day1]
+      $C bind $tag <Button-1> [list EG::diagr::MoveToDay $day1]
     }
   }
 }
@@ -403,7 +412,7 @@ proc diagr::DrawWeekNN {} {
     }
     set id [$C create text $x1 $y1 -text $wN -font $font -fill $fcolor -tag WN$iw]
     lappend idlist $id
-    $C bind $id <Button-1> [list EG::MoveToDay $day1]
+    $C bind $id <Button-1> [list EG::diagr::MoveToDay $day1]
     ::baltip::tip $C $tip -ctag WN$iw
   }
 }

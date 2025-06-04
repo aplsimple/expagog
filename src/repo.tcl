@@ -24,7 +24,7 @@ namespace eval repo {
   variable redComment {}
   variable Year {}
   variable fieldVars {jsRepo cssRepo icoRepo file1Repo file2Repo \
-    headRepo blackComment redComment Year doDiagr}
+    headRepo blackComment redComment Year doDiagr doNotes}
   variable settingVars [list tplRepo outRepo {*}$fieldVars]
   variable settingsKey RepoPreferences
   variable Html
@@ -37,7 +37,7 @@ namespace eval repo {
   variable RedColor #be0000
   variable YellowColor #6b6b00
   variable GreenColor #115111
-  variable doDiagr 1
+  variable doDiagr 1 doNotes 1
 }
 
 # ________________________ Common _________________________ #
@@ -74,6 +74,7 @@ proc repo::fetchVars {} {
     variable YellowColor
     variable GreenColor
     variable doDiagr
+    variable doNotes
   }
 }
 
@@ -91,6 +92,7 @@ proc repo::ReadPreferences {} {
   }
   set Year [file root [file tail $::EG::D(FILE)]]
   set doDiagr [string is true $doDiagr]
+  set doNotes [string is true $doNotes]
 }
 #_______________________
 
@@ -99,7 +101,7 @@ proc repo::SavePreferences {} {
 
   fetchVars
   foreach {var tex} {jsRepo TexJS blackComment TexBlack redComment TexRed} {
-    set $var [string trimright [[$pobj $tex] get 1.0 end]]
+    catch {set $var [string trimright [[$pobj $tex] get 1.0 end]]}
   }
   foreach fld $settingVars {
     lappend fieldValues [EG::toEOL [set $fld]]
@@ -315,6 +317,18 @@ proc repo::InitialDir {var} {
   }
   return $res
 }
+#_______________________
+
+proc repo::CheckNotes {} {
+  # Enables/disables "notes" fields depending on doNotes value.
+
+  fetchVars
+  if {$doNotes} {set st normal} {set st disabled}
+  foreach fld {TexBlack TexRed} {
+    [$pobj $fld] configure -state $st
+  }
+  $pobj themeNonThemed $win
+}
 
 # ________________________ Processing data _________________________ #
 
@@ -500,13 +514,20 @@ proc repo::FillFields {} {
   set wtmp [$pobj TexTmp]
   $wtmp replace 1.0 end {}
   foreach fld $fieldVars {
-    lappend pairs $fld [TextContent [set $fld]]
+    if {$fld ni {blackComment redComment} || $doNotes} {
+      set val [TextContent [set $fld]]
+    } else {
+      set val {}
+    }
+    lappend pairs $fld $val
   }
   lappend pairs statRepo [EG::stat::Calculate no $wtmp]
   set Notes {}
-  foreach n $::EG::NOTESN {
-    if {[set note [EG::note::OpenNoteText $n]] ne {}} {
-      append Notes <p><b>[EG::note::NoteName $n]</b><br>$note</p>
+  if {$doNotes} {
+    foreach n $::EG::NOTESN {
+      if {[set note [EG::note::OpenNoteText $n]] ne {}} {
+        append Notes <p><b>[EG::note::NoteName $n]</b><br>$note</p>
+      }
     }
   }
   lappend pairs Notes $Notes
@@ -577,8 +598,9 @@ proc repo::Help {} {
 
 # ________________________ GUI _________________________ #
 
-proc repo::_create {} {
+proc repo::_create {parent} {
   # Creates "Report" dialogue.
+  #   parent - parent window's path
 
   fetchVars
   catch {$pobj destroy}
@@ -618,14 +640,16 @@ proc repo::_create {} {
       -initialdir {::EG::repo::InitialDir file2Repo}}}
     {.v_4 .lab6 T 1 1 {-pady 8}}
     {.lab7 + T 1 1 {-st en} {-t {JS code:} -anchor e}}
-    {.TexJS + L 2 99 {-st nswe} {-w 70 -h 4 -tabnext *.texBlack}}
+    {.TexJS + L 2 99 {-st nswe} {-w 70 -h 4 -tabnext *.entHead}}
     {lfr2 lfr T 1 2 {-st nswe} {-t Heading}}
-    {.lab5 + T 1 1 {-st en -padx 4} {-t Title: -anchor e}}
+    {.lab - - - - {-st en -padx 4} {-t Title: -anchor e}}
     {.entHead + L 1 1 {-st swe} {-w 74 -tvar ::EG::repo::headRepo}}
-    {.lab6 .lab5 T 1 1 {-st en -padx 4} {-t {Normal:} -anchor e}}
+    {.lab1 .lab T 1 1 {-st en} {-t {Include notes:} -anchor e}}
+    {.chbNotes + L 1 1 {-st nw} {-var ::EG::repo::doNotes -com EG::repo::CheckNotes}}
+    {.lab2 .lab1 T 1 1 {-st en -padx 4} {-t {Normal note:} -anchor e}}
     {.TexBlack + L 2 99 {-st nswe} {-w 74 -h 4 -tabnext *.texRed}}
-    {.v_4 .lab6 T 1 1 {-pady 8}}
-    {.lab7 + T 1 1 {-st en} {-t {Red:} -anchor e}}
+    {.v_4 .lab2 T 1 1 {-pady 8}}
+    {.lab3 + T 1 1 {-st en} {-t {Red note:} -anchor e}}
     {.TexRed + L 2 99 {-st nswe} {-w 74 -h 4 -tabnext *.butExpo}}
     {seh lfr2 T 1 2 {-pady 8 -st ew}}
     {frabot + T 1 2 {-st ew} {}}
@@ -637,27 +661,35 @@ proc repo::_create {} {
       -image mnu_print -compound left -com EG::repo::Report}}
     {.butCancel + L 1 1 {pack -side left -padx 4} {-text Cancel -com "destroy $win"}}
   }
+  CheckNotes
   bind $win <F1> "[$pobj ButHelp] invoke"
   bind $win <F7> "[$pobj ButExpo] invoke"
   $pobj displayTaggedText [$pobj TexJS] jsRepo
   $pobj displayTaggedText [$pobj TexBlack] blackComment
   $pobj displayTaggedText [$pobj TexRed] redComment
-  set res [$pobj showModal $win -parent $::EG::WIN -resizable 0 \
+  set res [$pobj showModal $win -parent $parent -resizable 0 \
      -focus [$pobj chooserPath FilIn] -onclose destroy]
   catch {destroy $win}
   catch {$pobj destroy}
 }
 #_______________________
 
-proc repo::_run {{doit no}} {
+proc repo::_run {{tplrepo ""} {donotes -1} {parent ""} {doit no}} {
   # Runs "Report" dialogue.
+  #   tplrepo - if not "", defines tplRepo's value
+  #   donotes - if not -1, defines doNotes's value
+  #   parent - parent window's path
+  #   doit - if no, restarts after idle
 
   fetchVars
   if {!$doit} {
-    after idle {EG::repo::_run yes}
+    after idle [list EG::repo::_run $tplrepo $donotes $parent yes]
     return
   }
   EG::SaveAllData
   ReadPreferences
-  _create
+  if {$tplrepo ne {}} {set tplRepo $tplrepo}
+  if {$donotes != -1} {set doNotes $donotes}
+  if {$parent eq {}} {set parent $::EG::WIN}
+  _create $parent
 }
