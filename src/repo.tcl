@@ -441,7 +441,6 @@ proc repo::PutItemData {date1 tplweek itemdata} {
   if {$idxAEG && $aeg!=0 && $prevAEG!=0} {
     set diff [expr {($aeg - $prevAEG) / $aeg}]
     if {abs($diff)>$::EG::stat::maxdiff} {
-      # difference > 2% - highlight it
       if {$aeg > $prevAEG} {
         append font " color=$GreenColor"
       } else {

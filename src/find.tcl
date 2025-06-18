@@ -172,10 +172,13 @@ proc find::Found {item date where what fname} {
   #   what - list of "what to find" words at searching by list
   #   fname - egd file name or {}
 
+  variable findString
   variable chkCase
   variable chkList
   if {$chkCase} {set opt {}} {set opt -nocase}
-  if {$chkList} {
+  if {$findString eq {}} {
+    AddFoundInfo $item $date $where $fname $where ;# empty find value => show all texts
+  } elseif {$chkList} {
     set what [string trim $what]
     foreach word1 [split $where] {
       if {$word1 ne {}} {
@@ -263,12 +266,6 @@ proc find::OK {} {
   set findString [string trim $findString]
   SaveOptions
   set cbx [$pobj Cbx1]
-  if {$findString eq {}} {
-    bell
-    EG::Message "Enter what to search."
-    apave::focusByForce $cbx
-    return
-  }
   EG::Message "Wait please..." 10
   ClearCbx $cbx ::EG::D(FindStrs)
   set ::EG::D(FindStrs) [linsert $::EG::D(FindStrs) 0 $findString]
@@ -407,7 +404,7 @@ proc find::_create {} {
     {lab1 - - - - {-st e -padx 2 -pady 4} {-t Find:}}
     {Cbx1 + L 1 3 {-st w -pady 4 -cw 1}
       {-tvar ::EG::find::findString -w 50 -h 10 -values {$::EG::D(FindStrs)}
-      -clearcom {EG::find::ClearCbx %w ::EG::D(FindStrs)}}}
+      -clearcom {EG::find::ClearCbx %w ::EG::D(FindStrs)} -tip {-BALTIP "Empty field means\n\"show all texts\"" -MAXEXP 2} }}
     {lab2 lab1 T 1 1 {-st e -padx 2 -pady 4} {-t Tags:}}
     {Opc1 + L 1 1 {-st w -pady 4} {::EG::find::Opcvar ::EG::find::OpcItems {-width 10}
       {EG::find::opcPre {%a}} -command EG::find::opcPost}}

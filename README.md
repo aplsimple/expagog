@@ -197,6 +197,8 @@ If you need to search by a list of tags (i.e. just word by word), turn on the *B
 
 The *Match case* mode allows you to search for case-sensitive text.
 
+If *Find* field is empty, all cell comments and text cells will be shown.
+
 Click on any row in the list of matches found, and you will be redirected to the corresponding cell in the table.
 
 The *Find* dialogue does not need to be closed after opening, it does not affect the operation in the main *EG* window. The *Find* dialogue's geometry and options are saved until the next session.
@@ -262,6 +264,8 @@ Main settings:
    - *To resulting .html* - the report in html format
 
    - *Include diagram* - if ON, the current diagram will be in the report
+
+   - *Include notes* - if ON, the heading texts will be in the report
 
 Preferences of the report heading:
 

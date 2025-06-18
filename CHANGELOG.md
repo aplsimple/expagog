@@ -1,23 +1,23 @@
 # Last changes:
 
 
-Version `v1.3.2 (4 Jun'25)`
+Version `v1.4.0 (18 Jun'25)`
 
   - BUGFIX: at selecting date from date chooser: current cell change moved too
+  - BUGFIX: default color scheme -> texts aren't monotyped
+  - BUGFIX: focus entry at opening Report dialog
+  - NEW   : one instance of expagog app allowed only
+  - NEW   : *Find* dialog: empty value to find means "show all texts"
+  - NEW   : data/tpl/repo*.html - 4 report templates
   - NEW   : *Report* dialog: "Include notes" setting
   - NEW   : *Statistics* dialog: F7 key to report
   - NEW   : statistics: AggrEG under table 1 (week data)
   - DELETE: data/tpl/stat.html
+  - CHANGE: date chooser parented
+  - CHANGE: stat::maxdiff = 0.5%
   - CHANGE: save cell's change at moving to other week
   - CHANGE: *Statistics* dialog: "Report" dialog to report
   - CHANGE: date chooser selects date, not week
-
-
-Version `v1.3.1 (31 May'25)`
-
-  - BUGFIX: default color scheme -> texts aren't monotyped
-  - BUGFIX: focus entry at opening Report dialog
-  - NEW   : data/tpl/repo*.html - 4 report templates
   - CHANGE: date format full: no year by default
   - CHANGE: report's diagram setting: 1. saved; 2. if off, no diagram at all
   - CHANGE: dates in Statistics & Preferences: readonly, not disabled

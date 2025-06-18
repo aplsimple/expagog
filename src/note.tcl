@@ -2,7 +2,7 @@
 # Name:    note.tcl
 # Author:  Alex Plotnikov  (aplsimple@gmail.com)
 # Date:    Jan 20, 2025
-# Brief:   Handles notes of EG app.
+# Brief:   Handles notes (stickers) of EG app.
 # License: MIT.
 ###########################################################
 

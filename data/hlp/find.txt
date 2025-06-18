@@ -4,7 +4,7 @@
 
  Available are the search options:
 
-   <b>Find</b> value - what to search
+   <b>Find</b> value - what to search (empty field means "all")
 
    <b>Tags</b> list  - to add colors and keywords to the entry;
                 these are set in <b>Preferences</b> dialogue

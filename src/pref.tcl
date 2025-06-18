@@ -703,7 +703,7 @@ proc pref::SelEgdDate {ndate} {
   set dtvar ::EG::pref::DP(egdDate$ndate)
   if {$ndate==1} {set ttl {Week first}} {set ttl {Week last}}
   set ent [$obPrf EntegdD$ndate]
-  EG::ChooseDay $dtvar -entry $ent -title $ttl -dateformat $::EG::D(DatePG)
+  EG::ChooseDay $dtvar -entry $ent -title $ttl -dateformat $::EG::D(DatePG) -parent $win
   if {$ndate==1} CheckEgdDate1 CheckEgdDate2
 }
 

@@ -14,7 +14,7 @@ namespace eval stat {
   variable date1 {}
   variable date2 {}
   variable aggrdata; array set aggrdata {}
-  variable maxdiff 0.02
+  variable maxdiff 0.005
   variable fieldwidth 11  ;# defined by " yyyy/mm/dd" fields
   variable fmt0 [string repeat 9 $fieldwidth]
   variable fmt1 [string repeat 9 [expr {$fieldwidth-2}]].9
@@ -447,7 +447,6 @@ proc stat::Table2Value {nrow ncol nsum nprevsum nitemtype nchprev nrlen nres} {
     if {$s1 ne $s2} {
       set diff [expr {($sum - $prevsum) / $sum}]
       if {abs($diff)>$maxdiff} {
-        # difference > 2% - highlight it
         if {$sum > $prevsum} {
           set t1 <g>  ;# green
           set t2 </g>
@@ -773,7 +772,7 @@ proc stat::Legend2 {} {
     --------------------------------------------------------------\n\
     The <r>red</r> / <g>green</g> values mean:\n\
     - a value is <r>lesser</r> / <g>greater</g> than previous one by\
-    [expr {int($maxdiff*100)}]% or more.</s>"
+    [expr {$maxdiff*100}]% or more.</s>"
 }
 
 # ________________________ Actions _________________________ #

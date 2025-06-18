@@ -75,6 +75,7 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   variable QUESVAL 0
   variable TAGOPCLEN 16
   variable NAMEWIDTH 15
+  variable comm_port 51137
 
   variable Colors;  ;# item colors
   array set Colors [list pending #ffff00 failed #ff0000 done #80ff80 \
@@ -234,6 +235,56 @@ proc EG::Source {scriptname} {
   fetchVars
   if {![namespace exists $scriptname]} {
     source [file join $SCRDIR $scriptname.tcl]
+  }
+}
+
+# __________________ Procs to raise the app (borrowed from alited) ___________________ #
+
+
+catch {package require comm}  ;# Generic message transport
+
+proc EG::raise_window {args} {
+  # Raises the app's window.
+
+  fetchVars
+  catch {
+    set foc {}
+    foreach wc [winfo children $WIN] {
+      if {$wc ne "$WIN.fra" && ![string match $WIN.sticker* $wc]} {
+        set foc $wc
+        break
+      }
+    }
+    wm withdraw $WIN
+    wm deiconify $WIN
+    if {$foc eq {}} {set foc [Field $D(curritem) $D(currwday)]}
+    focus $foc
+  }
+}
+
+proc EG::run_remote {cmd args} {
+  # Runs a command that was started by another process.
+
+  if {[catch { $cmd {*}$args } err]} {
+    puts $err
+    return -code error
+  }
+}
+
+# Attempt to raise the existing application
+if {$::tcl_platform(platform) eq {windows}} {
+  if {[catch {::comm::comm config -port $::EG::comm_port}]} {
+    if {![catch {::comm::comm send $::EG::comm_port ::EG::run_remote \
+    ::EG::raise_window {*}$::argv}]} {
+      destroy .
+      exit
+    }
+  }
+} else {
+  if {[tk appname expagog] ne "expagog"} {
+    send -async expagog ::EG::raise_window {*}$::argv
+    destroy .
+    exit
   }
 }
 
@@ -1432,7 +1483,7 @@ proc EG::ChooseDay {dtvar args} {
   fetchVars
   set hllist [lsort [dict keys $EGD */*/*]]
   set dt [obj chooser dateChooser $dtvar -title {Choose a week} \
-    -locale en -dateformat $D(DateUser) -weeks 1 \
+    -locale en -dateformat $D(DateUser) -weeks 1 -parent $WIN \
     -hllist $hllist -hlweeks 1 -entry [$EGOBJ EntDate] {*}$args]
   if {$dt ne {}} {
     if {[catch {set fmt [dict get $args -dateformat]}]} {
