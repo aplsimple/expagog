@@ -139,6 +139,7 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   variable InpItem {} ;# input item to go to
   variable InpDate {} ;# input date to go to
   variable TestMode 0 ;# allows no changes to data
+  variable DebugMode 0 ;# debugging mode
 
   ## ________________________ Pathes ________________________ ##
 
@@ -238,8 +239,27 @@ proc EG::Source {scriptname} {
   }
 }
 
-# __________________ Procs to raise the app (borrowed from alited) ___________________ #
+# ________________________ Handle special arguments _________________________ #
 
+set i [lsearch $::argv -test]
+if {$i>=0} {
+  set ::EG::TestMode 1
+  set ::argv [lreplace $::argv $i $i]
+}
+
+set i [lsearch $::argv -debug]
+if {$i>=0} {
+  set ::EG::DebugMode 1
+  set ::argv [lreplace $::argv $i $i]
+  set i [file join [apave::HomeDir] TMP]  ;# directory for logs
+  if {[file exists $i]} {
+    apave::logName [file join $i EG.log]
+  }
+}
+set ::argc [llength $::argv]
+unset i
+
+# __________________ Procs to raise the app (borrowed from alited) ___________________ #
 
 catch {package require comm}  ;# Generic message transport
 
@@ -272,19 +292,21 @@ proc EG::run_remote {cmd args} {
 }
 
 # Attempt to raise the existing application
-if {$::tcl_platform(platform) eq {windows}} {
-  if {[catch {::comm::comm config -port $::EG::comm_port}]} {
-    if {![catch {::comm::comm send $::EG::comm_port ::EG::run_remote \
-    ::EG::raise_window {*}$::argv}]} {
+if {!$::EG::TestMode && !$::EG::DebugMode} {
+  if {$::tcl_platform(platform) eq {windows}} {
+    if {[catch {::comm::comm config -port $::EG::comm_port}]} {
+      if {![catch {::comm::comm send $::EG::comm_port ::EG::run_remote \
+      ::EG::raise_window {*}$::argv}]} {
+        destroy .
+        exit
+      }
+    }
+  } else {
+    if {[tk appname expagog] ne "expagog"} {
+      send -async expagog ::EG::raise_window {*}$::argv
       destroy .
       exit
     }
-  }
-} else {
-  if {[tk appname expagog] ne "expagog"} {
-    send -async expagog ::EG::raise_window {*}$::argv
-    destroy .
-    exit
   }
 }
 
@@ -325,8 +347,9 @@ proc EG::ButtonValue {icon} {
 proc EG::Round {value digits} {
   # Rounds *value* to *digits* after point.
 
+  set sign [expr {$value<0 ? -1 : 1}]
   set mult [expr {10.0**$digits}]
-  expr {int($value*$mult+0.5)/$mult}
+  expr {int(abs($value)*$mult+0.5)/$mult*$sign}
 }
 #_______________________
 
@@ -1038,14 +1061,15 @@ proc EG::TextValue {tval} {
     # no text, no value
     set val 0
   } else {
-    # any text is evaluated as 1
-    set val 1
-    # leading "-" make it lesser
-    # leading "+" make it greater
-    set tlen [string length $tval]
-    incr val [expr {[string length [string trimleft $tval -]] - $tlen}]
-    incr val [expr {$tlen - [string length [string trimleft $tval +]]}]
-    set val [expr {max(0,$val)}]
+    set len [string length $tval]
+    if {[set val [expr {$len - [string length [string trimleft $tval +]]}]]} {
+      # number of leading "+" means positive value
+    } elseif {[set val [expr {[string length [string trimleft $tval -]] - $len}]]} {
+      # number of leading "-" means negative value
+    } else {
+      # any other text is evaluated as 1
+      set val 1
+    }
   }
   return $val
 }
@@ -1067,6 +1091,20 @@ proc EG::ItemValue {typ val} {
     }
   }
   return $val
+}
+#_______________________
+
+proc EG::CheckItems {} {
+  # Checks and corrects lists of items and item types.
+
+  fetchVars
+  set D(Items)      [lrange $D(Items)      0 $D(MAXITEMS)-1]
+  set D(ItemsTypes) [lrange $D(ItemsTypes) 0 $D(MAXITEMS)-1]
+  if {[lindex $D(Items) end] ne {EG}} {
+    lappend D(Items) EG
+    lappend D(ItemsTypes) foo
+  }
+  set D(ItemsTypes) [lreplace $D(ItemsTypes) end end 999] ;# EG's format
 }
 
 ## ________________________ Scanning _________________________ ##
@@ -1265,6 +1303,7 @@ proc EG::CommonData {args} {
 proc EG::SaveRC {} {
   # Saves resource data except for notes' contents.
 
+  if {[IsTestMode]} return
   fetchVars
   foreach n $NOTESN {
     lappend noteopen [winfo exists [note::NoteWin $n]]
@@ -1292,6 +1331,7 @@ proc EG::SaveAllData {args} {
   # Saves all data.
 
   fetchVars
+  StoreItem
   set t [[$EGOBJ Text] get 1.0 end]
   StoreText $t
   if {"-openfile" ni $args} {
@@ -1362,10 +1402,7 @@ proc EG::AllWeekData {} {
           }
         }
         incr cnt
-        if {$val<=0 || ![string is double -strict $val]} {
-          incr cnt0
-          set val 0
-        }
+        stat::CheckCount0 val cnt0
         set sum [expr {$sum + $val}]
         dict set DS {*}$item [list $cnt $cnt0 $sum $tags $tagcmnt]
       }
@@ -1527,7 +1564,7 @@ proc EG::IsTestMode {} {
   # Checks if the app in the test mode. Shows message if it is.
 
   if {$::EG::TestMode} {
-    Message "Disabled at testing" 7
+    Message "No changes at testing" 7
     return yes
   }
   return no
@@ -1651,6 +1688,14 @@ proc EG::MoveToDay {{dt ""}} {
 
   CurrentItemDay "" [FormatDatePG $dt]
   MoveToWeek 0 $dt
+}
+#_______________________
+
+proc EG::MoveToToday {} {
+  # Move to today.
+
+  MoveToDay
+  diagr::Draw 1
 }
 
 # ________________________ Show data _________________________ #
@@ -2408,13 +2453,7 @@ proc EG::OpenDataFile {fname} {
     set D(Items) $items
     set D(ItemsTypes) $itemstypes
   }
-  set D(Items)      [lrange $D(Items)      0 $D(MAXITEMS)-1]
-  set D(ItemsTypes) [lrange $D(ItemsTypes) 0 $D(MAXITEMS)-1]
-  if {[lindex $D(Items) end] ne {EG}} {
-    lappend D(Items) EG
-    lappend D(ItemsTypes) foo
-  }
-  set D(ItemsTypes) [lreplace $D(ItemsTypes) end end 999] ;# EG's format
+  CheckItems
   foreach it $D(Items) {
     set itw [expr {min(16,[string length $it]+2)}] ;# +2 for bold font
     if {$ITWIDTH<$itw} {set ITWIDTH $itw}
@@ -2938,11 +2977,6 @@ proc EG::Init {} {
   global argv argc
   fetchVars
   set fileegd [CurrentYear].egd
-  set i [lsearch -exact $argv -test]
-  if {$i>=0} {
-    set TestMode 1
-    set argv [lreplace $argv $i $i]
-  }
   set i1 [lsearch -exact $argv -item]
   set i2 [lsearch -exact $argv -date]
   if {$i1>=0 && $i2>=0} {
@@ -3141,7 +3175,7 @@ proc EG::_create {} {
       Tool_next2 {{EG::MoveToWeek 28} -tip "Next 4 weeks@@ -under 5"}
       sev 4
       Tool_date {EG::ChooseWeek -tip "Choose a week\nCtrl+D@@ -under 5"}
-      Tool_home {EG::MoveToDay -tip "To the current day\nCtrl+H@@ -under 5"}
+      Tool_home {EG::MoveToToday -tip "To today\nCtrl+H@@ -under 5"}
       Tool_find {EG::Find -tip "Find in texts\nCtrl+F@@ -under 5"}
       sev 4
       Tool_lock {EG::SwitchLock -tip "Unlock changes\nCtrl+L@@ -under 5"}
@@ -3296,7 +3330,7 @@ proc EG::_run {} {
 
 # ________________________ Run this _________________________ #
 
-# if {"-test" ni $::argv} {source [apave::HomeDir]/PG/github/DEMO/expagog/demo.tcl} ;#! for demo
+# if {!$::EG::TestMode} {source [apave::HomeDir]/PG/github/DEMO/expagog/demo.tcl} ;#! for demo
 
 EG::_run
 

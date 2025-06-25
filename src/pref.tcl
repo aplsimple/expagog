@@ -206,6 +206,7 @@ proc pref::IsChangedMainSettings {} {
 proc pref::UpdateAppearance {} {
   # Updates the appearance: colors & dates.
 
+  EG::CheckItems
   EG::SaveAll
   EG::Init
   EG::FocusedIt $::EG::D(curritem) $::EG::D(currwday)
@@ -338,6 +339,8 @@ proc pref::Save {{istest 0} args} {
     set ::EG::D($k) $DP($k)
   }
   if {$istest} {
+    set argvsav $::argv
+    set argcsav $::argc
     if {$::argc>1} {
       set ::argv [lreplace $::argv 1 1 $tmprc]
     } elseif {$::argc==1} {
@@ -349,6 +352,8 @@ proc pref::Save {{istest 0} args} {
     set ::EG::D(DateUser) $tmpDateUser
     EG::SaveAllData
     catch {exec -- [info nameofexecutable] $::EG::SCRIPT {*}$::argv -test}
+    set ::argv $argvsav
+    set ::argc $argcsav
     set ::EG::USERFILEPG $savedUSERFILEPG
     array set ::EG::Colors $tmpcolors
     array set ::EG::D $tmpD

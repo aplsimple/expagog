@@ -83,7 +83,7 @@ However, get to the point.
 
 **Cell** is located at the intersection of the *subject* row with the *week day* column.
 
-**Cell value** - for topics such as numbers and time, these are their values. For the switch, these are 2 (*yes*), 1 (*lamp*), 0 (*?*) or -1 (*no*); for text, it is always 1 plus the number of initial *+* minus the number of *-* (for example, value of *++ wow!* is 3). The sums of values less than zero are reset to 0 (there is no negative sum in *EG*).
+**Cell value** - for topics of number and time types, these are their values. For the switch (*chk*), these are 2 (*yes*), 1 (*lamp*), 0 (*?*) or -1 (*no*); for the text (*xxx*), it is always 1 by default, but the number of initial *+* sets a positive value and the number of *-* sets a negative value (for example, *"hurray!"* equals to 1, value of *"+++ wow!"* is 3, while *"-- miau"* is evaluated to -2).
 
 **Schedule** is set in the form of question marks (*?*) in the cells of the table. These are the points of your adventures desirable to fulfill, for example, a point of *Feat* on Wednesdays. The value of *?* is 0, so it *spoils the statistics* if the cell experiment has not been fulfilled.
 

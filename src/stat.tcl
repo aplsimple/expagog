@@ -19,7 +19,7 @@ namespace eval stat {
   variable fmt0 [string repeat 9 $fieldwidth]
   variable fmt1 [string repeat 9 [expr {$fieldwidth-2}]].9
   variable fmt2 [string repeat 9 [expr {$fieldwidth-3}]].99
-  variable fmtX [string repeat X $fieldwidth]
+  variable fmtX [string repeat \r $fieldwidth]
   variable DS; set DS [dict create]
   variable Table1 {}
   variable Table2 {}
@@ -57,13 +57,8 @@ proc stat::Fmt {val {fmt ""}} {
       }
       set res [string range $fill$val end-$wd1 end]
     }
-    X { ;# text aligned to right
+    \r { ;# text aligned to right
       set res [string range $fill$val end-$wd1 end]
-    }
-    C { ;# text centered
-      set vd [expr {($wd0 - [string length $val])/2}]
-      set fill [string repeat { } $vd]
-      set res [string range "$fill$val$fill " 0 $wd1]
     }
     default { ;# text aligned to left
       set res [string range $val$fill 0 $wd1]
@@ -151,6 +146,21 @@ proc stat::CompareIt {it1 it2} {
   if {$it1 < $it2} {return -1}
   return 0
 }
+#_______________________
+
+proc stat::CheckCount0 {nval ncnt0} {
+  # Checks if cell's value contributes to Count0 (at value<=0).
+  #   nval - value variable
+  #   ncnt0 - Count0 variable
+
+  upvar $nval val $ncnt0 cnt0
+  if {![string is double -strict $val]} {
+    incr cnt0
+    set val 0
+  } elseif {$val<=0} {
+    incr cnt0
+  }
+}
 
 # ________________________ Processing data _________________________ #
 
@@ -178,10 +188,7 @@ proc stat::StatData {} {
       }
       lassign $res cnt cnt0 sum
       incr cnt
-      if {$val==0 || ![string is double -strict $val]} {
-        incr cnt0
-        set val 0
-      }
+      CheckCount0 val cnt0
       set sum [expr {$sum + $val}]
       if {[catch {set avg [expr {1.0*$sum/$cnt}]}] \
       || ![string is double -strict $avg]} {
@@ -278,12 +285,10 @@ proc stat::SetDates {} {
 
   variable date1
   variable date2
-  if {$date1 eq {}} {
-    set date1 [EG::FirstWDay [EG::ScanDate]]
-    set date2 [clock add $date1 +1 week]
-    set date1 [EG::FormatDate $date1]
-    set date2 [EG::FormatDate $date2]
-  }
+  set date1 [EG::FirstWDay [EG::ScanDate]]
+  set date2 [clock add $date1 +1 week]
+  set date1 [EG::FormatDate $date1]
+  set date2 [EG::FormatDate $date2]
 }
 
 ## ________________________ Filling tables _________________________ ##
@@ -413,10 +418,10 @@ proc stat::TableValue {itemtype val {len 0}} {
       set val [EG::TimeSym [Fmt $val $fmt2]]
       set val [Fmt $val $fmtX]
     }
-    X*      {set val [Fmt $val $fmtX]}
-    chk     {set val [Fmt $val $fmt0]}
-    AggrEG  {set val [Fmt $val $fmt1]}
-    default {set val [Fmt $val $fmt2]}
+    \r*           {set val [Fmt $val $fmtX]}
+    AggrEG        {set val [Fmt $val $fmt1]}
+    9*.9* - calc* {set val [Fmt $val $fmt2]}
+    default       {set val [Fmt $val $fmt0]}
   }
   if {$len} {set val [string range $val end-$len end]}
   return $val
@@ -628,7 +633,6 @@ proc stat::DoTable2 {} {
   set under [string repeat - [string length $title1]]
   set reslen [expr {[string length $title1] - $namlen + 4}]
   set resfill [string repeat { } $reslen]
-  set fmtc [string repeat C $reslen]
   PutLine Table2 $title1 t
   PutLine Table2 $title2 t
   PutLine Table2 $under t

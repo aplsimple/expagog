@@ -1,6 +1,20 @@
 # Last changes:
 
 
+Version `v1.4.1 (25 Jun'25)`
+
+  - BUGFIX: Preferences: "Test" button's issues
+  - BUGFIX: Preferences: modified EG field is cleared at OK (without restart)
+  - BUGFIX: Statistics: no cnt0 counted at val<0
+  - NEW   : argument *-debug*  for logs to ~/TMP (+ disables 1 app instance check)
+  - NEW   : "Home" button (Ctrl+H) redraws also the diagram to see current week
+  - CHANGE: text cell's value: leading +/- sets value (not incrs/decrs)
+  - CHANGE: Round proc: rounding negative numbers by abs
+  - CHANGE: Statistics: at opening, current date range & table
+  - CHANGE: Statistics: text items' & EG's values formatted as 999
+  - CHANGE: docs & clearance
+
+
 Version `v1.4.0 (18 Jun'25)`
 
   - BUGFIX: at selecting date from date chooser: current cell change moved too

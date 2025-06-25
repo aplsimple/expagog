@@ -54,8 +54,10 @@
    e.g. <b>calc:99.9:Dist/Time</b> means calculating <b>Speed</b> as
    <b>Dist/Time</b> (the same as <b>$1/$2</b>) formatted by 99.9
 
- - other formats (e.g. <b>xxxxx</b>) mean anything of that length,
-   though only first 10 characters will be seen in the table
+ - other formats (e.g. <b>xxxxx</b>) mean anything of that length;
+   any text is evaluated as 1, but the number of <b>initial +</b>
+   sets a positive value and the number of <b>-</b> sets a negative
+   value (for example, value of <b>+++ wow!</b> is 3)
  ____________________________________________________________
 
  You can move topics in the topic list up and down. Also,
