@@ -318,12 +318,8 @@ proc find::OK {} {
     }
     EG::ForEach {} $dkeys {
       lassign [split %k {}] k d
-      set typ %t
-      switch -glob -- $typ {
-        9* - calc* - time - chk - {} {}
-        default {
-          set k t ;# search in text cells
-        }
+      if {[EG::ValueType %t] eq {text}} {
+        set k t ;# to search in text cells
       }
       if {$k eq {t} && [string is digit -strict $d]} {
         set date [clock add [EG::ScanDatePG %d] $d day]

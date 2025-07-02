@@ -76,6 +76,7 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   variable TAGOPCLEN 16
   variable NAMEWIDTH 15
   variable comm_port 51137
+  variable TipUnderLine "\n_______________ \n"
 
   variable Colors;  ;# item colors
   array set Colors [list pending #ffff00 failed #ff0000 done #80ff80 \
@@ -565,8 +566,8 @@ proc EG::ValidIt {wid type item wday P V} {
   set P [string trimleft $P]
   if {$P ne $EMPTY} {
     set input $P
-    switch -glob $type {
-      calc* {
+    switch [ValueType $type] {
+      calc {
         Message {Calculated cell}
         return 0
       }
@@ -583,7 +584,7 @@ proc EG::ValidIt {wid type item wday P V} {
         focus $w
         after idle [list EG::StoreData v $val $item $wday]
       }
-      9* - time {
+      int - float - time {
         $w configure -validate key
         if {$type eq "time"} {set typ 99.99}
         set err no
@@ -742,8 +743,8 @@ proc EG::FormatValue {w type typ P} {
     lassign [split [string map {. :} $P] :] n1 n2
   }
   if {$n1 eq {}} {set n1 "0"}
-  switch -glob $type {
-    9*.* {
+  switch [ValueType $type] {
+    float {
       set n2 [string range ${n2}0000000000 0 [string length $t2]-1]
       set P $n1.$n2
     }
@@ -1057,21 +1058,22 @@ proc EG::TextValue {tval} {
   # Calculates value of text cell.
   #   tval - text
 
-  if {$tval eq {}} {
-    # no text, no value
-    set val 0
-  } else {
-    set len [string length $tval]
-    if {[set val [expr {$len - [string length [string trimleft $tval +]]}]]} {
+  if {[set len [string length $tval]]} {
+    if {[set res [expr {$len - [string length [string trimleft $tval +]]}]]} {
       # number of leading "+" means positive value
-    } elseif {[set val [expr {[string length [string trimleft $tval -]] - $len}]]} {
-      # number of leading "-" means negative value
     } else {
-      # any other text is evaluated as 1
-      set val 1
+      # number of leading "-" means negative value
+      set res [expr {[string length [string trimleft $tval -]] - $len}]
     }
+    if {abs($res)==1} {
+      # possible +2, +3 .. , -2, -3 ..
+      set ival [regexp -inline {^.\d+} $tval]
+      if {[string is integer -strict $ival]} {set res $ival}
+    }
+  } else {
+    set res 0
   }
-  return $val
+  return $res
 }
 #_______________________
 
@@ -1080,10 +1082,10 @@ proc EG::ItemValue {typ val} {
   #   typ - type of value
   #   val - value
 
-  switch -glob $typ {
+  switch [ValueType $typ] {
     time {set val [EG::TimeValue $val]}
-    chk* {set val [EG::ButtonValue $val]}
-    calc* - 9* {
+    chk {set val [EG::ButtonValue $val]}
+    calc - int - float {
       if {$val eq $::EG::EMPTY} {set val 0}
     }
     default {  ;# pure text
@@ -1091,6 +1093,23 @@ proc EG::ItemValue {typ val} {
     }
   }
   return $val
+}
+#_______________________
+
+proc EG::ValueType {typ} {
+  # Gets value's type.
+  #   typ - item type (of Preferences)
+  # Returns according to *typ*: time, chk, calc, float, int, text.
+
+  switch -glob $typ {
+    time    {set res time}
+    chk     {set res chk}
+    calc*   {set res calc}
+    9*.9*   {set res float}
+    9*      {set res int}
+    default {set res text}
+  }
+  return $res
 }
 #_______________________
 
@@ -1390,10 +1409,10 @@ proc EG::AllWeekData {} {
         } else {
           set typ [string range %t 0 3]
         }
-        switch -glob $typ {
+        switch [ValueType $typ] {
           time {set val [TimeValue %v]}
-          chk* {set val [ButtonValue %v]}
-          calc* - 9* {
+          chk {set val [ButtonValue %v]}
+          calc - int - float {
             set val %v
             if {$val eq $::EG::EMPTY} {set val 0}
           }
@@ -1833,16 +1852,26 @@ proc EG::TextTip {} {
 }
 #_______________________
 
-proc EG::CellTip {item {wday ""}} {
+proc EG::CellTip {item wday typ} {
   # Gets a tip for cell.
-  #   item - item
+  #   item - item's name
   #   wday - week day
+  #   typ - item's type
 
-  set val [DataValue t $item $wday]
-  if {$val eq {} && [incr ::EG::_MAXTIP]<333} {  ;# soon, pointer moves will
-    set val "After change\npress Enter to save"  ;# disable the annoying tips
+  set tip {}
+  if {[ValueType $typ] eq "text"} {
+    set tip [DataValue v $item $wday]  ;# text cell's value - initial tip
   }
-  fromEOL $val
+  if {[set textcomment [DataValue t $item $wday]] ne {}} {
+    if {$tip ne {}} {append tip $::EG::TipUnderLine \n}  ;# underline before text comment
+    append tip $textcomment  ;# text comments added
+  }
+  set tip [string trim $tip]
+  if {$tip eq {} && [incr ::EG::_MAXTIP]<333} {
+    # for empty tips - annoying reminders (soon, pointer moves will disable them)
+    set tip "After change\npress Enter to save"
+  }
+  fromEOL $tip
 }
 #_______________________
 
@@ -3134,9 +3163,9 @@ proc EG::MaxItemWidth {} {
 
   set wmax 5 ;# for times
   foreach typ $::EG::D(ItemsTypes) {
-    switch -glob -- $typ {
-       calc* {lassign [split $typ :] - typ}
-       9* {}
+    switch [ValueType $typ] {
+       calc {lassign [split $typ :] -> typ}
+       int - float {}
        default {continue}
     }
     set w [string length $typ]
@@ -3223,7 +3252,7 @@ proc EG::_create {} {
             <FocusOut> {EG::StoreItem; EG::SelIt -1}\
             <KeyPress> {EG::KeyPress %W %K %s {$item} $i}\
             <ButtonPress-3> {EG::PopupOnItem %W %X %Y}} -tip {-BALTIP ! -COMMAND\
-            {EG::CellTip $it $i} -UNDER 2 -PER10 999999}}"
+            {EG::CellTip $it $i {$typ}} -UNDER 2 -PER10 999999}}"
           %C $lwid
         }
         set n .LaBI$it

@@ -36,7 +36,6 @@ namespace eval diagr {
   variable yPREV  ;# used in DrawColumn
   variable DayColWidth 3  ;# width of day column
   variable WeekColWidth [expr {$DayColWidth*7}]  ;# width of week column
-  variable UnderLine "\n_______________ \n"
   variable idDayLine {}
   variable WKcolor
 
@@ -74,7 +73,6 @@ proc diagr::fetchVars {} {
     variable yPREV
     variable DayColWidth
     variable WeekColWidth
-    variable UnderLine
     variable idDayLine
     variable WKcolor
   }
@@ -114,7 +112,7 @@ proc diagr::initVars {} {
 proc diagr::MoveToDay {day1} {
   # Moves to a day at clicking diagram, storing current cell at that
   #   day1 - day to go on
-  
+
   EG::StoreItem
   EG::MoveToDay $day1
 }
@@ -285,7 +283,7 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
       $colorname eq {Red} || ($colorname eq {Yellow} && $WKcolor($iw) ne {Red})} {
         set WKcolor($iw) $colorname
         set tip [EG::FormatDate $day1]
-        if {$tagcmnt ne {}} {append tip [string trimright $UnderLine\n$tagcmnt]}
+        if {$tagcmnt ne {}} {append tip [string trimright $::EG::TipUnderLine\n$tagcmnt]}
         lset x1list $iw 3 $tip
         ::baltip::tip $C $tip -ctag WK$iw
       } else {
@@ -324,7 +322,7 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
       }
       set tag [DrawColumn $item $iw $x1 $colWidth $colHeight \
         $color $color2 $ispoly]
-      set tip "[EG::FormatDate $day1]$UnderLine"
+      set tip "[EG::FormatDate $day1]$::EG::TipUnderLine"
       if {$ispoly} {append tip \n\"$item\"}
       append tip "\nSum: [EG::Round $sum 2]\nCells: $cnt"
       ::baltip::tip $C $tip -ctag $tag -per10 4000

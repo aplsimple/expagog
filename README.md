@@ -83,7 +83,7 @@ However, get to the point.
 
 **Cell** is located at the intersection of the *subject* row with the *week day* column.
 
-**Cell value** - for topics of number and time types, these are their values. For the switch (*chk*), these are 2 (*yes*), 1 (*lamp*), 0 (*?*) or -1 (*no*); for the text (*xxx*), it is always 1 by default, but the number of initial *+* sets a positive value and the number of *-* sets a negative value (for example, *"hurray!"* equals to 1, value of *"+++ wow!"* is 3, while *"-- miau"* is evaluated to -2).
+**Cell value** - for topics of number and time types, these are their values. For the switch (*chk*), these are 2 (*yes*), 1 (*lamp*), 0 (*?*) or -1 (*no*); for the text (*xxx*), it is always 0 by default, but the number of initial *+* sets a positive value and the number of *-* sets a negative value, and the leading +2, +3.. -2, -3.. sets value as well (for example, *"hurray!"* equals to 0, value of *"+++ wow!"* is 3, *"-- miau"* is evaluated to -2, value of *"+5!"* is 5).
 
 **Schedule** is set in the form of question marks (*?*) in the cells of the table. These are the points of your adventures desirable to fulfill, for example, a point of *Feat* on Wednesdays. The value of *?* is 0, so it *spoils the statistics* if the cell experiment has not been fulfilled.
 
@@ -328,7 +328,7 @@ Data types:
   - *calc* is a calculated type
 
   - *xxxxxx* is arbitrary text type, possibly with leading characters *+* /*-*
-to increase/decrease its value
+to set its value (+2, +3.. -2, -3.. sets its value as well)
 
 The calculated type (*calc*) is set as:
 
