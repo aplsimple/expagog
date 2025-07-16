@@ -27,6 +27,7 @@ namespace eval stat {
   variable fontsize 11
   variable tags {}
   variable tagsHtml {}
+  variable wdprev Inf
 }
 
 # ________________________ Common _________________________ #
@@ -304,8 +305,10 @@ proc stat::StartText {dotext} {
   variable Table1
   variable Table2
   variable aggrdata
+  variable wdprev
   array unset aggrdata
   array set aggrdata {}
+  set wdprev Inf
   if {[obj csDark]} {
     set g #9dff9d
     set r #ff9696
@@ -347,6 +350,26 @@ proc stat::StartText {dotext} {
 }
 #_______________________
 
+proc stat::DoHeading {} {
+  # Makes statistics heading.
+
+  variable aggrdata
+  variable Table1
+  variable date1
+  variable date2
+  PutLine Table1 "<t>Current      : from Date1 \[</t> $date1 <t>to Date2</t> $date2\
+    <t>\)</t>\n"
+  PutLine Table1 "<t>Data range   : \[</t> $aggrdata(Date1st) <t>-</t>\
+    $aggrdata(DateLast) <t>\)</t>"
+  PutLine Table1 "<t>Data days    :</t> $aggrdata(daysAll)\n"
+  set todoweeks [expr {($aggrdata(daysCnt)+6)/7}]
+  PutLine Table1 "<t>Planned days :</t> $aggrdata(daysCnt)\
+    <t>(planned weeks :</t> $todoweeks<t>)</t>"
+  PutLine Table1 "<t>Checked days :</t> $aggrdata(daysCnt1)"
+  PutLine Table1 "<t>Empty days   :</t> $aggrdata(daysCnt0)\n"
+}
+#_______________________
+
 proc stat::FinishText {dotext {wtmp ""}} {
   # Ends collecting statistics.
   #   dotext - yes if show results in text widget
@@ -358,8 +381,7 @@ proc stat::FinishText {dotext {wtmp ""}} {
   variable tagsHtml
   variable Table1
   variable Table2
-  set ::EG::stat::TextCont ${Table1}[Legend1]\n\n${Table2}[Legend2]\n
-  set res {}
+  set ::EG::stat::TextCont $Table1[Legend1]\n\n$Table2[Legend2]\n
   if {$dotext} {
     set wtxt [$pobj Text]
     $pobj displayTaggedText $wtxt ::EG::stat::TextCont $tags
@@ -367,12 +389,12 @@ proc stat::FinishText {dotext {wtmp ""}} {
     ::tk::TextSetCursor $wtxt 1.0
     [$pobj ButExpo] configure -state normal
   } else {
-    set res $::EG::stat::TextCont
-    foreach tagval $tagsHtml {
-      lassign $tagval tag val
-      set res [string map [list <$tag> "<font $val>" </$tag> </font>] $res]
-    }
     obj displayTaggedText $wtmp ::EG::stat::TextCont $tags
+  }
+  set res $::EG::stat::TextCont
+  foreach tagval $tagsHtml {
+    lassign $tagval tag val
+    set res [string map [list <$tag> "<font $val>" </$tag> </font>] $res]
   }
   return $res
 }
@@ -387,10 +409,9 @@ proc stat::GetOptions {} {
 
   variable date1
   variable date2
-  set d1 0000/00/00
-  set d2 9999/99/00
-  if {$date1 ne {}} {set d1 [EG::FormatDatePG [EG::ScanDate $date1]]}
-  if {$date2 ne {}} {set d2 [EG::FormatDatePG [EG::ScanDate $date2]]}
+  if {$date1 eq {} || $date2 eq {}} SetDates
+  set d1 [EG::FormatDatePG [EG::ScanDate $date1]]
+  set d2 [EG::FormatDatePG [EG::ScanDate $date2]]
   set namlen 6
   foreach item $::EG::D(Items) {
     if {[set sl [string length $item]] > $namlen} {
@@ -514,14 +535,12 @@ proc stat::Table1LinePart3 {itemtype cnt cnt0 sum avg fmt2} {
 proc stat::DoTable1 {} {
   # Makes 1st table (data on counts, totals and averages).
 
-  variable date1
-  variable date2
   variable fmt1
   variable fmt2
   variable fmtX
   variable DS
-  variable aggrdata
   variable Table1
+  variable wdprev
   lassign [GetOptions] d1 d2 namlen namttl namfill
   set title "NN.       $d1 :"
   foreach wd {0 1 2 3 4 5 6} {
@@ -533,16 +552,6 @@ proc stat::DoTable1 {} {
   set reslen [expr {$reslen0 + 79}]
   set resfill [string repeat { } $reslen]
   set fmtx [string repeat x $reslen]
-  PutLine Table1 "<t>Current      : from Date1 \[</t> $date1 <t>to Date2</t> $date2\
-    <t>\)</t>\n"
-  PutLine Table1 "<t>Data range   : \[</t> $aggrdata(Date1st) <t>-</t>\
-    $aggrdata(DateLast) <t>\)</t>"
-  PutLine Table1 "<t>Data days    :</t> $aggrdata(daysAll)\n"
-  set todoweeks [expr {($aggrdata(daysCnt)+6)/7}]
-  PutLine Table1 "<t>Planned days :</t> $aggrdata(daysCnt)\
-    <t>(planned weeks :</t> $todoweeks<t>)</t>"
-  PutLine Table1 "<t>Checked days :</t> $aggrdata(daysCnt1)"
-  PutLine Table1 "<t>Empty days   :</t> $aggrdata(daysCnt0)\n"
   PutLine Table1 $title t
   PutLine Table1 $under t
   set weekdata [WeekData $d1 $d2]
@@ -592,9 +601,9 @@ proc stat::DoTable1 {} {
     set v [CalculateByFormula $::EG::D(AggrEG) $data 0.0]
     set sum [expr {$sum + $v}]
     set v [Fmt $v $fmt1]
-    if {$wd==0 || $v==$prev || $v==0.0} {
+    if {$wdprev==Inf || $v==$wdprev || $v==0.0} {
       set tag [set untag {}]
-    } elseif {$v > $prev} {
+    } elseif {$v > $wdprev} {
       set tag <g>
       set untag </g>
     } else {
@@ -602,28 +611,27 @@ proc stat::DoTable1 {} {
       set untag </r>
     }
     append res $tag[string range "     $v" end-5 end]$untag
-    set prev $v
+    set wdprev $v
   }
   append res [Table1LinePart2 $resfill AggrEG $namlen]
   append res [Table1LinePart3 $fmt2 7 0 $sum [expr {$sum/7}] $fmt2]
   PutLine Table1 "    [string trimright $res]"
-  PutLine Table1 $under t
+  PutLine Table1 $under\n t
 }
 #_______________________
 
 proc stat::DoTable2 {} {
   # Makes 2nd table (data on previous, current and next weeks).
 
-  variable date1
   variable fmt2
   variable fmtX
   variable DS
   variable Table2
   # show table's head
-  foreach w {1 2 3 4} {
-    set dp$w [EG::FormatDatePG [clock add [EG::ScanDate $date1] -$w week]]
-  }
   lassign [GetOptions] d1 d2 namlen title namfill
+  foreach w {1 2 3 4} {
+    set dp$w [EG::FormatDatePG [clock add [EG::ScanDatePG $d1] -$w week]]
+  }
   set title1 "$title|    Previous [Fmt $dp4 $fmtX] [Fmt $dp3 $fmtX]\
     [Fmt $dp2 $fmtX] [Fmt $dp1 $fmtX]  $d1       Next  |      Total |     \
     Average     Average     Average     Average"
@@ -743,7 +751,7 @@ proc stat::AggregateValue {ic} {
 proc stat::Legend1 {} {
   # Gets Table1's legend.
 
-  return "<s>\n\
+  return "<s>\
     Cells   - all cells to be checked\n\
     Cells0  - cells non-checked (\"?\") or failed (value<=0) \n\
     Total   - total sum of values\n\
@@ -831,21 +839,26 @@ proc stat::Calculate {{dotext yes} {wtmp ""}} {
 
   variable date1
   variable date2
+  set date1sav $date1
+  set date2sav $date2
   if {!$dotext} {
-    set date1sav $date1
-    set date2sav $date2
     set date1 ""
     set date2 ""
     SetDates
   }
   StartText $dotext
   StatData
-  DoTable1
-  DoTable2
-  if {!$dotext} {
-    set date1 $date1sav
-    set date2 $date2sav
+  DoHeading
+  while 1 {
+    DoTable1
+    set date1 [EG::ScanDate $date1]
+    set date1 [clock add $date1 1 week]
+    set date1 [EG::FormatDate $date1]
+    if {[EG::ScanDate $date1] >= [EG::ScanDate $date2]} break
   }
+  set date1 $date1sav
+  set date2 $date2sav
+  DoTable2
   set res [FinishText $dotext $wtmp]
   return $res
 }

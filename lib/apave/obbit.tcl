@@ -56,8 +56,8 @@ set _CS_(isActive) 1
 set _CS_(!FG) #000000
 set _CS_(!BG) #b7b7b7 ;#a8bcd2 #c3c3c3 #9cb0c6 #4a6984
 set _CS_(expo,tfg1) "-"
-set _CS_(defFont) [font actual TkDefaultFont -family]
-set _CS_(textFont) [font actual TkFixedFont -family]
+set _CS_(defFont) [font actual TkDefaultFont]
+set _CS_(textFont) [font actual TkFixedFont]
 set _CS_(smallFont) [font actual TkSmallCaptionFont]
 set _CS_(fs) [font actual TkDefaultFont -size]
 set _CS_(untouch) [list]

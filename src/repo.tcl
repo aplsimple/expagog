@@ -510,8 +510,6 @@ proc repo::FillFields {} {
   # Fills stand-alone fields in report.
 
   fetchVars
-  set wtmp [$pobj TexTmp]
-  $wtmp replace 1.0 end {}
   foreach fld $fieldVars {
     if {$fld ni {blackComment redComment} || $doNotes} {
       set val [TextContent [set $fld]]
@@ -520,7 +518,15 @@ proc repo::FillFields {} {
     }
     lappend pairs $fld $val
   }
-  lappend pairs statRepo [EG::stat::Calculate no $wtmp]
+  if {[winfo exists $::EG::stat::win]} {
+    # run from Statistics dialogue -> rebuild statistics of its week range
+    lappend pairs statRepo [EG::stat::Calculate]
+  } else {
+    # run from Report dialogue by itself -> build statistics of current week
+    set wtmp [$pobj TexTmp]
+    $wtmp replace 1.0 end {}
+    lappend pairs statRepo [EG::stat::Calculate no $wtmp]
+  }
   set Notes {}
   if {$doNotes} {
     foreach n $::EG::NOTESN {

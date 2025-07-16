@@ -3128,6 +3128,8 @@ proc EG::Init {} {
   apave::iconImage -init $ICONTYPE yes
   set ::EG::img_arrleft [apave::iconImage previous]
   set ::EG::img_arrright [apave::iconImage next]
+  set ::EG::img_arrleft2 [apave::iconImage previous2]
+  set ::EG::img_arrright2 [apave::iconImage next2]
   set ::EG::img_diagram [apave::iconImage diagram]
   set defattr "-font {$::apave::FONTMAIN}"
   obj defaultATTRS laB {} $defattr
@@ -3282,10 +3284,14 @@ proc EG::_create {} {
     {.frar2 - - - - {pack -side bottom -fill x -pady 2}}
     {.frar2.btT - - - - {-st w}
       {-image $::EG::img_diagram -com EG::diagr::Draw -tip "Redraw diagram\nF5"}}
+    {.frar2.btT0 + L 1 1 {-st w} {-image $::EG::img_arrleft2
+      -com {EG::diagr::Scroll -8 pages} -tip "To beginning"}}
     {.frar2.btT1 + L 1 1 {-st w} {-image $::EG::img_arrleft
-      -com {EG::diagr::Scroll -4} -tip "Move left"}}
+      -com {EG::diagr::Scroll -3} -tip "To left"}}
     {.frar2.btT2 + L 1 1 {-st w} {-image $::EG::img_arrright
-      -com {EG::diagr::Scroll 4} -tip "Move right"}}
+      -com {EG::diagr::Scroll 3} -tip "To right"}}
+    {.frar2.btT3 + L 1 1 {-st w} {-image $::EG::img_arrright2
+      -com {EG::diagr::Scroll 8 pages} -tip "To end"}}
     {.frar2.opc1 + L 1 1 {-st w -padx 20} {::EG::Opcvar ::EG::OpcItems {-width -4
       -takefocus 0} {EG::opcPre {%a}} -command EG::opcPost}}
     {.frar2.chbW + L 1 1 {-st w} {-t weeks -var ::EG::byWeek
