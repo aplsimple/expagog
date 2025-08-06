@@ -3108,7 +3108,8 @@ proc EG::Init {} {
     catch {dict set D(DefFont) -size $fs}
     foreach font {TkDefaultFont TkMenuFont TkHeadingFont TkCaptionFont} {
       if {[catch {font configure $font {*}$D(DefFont)}]} {
-        set D(DefFont) {}
+        set D(DefFont) [font actual TkDefaultFont]
+        font configure $font {*}$D(DefFont)
       }
     }
     if {$D(DefFont) ne {}} {
@@ -3129,7 +3130,14 @@ proc EG::Init {} {
     set D(TexFont) [obj basicTextFont]
   }
   obj basicTextFont $D(TexFont)
-  obj basicFontSize $fs
+  if {[catch {obj basicFontSize $fs}]} {
+    # incorrect font settings may lead to EG crash
+    set D(TexFont) [font actual TkFixedFont]
+    obj basicTextFont $D(TexFont)
+    set D(DefFont) [font actual TkDefaultFont]
+    obj basicDefFont $D(DefFont)
+    obj basicFontSize $fs
+  }
   obj basicDefFont [list {*}[obj basicDefFont] -size $fs]
   obj basicSmallFont [list {*}[obj basicSmallFont] -size [expr {$fs-2}]]
   set D(MsgFont) [list -font [list {*}[obj basicSmallFont] -weight bold] \
