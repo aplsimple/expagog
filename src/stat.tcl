@@ -319,7 +319,7 @@ proc stat::StartText {dotext} {
   lassign [obj csGet] fga fg bga bg bgHL actbg actfg cursor greyed hot \
     emfg embg - menubg winfg winbg itemHL2
   set Table1 [set Table2 {}]
-  set font [list -family [obj basicTextFont]]
+  set font [obj basicTextFont]
   if {$dotext} {
     set ::EG::D(AggrEG) [[$pobj TexAggr] get 1.0 end]
     set ::EG::D(AggrEG) [string map [list \n { }] [string trim $::EG::D(AggrEG)]]
@@ -885,7 +885,7 @@ proc stat::OK {} {
 #_______________________
 
 proc stat::Cancel {args} {
-  # Closes Find dialog.
+  # Closes the dialog.
 
   variable win
   variable pobj

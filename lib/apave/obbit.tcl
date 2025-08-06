@@ -1253,7 +1253,7 @@ method boldDefFont {{fs 0}} {
 
   if {$fs == 0} {set fs [my basicFontSize]}
   set bf [font actual basicDefFont]
-  dict replace $bf -family [my basicDefFont] -weight bold -size $fs
+  dict replace $bf {*}[my basicDefFont] -weight bold -size $fs
 }
 #_______________________
 
@@ -1263,7 +1263,7 @@ method boldTextFont {{fs 0}} {
 
   if {$fs == 0} {set fs [expr {2+[my basicFontSize]}]}
   set bf [font actual TkFixedFont]
-  dict replace $bf -family [my basicTextFont] -weight bold -size $fs
+  dict replace $bf {*}[my basicTextFont] -weight bold -size $fs
 }
 
 ## ________________________ Color schemes _________________________ ##

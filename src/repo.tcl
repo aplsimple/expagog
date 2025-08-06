@@ -600,6 +600,14 @@ proc repo::Help {} {
   fetchVars
   EG::Help repo -width 59 -height 32 -parent $win
 }
+#_______________________
+
+proc repo::Cancel {args} {
+  # Closes the dialog.
+
+  fetchVars
+  $pobj res $win 0
+}
 
 # ________________________ GUI _________________________ #
 
@@ -664,7 +672,7 @@ proc repo::_create {parent} {
     {.LaBMess + L 1 1 {pack -side left -expand 1 -fill x}}
     {.ButExpo + L 1 1 {pack -side left} {-text Report
       -image mnu_print -compound left -com EG::repo::Report}}
-    {.butCancel + L 1 1 {pack -side left -padx 4} {-text Cancel -com "destroy $win"}}
+    {.butCancel + L 1 1 {pack -side left -padx 4} {-text Cancel -com EG::repo::Cancel}}
   }
   CheckNotes
   bind $win <F1> "[$pobj ButHelp] invoke"
@@ -673,7 +681,7 @@ proc repo::_create {parent} {
   $pobj displayTaggedText [$pobj TexBlack] blackComment
   $pobj displayTaggedText [$pobj TexRed] redComment
   set res [$pobj showModal $win -parent $parent -resizable 0 \
-     -focus [$pobj chooserPath FilIn] -onclose destroy]
+     -focus [$pobj chooserPath FilIn] -onclose EG::repo::Cancel]
   catch {destroy $win}
   catch {$pobj destroy}
 }

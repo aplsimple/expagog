@@ -313,6 +313,81 @@ if {!$::EG::TestMode && !$::EG::DebugMode} {
 
 # ________________________ Common procs _________________________ #
 
+proc EG::Round {value digits} {
+  # Rounds *value* to *digits* after point.
+
+  set sign [expr {$value<0 ? -1 : 1}]
+  set mult [expr {10.0**$digits}]
+  expr {int(abs($value)*$mult+0.5)/$mult*$sign}
+}
+#_______________________
+
+proc EG::Oct2Dec {oct} {
+  # Converts octal to decimal.
+  #   oct - octal value
+
+  set res [string trimleft $oct 0]
+  if {![string is digit -strict $res]} {set res 0}
+  return $res
+}
+#_______________________
+
+proc EG::WriteTextFile {fname contVar} {
+  # Writes contents to a file.
+  #   fname - file name
+  #   contVar - variable for contents
+
+  variable TestMode
+  upvar $contVar cont
+  if {![IsLockedBase]} {
+    set tmpcont $cont
+    apave::writeTextFile $fname tmpcont
+  }
+}
+
+# ________________________ EOL _________________________ #
+
+proc EG::toEOL {line} {
+  # Transforms \n of line to $D(EOL).
+  #   line - line to be transformed
+
+  string map [list \n $::EG::D(EOL)] $line
+}
+#_______________________
+
+proc EG::fromEOL {line} {
+  # Transforms $D(EOL) of line to \n.
+  #   line - line to be transformed
+
+  string map [list $::EG::D(EOL) \n] $line
+}
+
+# ________________________ Theming _________________________ #
+
+proc EG::InitThemeEG {} {
+  # Initializes EG theme.
+
+  fetchVars
+  catch {
+    apave::InitTheme $D(Theme) $LIBDIR
+    apave::initWM -theme $D(Theme) -cs $D(CS) -cursorwidth 2 -labelborder 2
+  }
+}
+#_______________________
+
+proc EG::ColorName {color} {
+  # Gets a color name from color value.
+  #   color - color value
+
+  variable Colors
+  foreach cn {Red Yellow Green} {
+    if {$color eq $Colors($cn)} {return $cn}
+  }
+  return {}
+}
+
+# ________________________ Cell values _________________________ #
+
 proc EG::TimeValue {tm} {
   # Converts time to decimal.
   #  tm - time value (of format hh:mm or hh.mm)
@@ -345,14 +420,156 @@ proc EG::ButtonValue {icon} {
 }
 #_______________________
 
-proc EG::Round {value digits} {
-  # Rounds *value* to *digits* after point.
+proc EG::FormatValue {w type typ P} {
+  # Formats a cell value.
+  #   w - cell path
+  #   type - cell core type
+  #   typ - cell format
+  #   P - cell value
 
-  set sign [expr {$value<0 ? -1 : 1}]
-  set mult [expr {10.0**$digits}]
-  expr {int(abs($value)*$mult+0.5)/$mult*$sign}
+  fetchVars
+  set P [string trim $P]
+  if {$P eq $EMPTY} {return $P}
+  if {$P ne "0" && ![string match 0.* $P]} {
+    set P [string trimleft $P 0] ;# no octals, to be compatible with Tcl 8.6
+  }
+  lassign [split $typ .] t1 t2
+  lassign [split $P .] n1 n2
+  if {$type eq "time" && $n2 eq {}} {
+    lassign [split [string map {. :} $P] :] n1 n2
+  }
+  if {$n1 eq {}} {set n1 "0"}
+  switch [ValueType $type] {
+    float {
+      set n2 [string range ${n2}0000000000 0 [string length $t2]-1]
+      set P $n1.$n2
+    }
+    time {
+      if {$n2==60} {
+        incr n1; set n2 {00}
+      } else {
+        set n2 [string range 00$n2 end-1 end]
+      }
+      set P $n1:$n2
+    }
+    chk {
+      switch [$w cget -image] {
+       yes     {set P Y}
+       no      {set P N}
+       lamp    {set P L}
+       ques    {set P $EMPTY}
+       default {set P {}}
+      }
+    }
+  }
+  return $P
+}
+
+# ________________________ Cell fields _________________________ #
+
+proc EG::NormItem {item} {
+  # Normalizes item name, making it fit for widgets.
+  #   item - item name
+
+  string map {{ } {} . {}} [apave::NormalizeFileName $item]
 }
 #_______________________
+
+proc EG::Field {item iday} {
+  # Gets entry field path from item&day.
+  #   item - item name
+  #   iday - day index
+
+  fetchVars
+  if {[catch {
+    set it [NormItem $item]
+    set res [$EGOBJ $D(fld${it},$iday)]
+  }]} then {
+    set res {}
+  }
+  return $res
+}
+#_______________________
+
+proc EG::FirstCell {} {
+  # Gets 1st cell for -tabnext option of text.
+
+  fetchVars
+  Field [lindex $D(Items) 0] 0
+}
+#_______________________
+
+proc EG::ClearCells {ccur what} {
+  # Clears cells.
+  #   ccur - index of clicked title
+  #   what - what cells to clear
+
+  fetchVars
+  if {[LockedChanges]} return
+  switch $what {
+    all {
+      set c1 0
+      set c2 6
+    }
+    left {
+      set c1 0
+      set c2 [incr ccur -1]
+    }
+    right {
+      set c1 [incr ccur]
+      set c2 6
+    }
+    default {
+      set c1 [set c2 $ccur]
+    }
+  }
+  for {set wday $c1} {$wday<=$c2} {incr wday} {
+    foreach item $D(Items) {
+      StoreValue v {} $item $wday
+      StoreValue t {} $item $wday
+    }
+  }
+  ShowTable
+}
+#_______________________
+
+proc EG::GeItemsNumber {} {
+  # Gets number of items.
+
+  variable D
+  set D(Curritems) [expr {min( $D(MAXITEMS), \
+    [llength $D(Items)], [llength $D(ItemsTypes)])}]
+}
+
+# ________________________ Year & Month _________________________ #
+
+proc EG::CurrentYear {{fromdate1 no}} {
+  # Gets current year (from date entry).
+  #   fromdate1 - yes if get the year from the date entry
+
+  if {$fromdate1} {
+    return [clock format [ScanDate] -format %Y]
+  }
+  return [clock format [Date1Seconds] -format %Y]
+}
+#_______________________
+
+proc EG::MonthShort {month} {
+  # Gets short month name.
+  #   month - month number
+
+  lindex $::EG::MONTHSHORT [expr $month-1]
+}
+#_______________________
+
+proc EG::MonthFull {month} {
+  # Gets full month name.
+  #   month - month number
+
+  lindex $::EG::MONTHSFULL [expr $month-1]
+}
+
+# ________________________ Date format & scan _________________________ #
 
 proc EG::TimeSym {tm} {
   # Converts time to symbolic hh:mm.
@@ -363,14 +580,6 @@ proc EG::TimeSym {tm} {
   if {[catch {set mm [expr $mm.*60./100.]}]} {set mm 0}
   set mm [string range 00[expr {round($mm)}] end-1 end]
   return $hh:$mm
-}
-#_______________________
-
-proc EG::NormItem {item} {
-  # Normalizes item name, making it fit for widgets.
-  #   item - item name
-
-  string map {{ } {} . {}} [apave::NormalizeFileName $item]
 }
 #_______________________
 
@@ -421,129 +630,6 @@ proc EG::ScanDatePG {{dt ""}} {
   fetchVars
   if {$dt eq {}} {return [ScanDate]}
   clock scan $dt -format $D(DatePG)
-}
-#_______________________
-
-proc EG::CurrentYear {{fromdate1 no}} {
-  # Gets current year (from date entry).
-  #   fromdate1 - yes if get the year from the date entry
-
-  if {$fromdate1} {
-    return [clock format [ScanDate] -format %Y]
-  }
-  return [clock format [Date1Seconds] -format %Y]
-}
-#_______________________
-
-proc EG::Field {item iday} {
-  # Gets entry field path from item&day.
-  #   item - item name
-  #   iday - day index
-
-  fetchVars
-  if {[catch {
-    set it [NormItem $item]
-    set res [$EGOBJ $D(fld${it},$iday)]
-  }]} then {
-    set res {}
-  }
-  return $res
-}
-#_______________________
-
-proc EG::FirstCell {} {
-  # Gets 1st cell for -tabnext option of text.
-
-  fetchVars
-  Field [lindex $D(Items) 0] 0
-}
-#_______________________
-
-proc EG::MonthShort {month} {
-  # Gets short month name.
-  #   month - month number
-
-  lindex $::EG::MONTHSHORT [expr $month-1]
-}
-#_______________________
-
-proc EG::MonthFull {month} {
-  # Gets full month name.
-  #   month - month number
-
-  lindex $::EG::MONTHSFULL [expr $month-1]
-}
-#_______________________
-
-proc EG::toEOL {line} {
-  # Transforms \n of line to $D(EOL).
-  #   line - line to be transformed
-
-  string map [list \n $::EG::D(EOL)] $line
-}
-#_______________________
-
-proc EG::fromEOL {line} {
-  # Transforms $D(EOL) of line to \n.
-  #   line - line to be transformed
-
-  string map [list $::EG::D(EOL) \n] $line
-}
-#_______________________
-
-proc EG::InitThemeEG {} {
-  # Initializes EG theme.
-
-  fetchVars
-  catch {
-    apave::InitTheme $D(Theme) $LIBDIR
-    apave::initWM -theme $D(Theme) -cs $D(CS) -cursorwidth 2 -labelborder 2
-  }
-}
-#_______________________
-
-proc EG::GeItemsNumber {} {
-  # Gets number of items.
-
-  variable D
-  set D(Curritems) [expr {min( $D(MAXITEMS), \
-    [llength $D(Items)], [llength $D(ItemsTypes)])}]
-}
-#_______________________
-
-proc EG::WriteTextFile {fname contVar} {
-  # Writes contents to a file.
-  #   fname - file name
-  #   contVar - variable for contents
-
-  variable TestMode
-  upvar $contVar cont
-  if {![IsLockedBase]} {
-    set tmpcont $cont
-    apave::writeTextFile $fname tmpcont
-  }
-}
-#_______________________
-
-proc EG::ColorName {color} {
-  # Gets a color name from color value.
-  #   color - color value
-
-  variable Colors
-  foreach cn {Red Yellow Green} {
-    if {$color eq $Colors($cn)} {return $cn}
-  }
-  return {}
-}
-#_______________________
-
-proc EG::Oct2Dec {oct} {
-  # Converts octal to decimal.
-  #   oct - octal value
-
-  set res [string trimleft $oct 0]
-  if {![string is digit -strict $res]} {set res 0}
-  return $res
 }
 
 # ________________________ Items _________________________ #
@@ -724,52 +810,6 @@ proc EG::SelIt {{to end}} {
 }
 #_______________________
 
-proc EG::FormatValue {w type typ P} {
-  # Formats a cell value.
-  #   w - cell path
-  #   type - cell core type
-  #   typ - cell format
-  #   P - cell value
-
-  fetchVars
-  set P [string trim $P]
-  if {$P eq $EMPTY} {return $P}
-  if {$P ne "0" && ![string match 0.* $P]} {
-    set P [string trimleft $P 0] ;# no octals, to be compatible with Tcl 8.6
-  }
-  lassign [split $typ .] t1 t2
-  lassign [split $P .] n1 n2
-  if {$type eq "time" && $n2 eq {}} {
-    lassign [split [string map {. :} $P] :] n1 n2
-  }
-  if {$n1 eq {}} {set n1 "0"}
-  switch [ValueType $type] {
-    float {
-      set n2 [string range ${n2}0000000000 0 [string length $t2]-1]
-      set P $n1.$n2
-    }
-    time {
-      if {$n2==60} {
-        incr n1; set n2 {00}
-      } else {
-        set n2 [string range 00$n2 end-1 end]
-      }
-      set P $n1:$n2
-    }
-    chk {
-      switch [$w cget -image] {
-       yes     {set P Y}
-       no      {set P N}
-       lamp    {set P L}
-       ques    {set P $EMPTY}
-       default {set P {}}
-      }
-    }
-  }
-  return $P
-}
-#_______________________
-
 proc EG::KeyPress {wid K s item wday} {
   # Handles pressing key in cell.
   #   wid - widget's path
@@ -844,6 +884,34 @@ proc EG::KeyPress {wid K s item wday} {
 }
 #_______________________
 
+proc EG::AddTag {tag {doit 0}} {
+  # Add tag to item text.
+  #   tag - tag value
+
+  fetchVars
+  if {!$doit} {
+    after idle [list EG::AddTag $tag 1]
+    return
+  }
+  if {[LockedChanges]} return
+  set wtxt [$EGOBJ Text]
+  set text [$wtxt get 1.0 end]
+  set ltext [split $text \n]
+  set line1 [string trim [lindex $ltext 0]]
+  if {[string first $D(TAGS) $line1]<0} {
+    set line1 $D(TAGS)\ $tag\n
+    if {$text eq {}} {$EGOBJ displayText $wtxt {      }}
+    $wtxt insert 1.0 $line1
+  } else {
+    if {[string first $tag $line1]>=[string length $D(TAGS)]} return
+    append line1 { } $tag
+    $wtxt replace 1.0 1.end $line1
+  }
+  StoreText
+  ShowTable
+}
+#_______________________
+
 proc EG::PopupOnItem {wit X Y {doit 0}} {
   # Handles popup menu on item.
   #   wit - item widget's path
@@ -891,34 +959,6 @@ proc EG::PopupOnItem {wit X Y {doit 0}} {
 }
 #_______________________
 
-proc EG::AddTag {tag {doit 0}} {
-  # Add tag to item text.
-  #   tag - tag value
-
-  fetchVars
-  if {!$doit} {
-    after idle [list EG::AddTag $tag 1]
-    return
-  }
-  if {[LockedChanges]} return
-  set wtxt [$EGOBJ Text]
-  set text [$wtxt get 1.0 end]
-  set ltext [split $text \n]
-  set line1 [string trim [lindex $ltext 0]]
-  if {[string first $D(TAGS) $line1]<0} {
-    set line1 $D(TAGS)\ $tag\n
-    if {$text eq {}} {$EGOBJ displayText $wtxt {      }}
-    $wtxt insert 1.0 $line1
-  } else {
-    if {[string first $tag $line1]>=[string length $D(TAGS)]} return
-    append line1 { } $tag
-    $wtxt replace 1.0 1.end $line1
-  }
-  StoreText
-  ShowTable
-}
-#_______________________
-
 proc EG::PopupOnWeekTitle {ccur X Y} {
   # Handles popup menu on week day title.
   #   ccur - index of clicked title
@@ -942,40 +982,6 @@ proc EG::PopupOnWeekTitle {ccur X Y} {
     $wpop entryconfigure 3 -state disabled
   }
   tk_popup $wpop $X $Y
-}
-#_______________________
-
-proc EG::ClearCells {ccur what} {
-  # Clears cells.
-  #   ccur - index of clicked title
-  #   what - what cells to clear
-
-  fetchVars
-  if {[LockedChanges]} return
-  switch $what {
-    all {
-      set c1 0
-      set c2 6
-    }
-    left {
-      set c1 0
-      set c2 [incr ccur -1]
-    }
-    right {
-      set c1 [incr ccur]
-      set c2 6
-    }
-    default {
-      set c1 [set c2 $ccur]
-    }
-  }
-  for {set wday $c1} {$wday<=$c2} {incr wday} {
-    foreach item $D(Items) {
-      StoreValue v {} $item $wday
-      StoreValue t {} $item $wday
-    }
-  }
-  ShowTable
 }
 #_______________________
 
@@ -1066,9 +1072,15 @@ proc EG::TextValue {tval} {
       set res [expr {[string length [string trimleft $tval -]] - $len}]
     }
     if {abs($res)==1} {
-      # possible +2, +3 .. , -2, -3 ..
+      # possible +1, +2 .. , -1, -2 ..
       set ival [regexp -inline {^.\d+} $tval]
       if {[string is integer -strict $ival]} {set res $ival}
+    } elseif {$res==0} {
+      # possible 1+, 2+ .. , 1-, 2- ..
+      lassign [regexp -inline {^(\d+[+-]{1})([^+-]|$)} $tval] -> ival
+      if {$ival ne {}} {
+        set res [string index $ival end][string range $ival 0 end-1]
+      }
     }
   } else {
     set res 0
@@ -2194,7 +2206,7 @@ proc EG::Message {msg {wait 0} {lab ""} {doit 0}} {
 
   fetchVars
   if {$lab eq {}} {set lab [$EGOBJ Labstat3]}
-  catch {  ;# the method can be called after destroying Puzzle object => catch
+  catch {  ;# the method can be called after destroying object => catch
     catch {after cancel $D(idafter)}
     if {!$doit} {
       set D(msg) {}
@@ -2221,7 +2233,7 @@ proc EG::CheckMessage {lab} {
   #   lab - label of message
 
   fetchVars
-  catch {  ;# the method can be called after destroying Puzzle object => catch
+  catch {  ;# the method can be called after destroying object => catch
     if {[set len [string length $D(msg)]]} {
       set D(msg) [string range $D(msg) 0 $len-2]
       Message $D(msg) -1 $lab
@@ -3133,6 +3145,8 @@ proc EG::Init {} {
   set ::EG::img_diagram [apave::iconImage diagram]
   set defattr "-font {$::apave::FONTMAIN}"
   obj defaultATTRS laB {} $defattr
+  obj defaultATTRS buT {} $defattr
+  append defattr " -relief flat -highlightthickness 1"
   obj defaultATTRS enT {} $defattr
   obj defaultATTRS tex {} $defattr
   lassign [obj csGet] 1 Colors(fg) Colors(bg2) Colors(bg) Colors(fgit) 6 7 8 \

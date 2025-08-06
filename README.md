@@ -237,7 +237,7 @@ The database statistics consists of two sections:
 
 The date range for the *current weeks* column is set in the report header. The data of this column is collected from the 1st date to the 2nd date (excluding it).
 
-A data value in the report is marked in color if it has changed by more than 2% relative to the previous period.
+A data value in the report is marked in color if it has changed by more than 0.5% relative to the previous period.
 
 The *Cells*  is the total number of non-empty cells in the schedule. The *Cells0* is the total number of non-empty cells with value of 0.
 
@@ -328,7 +328,7 @@ Data types:
   - *calc* is a calculated type
 
   - *xxxxxx* is arbitrary text type, possibly with leading characters *+* /*-*
-to set its value (+2, +3.. -2, -3.. sets its value as well)
+to set its value (leading +1, +2.. -1, -2.. 1+, 2+.. 1-, 2-.. set the value as well)
 
 The calculated type (*calc*) is set as:
 

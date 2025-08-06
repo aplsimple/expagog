@@ -1,13 +1,23 @@
 # Last changes:
 
 
+Version `v1.5.1 (6 Aug'25)`
+
+  - BUGFIX: F6, F7, click Cancel button -> close window actions not working
+  - NEW   : text cell's value: leading 1+, 2+.. 1-, 2-.. sets value
+  - CHANGE: Preferences/General: Tab order
+  - CHANGE: Preferences/Topics: names first, colors last
+  - CHANGE: EG.tcl: unit tree reordered
+  - CHANGE: appearance of some fields
+  - CHANGE: packages: apave 4.6.5
+
 Version `v1.5.0 (14 Jul'25)`
 
   - BUGFIX: Preferences: "Test" button's issues
   - BUGFIX: Preferences: modified EG field is cleared at OK (without restart)
   - BUGFIX: Statistics: no cnt0 counted at val<0
   - BUGFIX: initializing text font: -family option
-  - NEW   : text cell's value: leading +2, +3.. -2, -3.. sets value
+  - NEW   : text cell's value: leading +1, +2.. -1, -2.. sets value
   - NEW   : text cell's value in the cell's tip
   - NEW   : Statistics: if date range spans weeks, show Table-1 for each week
   - NEW   : buttons "to beginning/end" of diagram

@@ -64,7 +64,7 @@ proc pref::ItemVars {i} {
   # Gets list of variable names of item.
   #   i - index of item
 
-  return [list ::EG::pref::ClrI$i ::EG::pref::EnTI$i ::EG::pref::EnTF$i]
+  return [list ::EG::pref::ClrI$i ::EG::pref::EntI$i ::EG::pref::EntF$i]
 }
 #_______________________
 
@@ -461,6 +461,13 @@ proc pref::General_Tab {} {
     {.labHue .labCS T 1 1 {-st e -pady 1 -padx 3} {-t Hue:}}
     {.spxHue + L 1 1 {-st sw -pady 1}
       {-tvar ::EG::pref::DP(Hue) -from -50 -to 50 -increment 5 -w 4}}
+    {.h_1 .labHue T - - {-pady 8}}
+    {.lab1 .h_1 T 1 1 {-st e -pady 1 -padx 3} {-t {Color of text cell:}}}
+    {.clrtxtGEO + L 1 1 {-st w -pady 1 -padx 0} {-tvar ::EG::pref::txtColor
+      -title {Color for Topics with Text} -w 11}}
+    {.lab2 .lab1 T 1 1 {-st e -pady 1 -padx 3} {-t {Color of messages:}}}
+    {.clrmsgGEO + L 1 1 {-st w -pady 1 -padx 0} {-tvar ::EG::pref::msgColor
+      -title {Color for Messages} -w 11}}
     {.lfRMisc .opc1 L 6 3 {-st nswe} {-padx 2 -pady 2 -bd 1 -relief raised
       -labelwidget $win.labelmisc -labelanchor n}}
     {.lfRMisc.labZoom - - - - {-st e} {-t Zoom:}}
@@ -475,13 +482,6 @@ proc pref::General_Tab {} {
     {.lfRMisc.labNotetm .lfRMisc.labTFont T 1 1 {-st e -padx 3 -pady 4}
       {-t {Top stickers:}}}
     {.lfRMisc.chbNotetm + L 1 1 {-st w -pady 4} {-var ::EG::pref::DP(NoteOnTop)}}
-    {.h_1 .labHue T - - {-pady 8}}
-    {.lab1 .h_1 T 1 1 {-st e -pady 1 -padx 3} {-t {Color of text cell:}}}
-    {.clrtxtGEO + L 1 1 {-st w -pady 1 -padx 0} {-tvar ::EG::pref::txtColor
-      -title {Color for Topics with Text} -w 11}}
-    {.lab2 .lab1 T 1 1 {-st e -pady 1 -padx 3} {-t {Color of messages:}}}
-    {.clrmsgGEO + L 1 1 {-st w -pady 1 -padx 0} {-tvar ::EG::pref::msgColor
-      -title {Color for Messages} -w 11}}
     {.h_2 .lab2 T - - {-pady 8}}
     {.lfRTag + T 1 4 {-st nsew} {-labelwidget $win.labellfr -bd 1 -relief raised -labelanchor n}}
     {.lfRTag.fract - - - - {pack -side left -anchor n -padx 8 -pady 4}}
@@ -508,12 +508,10 @@ proc pref::Items_Tab {} {
     }
   }
   return {
-    {fra1 - - 1 9 {-st nsew}}
+    {fra1 - - 1 2 {-st nsew}}
     {.tcl {
     # row of head
     %C ".LaB0 - - - - {-st es -pady 0} {-t {} -w 3}"
-    %C ".LaBI1 + L - - {-st wes -pady 0} {-t Color -fg $::EG::Colors(fgit)\
-      -bg $::EG::Colors(bg)}"
     %C ".fra + L"
     %C ".fra.LaBI2 - - - - {-st es -pady 0} {-t Topic -fg $::EG::Colors(fgit)\
       -bg $::EG::Colors(bg)}"
@@ -522,6 +520,8 @@ proc pref::Items_Tab {} {
     %C ".fra.btT2 + L - - {-st ws -pady 0} {-image img_down\
       -com {EG::pref::SwopIt 1}}"
     %C ".LaBI3 .fra L - - {-st wes -pady 0} {-t Format -fg $::EG::Colors(fgit)\
+      -bg $::EG::Colors(bg)}"
+    %C ".LaBI1 + L - - {-st wes -pady 0} {-t Color -fg $::EG::Colors(fgit)\
       -bg $::EG::Colors(bg)}"
     set n .laB0
     set iitmax [expr {[llength $::EG::D(Items)]-1}] ;# excluding EG
@@ -535,20 +535,20 @@ proc pref::Items_Tab {} {
       }
       incr iit
       set ::EG::pref::ClrI$iit $::EG::Colors(my$iit)
-      set ::EG::pref::EnTI$iit $item
-      set ::EG::pref::EnTF$iit $frmi
+      set ::EG::pref::EntI$iit $item
+      set ::EG::pref::EntF$iit $frmi
       %C ".labI_$iit $n T 1 1 {-st es} {-t $iit. -w 3 -anchor e}"
+      %C ".EntI_$iit + L 1 1 {-st ws -padx 6} {-tvar ::EG::pref::EntI$iit -w 12\
+        -onevent {<Button> {EG::pref::Message {}}}}"
+      %C ".EntF_$iit + L 1 1 {-st ews} {-tvar ::EG::pref::EntF$iit -w 45\
+        -onevent {<Button> {EG::pref::Message {}}}}"
       %C ".ClrIGEO_$iit + L 1 1 {-st ws} {-tvar ::EG::pref::ClrI$iit -w 8\
-        -onevent {<Button> {EG::pref::Message {}}}}"
-      %C ".EnTI_$iit + L 1 1 {-st ws -padx 6} {-tvar ::EG::pref::EnTI$iit -w 12\
-        -onevent {<Button> {EG::pref::Message {}}}}"
-      %C ".EnTF_$iit + L 1 1 {-st ews} {-tvar ::EG::pref::EnTF$iit -w 45\
         -onevent {<Button> {EG::pref::Message {}}}}"
       set n .labI_$iit
     }}}
-    {labagg fra1 T 1 1 {-st sw -pady 8} {-anchor center -t {AggrEG formula: }
+    {labagg fra1 T 1 1 {-st se -pady 8} {-anchor center -t {AggrEG formula: }
       -foreground $::EG::Colors(fgit)}}
-    {entagg + L 1 1 {-st sw -pady 8} {-tvar ::EG::pref::DP(AggrEG) -w 60}}
+    {entagg + L 1 8 {-st sw -pady 8} {-tvar ::EG::pref::DP(AggrEG) -w 60}}
   }
 }
 #_______________________
@@ -557,8 +557,8 @@ proc pref::CurrentIt {} {
   # Gets index of current item.
 
   set foc [focus]
-  if {!([string match *clrI* $foc] || [string match *enTI* $foc]
-  || [string match *enTF* $foc])} {
+  if {!([string match *clrI* $foc] || [string match *entI* $foc]
+  || [string match *entF* $foc])} {
     Message "Set the cursor on a topic!" 10
     return {}
   }
@@ -573,7 +573,7 @@ proc pref::SwopIt {to} {
   fetchVars
   lassign [IsUpDown $to] i1 i2
   if {$i1} {
-    FocusColor $i1
+    FocusTopic $i1
     lassign [ItemVars $i1] clrvar1 itmvar1 frmvar1
     lassign [ItemVars $i2] clrvar2 itmvar2 frmvar2
     foreach v {clr itm frm} {
@@ -584,7 +584,7 @@ proc pref::SwopIt {to} {
       set $v1 $tmp2
       set $v2 $tmp1
     }
-    FocusColor $i2
+    FocusTopic $i2
     set o1 [lindex $itemOrder [incr i1 -1]]
     set o2 [lindex $itemOrder [incr i2 -1]]
     set itemOrder [lreplace $itemOrder $i1 $i1 $o2]
@@ -621,12 +621,13 @@ proc pref::focusFirst {foc} {
 }
 #_______________________
 
-proc pref::FocusColor {ic} {
-  # Sets focus on color field (and updates it).
-  #   ic - index of color
+proc pref::FocusTopic {it} {
+  # Sets focus on topic field.
+  #   it - index of topic
 
   fetchVars
-  focus [string map {.clr .entclr} [$obPrf ClrIGEO_$ic]]
+  focus [string map {.clr .entclr} [$obPrf ClrIGEO_$it]]
+  focus [$obPrf EntI_$it]
 }
 #_______________________
 
