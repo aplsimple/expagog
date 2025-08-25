@@ -1,6 +1,14 @@
 # Last changes:
 
 
+Version `v1.5.2 (25 Aug'25)`
+
+  - BUGFIX: some msg dialogs crashed
+  - NEW   : message at errors of backups
+  - CHANGE: msg dialog's message trimmed
+  - CHANGE: packages: apave 4.7.0
+
+
 Version `v1.5.1 (6 Aug'25)`
 
   - BUGFIX: F6, F7, click Cancel button -> close window actions not working

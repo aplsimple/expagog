@@ -141,6 +141,7 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   variable InpDate {} ;# input date to go to
   variable TestMode 0 ;# allows no changes to data
   variable DebugMode 0 ;# debugging mode
+  variable globalOK 1 ;# global "all right"
 
   ## ________________________ Pathes ________________________ ##
 
@@ -226,6 +227,7 @@ proc EG::fetchVars {} {
     variable TestMode
     variable InpItem
     variable InpDate
+    variable globalOK
   }
 }
 #_______________________
@@ -337,11 +339,11 @@ proc EG::WriteTextFile {fname contVar} {
   #   fname - file name
   #   contVar - variable for contents
 
-  variable TestMode
+  variable globalOK
   upvar $contVar cont
   if {![IsLockedBase]} {
     set tmpcont $cont
-    apave::writeTextFile $fname tmpcont
+    set globalOK [apave::writeTextFile $fname tmpcont]
   }
 }
 
@@ -2313,7 +2315,7 @@ proc EG::msg {type icon message {defb ""} args} {
 
   fetchVars
   if {$type eq {ok}} {
-    set args [linsert $args 0 $defb]
+    set args [linsert $args 0 {*}$defb]
     set defb {}
   } elseif {$defb eq {}} {
     set defb YES
@@ -2328,7 +2330,10 @@ proc EG::msg {type icon message {defb ""} args} {
       default {set title Info}
     }
   }
-  set res [$EGOBJ $type $icon $title "\n$message\n" {*}$defb \
+  set message [string trim $message]
+  set message [string map [list " \n" \n "\n " \n] $message]
+  set message [string map [list \n " \n "] $message]
+  set res [$EGOBJ $type $icon $title "\n $message \n" {*}$defb \
     -onclose destroy {*}[MessageTags] -text 1 {*}$args]
   return [lindex $res 0]
 }
@@ -2729,15 +2734,23 @@ proc EG::Backup {{auto no}} {
     }
   }
   if {$auto} {
-    SaveDataFile no $D(FILEBAK)
-    # additional save of "week day" version
-    set wd [clock format [Date1Seconds] -format %u]
-    set bak _$wd.bak
-    set fname  [file root $D(FILEBAK)]$bak
-    SaveDataFile no $fname
-    set fname [ResourceFileName]
-    set fback [file rootname $fname]_rc$bak
-    catch {file copy $fname $fback}
+    set globalOK 1
+    set fsave $D(FILEBAK)
+    SaveDataFile no $fsave
+    if {$globalOK} {
+      # additional save of "week day" version
+      set wd [clock format [Date1Seconds] -format %u]
+      set bak _$wd.bak
+      set fsave [file root $D(FILEBAK)]$bak
+      SaveDataFile no $fsave
+      set fname [ResourceFileName]
+      set fback [file rootname $fname]_rc$bak
+      catch {file copy $fname $fback}
+    }
+    if {!$globalOK} {
+      msg ok warn "Cannot save (backup) the file\n<b>$fsave</b>\n\n[::apave::error]" \
+        -w {50 80}
+    }
   }
 }
 #_______________________
