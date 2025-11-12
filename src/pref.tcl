@@ -193,7 +193,7 @@ proc pref::IsChangedMainSettings {} {
       # items & item types include EG - don't check it
       set old [lrange $old 0 end-1]
     }
-    if {$old ne $new} {set res yes; break}
+    if {$old != $new} {set res yes; break}
   }
   lassign $::EG::D(CS) ::EG::D(CS)
   lassign $DP(CS) DP(CS)
@@ -206,12 +206,14 @@ proc pref::IsChangedMainSettings {} {
 proc pref::UpdateAppearance {} {
   # Updates the appearance: colors & dates.
 
+  set opcvar $::EG::Opcvar
   EG::CheckItems
   EG::SaveAll
   EG::Init
   EG::FocusedIt $::EG::D(curritem) $::EG::D(currwday)
   EG::ShowTable
-  EG::diagr::Draw
+  set ::EG::Opcvar $opcvar ;# restore current diagram type
+  EG::Diagram
 }
 
 # ________________________ Main Frame _________________________ #

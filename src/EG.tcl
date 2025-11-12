@@ -1950,7 +1950,7 @@ proc EG::FillBar {} {
     -lablen 16 -tiplen 16 -padx 0 -bg [lindex [$EGOBJ csGet] 3] \
     -font TkTooltipFont -cdel {EG::OnTabDeletion %t} -cdel2 EG::UpdateBAR \
     -csel2 {EG::OnTabSelection %t} -popuptip ::EG::PopupTip]
-  set tip "To select a bar tab\npress Ctrl and click it."
+  set tip "To (un)select a bar tab\npress Ctrl and click it."
   lappend bar1Opts -menu [list \
     sep "com {Open...} EG::Open" \
     sep "com {Merge...} {EG::Merge 1 %t} {} {} {$tip}"]
@@ -2136,7 +2136,8 @@ proc EG::opcPre {args} {
 }
 #_______________________
 
-proc EG::opcPost {} {
+proc EG::Diagram {} {
+  # Draws diagram & item labels.
 
   if {[diagr::Draw]} {
     diagr::Title
@@ -3328,7 +3329,7 @@ proc EG::_create {} {
     {.frar2.btT3 + L 1 1 {-st w} {-image $::EG::img_arrright2
       -com {EG::diagr::Scroll 8 pages} -tip "To end"}}
     {.frar2.opc1 + L 1 1 {-st w -padx 20} {::EG::Opcvar ::EG::OpcItems {-width -4
-      -takefocus 0} {EG::opcPre {%a}} -command EG::opcPost}}
+      -takefocus 0} {EG::opcPre {%a}} -command EG::Diagram}}
     {.frar2.chbW + L 1 1 {-st w} {-t weeks -var ::EG::byWeek
       -com EG::diagr::Draw -takefocus 0}}
     {.frar2.chb + L 1 1 {-st w -padx 20} {-t cumulate

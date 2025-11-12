@@ -7,7 +7,7 @@
 ###########################################################
 
 package require Tk
-package provide apave 4.7.0
+package provide apave 4.7.3
 
 source [file join [file dirname [info script]] apavedialog.tcl]
 
@@ -425,6 +425,18 @@ proc focusedWidget {w} {
 }
 #_______________________
 
+proc focusByForce {foc {cnt 10}} {
+  # Focuses a widget.
+  #   foc - widget's path
+
+  if {[incr cnt -1]>0} {
+    after idle after 5 ::apave::focusByForce $foc $cnt
+  } else {
+    catch {focus -force [winfo toplevel $foc]; focus $foc}
+  }
+}
+#_______________________
+
 proc MouseOnWidget {w1} {
   # Places the mouse pointer on a widget.
   #   w1 - the widget's path
@@ -446,18 +458,6 @@ proc CursorAtEnd {w} {
   focus $w
   $w selection clear
   $w icursor end
-}
-#_______________________
-
-proc focusByForce {foc {cnt 10}} {
-  # Focuses a widget.
-  #   foc - widget's path
-
-  if {[incr cnt -1]>0} {
-    after idle after 5 ::apave::focusByForce $foc $cnt
-  } else {
-    catch {focus -force [winfo toplevel $foc]; focus $foc}
-  }
 }
 #_______________________
 
@@ -878,10 +878,11 @@ method input {icon ttl iopts args} {
   if {$iopts ne {}} {
     my initInput  ;# clear away all internal vars
   }
-  set pady "-pady 2"
+  my enhanceTitle args
   if {[set focusopt [::apave::getOption -focus {*}$args]] ne {}} {
     set focusopt "-focus $focusopt"
   }
+  set pady {-pady 2}
   lappend inopts [list fraM + T 1 98 "-st nsew $pady -rw 1"]
   set savedvv [list]
   set frameprev {}
@@ -1073,19 +1074,11 @@ method input {icon ttl iopts args} {
   set args [::apave::removeOptions $args \
     -titleHELP -buttons -comOK -titleOK -titleCANCEL -centerme]
   lappend args {*}$focusopt
-  if {[catch {
-    lassign [my PrepArgs {*}$args] args
-    if {[lindex $focusopt 1] in {. ""}} {set foc butOK} {set foc {}}
-    set res [my Query $icon $ttl {} \
-      "$butHelp $buttons butOK $titleOK $comOK $butCancel" \
-      $foc $inopts $args {} {*}$centerme -input yes]} e]
-  } then {
-    catch {destroy $Dlgpath}  ;# Query's window
-    set under \n[string repeat _ 80]\n\n
-    ::apave::obj ok err "ERROR" "\n$e$under $inopts$under $args$under $centerme" \
-      -t 1 -head "\nAPave error: \n" -hfg red -weight bold -w 80
-    return 0
-  }
+  lassign [my PrepArgs {*}$args] args
+  if {[lindex $focusopt 1] in {. ""}} {set foc butOK} {set foc {}}
+  set res [my Query $icon $ttl {} \
+    "$butHelp $buttons butOK $titleOK $comOK $butCancel" \
+    $foc $inopts $args {} {*}$centerme -input yes]
   if {![lindex $res 0]} {  ;# restore old values if OK not chosen
     foreach {vn vv} $_savedvv {
       # tk_optionCascade (destroyed now) was tracing its variable => catch

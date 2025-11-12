@@ -1,6 +1,14 @@
 # Last changes:
 
 
+Version `v1.5.3 (12 Nov'25)`
+
+  - BUGFIX: Preferences: updating "on fly" of Polygon diagram
+  - BUGFIX: Preferences: comparison of settings, at updating "on fly"
+  - CHANGE: tip of bartabs' Merge
+  - CHANGE: packages: apave 4.7.3
+
+
 Version `v1.5.2 (25 Aug'25)`
 
   - BUGFIX: some msg dialogs crashed
