@@ -1278,6 +1278,7 @@ proc EG::StoreItem {} {
   if {$P ne {}} {set P [FormatValue $w $type $typ $P]}
   set D($it$wday) $P
   StoreData v $P $item $wday
+  set D(toformat) {}
 }
 #_______________________
 

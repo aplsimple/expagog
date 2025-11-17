@@ -1,6 +1,11 @@
 # Last changes:
 
 
+Version `v1.5.4 (17 Nov'25)`
+
+  - BUGFIX: slowdown after entering data, cause in EG::StoreItem
+
+
 Version `v1.5.3 (12 Nov'25)`
 
   - BUGFIX: Preferences: updating "on fly" of Polygon diagram
