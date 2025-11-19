@@ -3214,6 +3214,65 @@ proc EG::MaxItemWidth {} {
 }
 #_______________________
 
+proc EG::FillTableCells {wpar lwidgets ilw} {
+  # Fills table cell widgets.
+  #   wpar - parent window
+  #   lwidgets - list of widgets
+  #   ilw - current index in lwidgets
+  # Returns updated list of widgets.
+
+  # heading: week days
+  fetchVars
+  set lwidgets [linsert $lwidgets [incr ilw] \
+    ".LaBIh - - - - {-st ews -pady 0 -padx 0} {-t {} -w $ITWIDTH\
+    -fg $Colors(fghot) -bg $Colors(bg)}"]
+  $EGOBJ makeWidgetMethod $wpar .LaBIh
+  for {set i 0} {$i<7} {incr i} {
+    set lwidgets [linsert $lwidgets [incr ilw] \
+      ".LaBIh$i + L 1 1 {-st ews} {-t [lindex $D(WeekDays) $i]\
+      -anchor center -fg $Colors(fghot) -bg $Colors(bg)\
+      -onevent {<ButtonPress-3> {EG::PopupOnWeekTitle $i %X %Y}}\
+      -tip {Right click to clear}}"]
+    $EGOBJ makeWidgetMethod $wpar .LaBIh$i
+  }
+  set wn .laBIh
+  # cells of items
+  foreach item $::EG::D(Items) typ $::EG::D(ItemsTypes) {
+    if {$item eq {EG}} {
+      set lwidgets [linsert $lwidgets [incr ilw] ".seheg $wn T 1 8 {-st ew -pady 4}"]
+      set n .seheg
+    }
+    # item name and its normalized version
+    set it [EG::NormItem $item]
+    set lwidgets [linsert $lwidgets [incr ilw] \
+      ".LaBI$it $wn T - - {-st ews} {-t {$item } -anchor w}"]
+    $EGOBJ makeWidgetMethod $wpar .LaBI$it
+    # item values day by day
+    for {set i 0} {$i<7} {incr i} {
+      if {$typ eq {chk}} {
+        set wn BuTSTD$it$i
+        set atr "-image none -compound center -com"
+      } else {
+        set wn EnTSTD$it$i
+        set atr "-textvar ::EG::D($it$i) -justify center -w $itwidth\
+          -validate key -validatecommand"
+      }
+      set ::EG::D(fld$it,$i) $wn
+      set lwidgets [linsert $lwidgets [incr ilw] \
+        ".$wn + L 1 1 {-st ewn} {$atr {EG::ValidIt $wn {$typ} {$item}\
+        $i %P %V} -onevent {<FocusIn> {EG::FocusedIt {$item} $i; EG::SelIt}\
+        <FocusOut> {EG::StoreItem; EG::SelIt -1}\
+        <KeyPress> {EG::KeyPress %W %K %s {$item} $i}\
+        <ButtonPress-3> {EG::PopupOnItem %W %X %Y}} -tip {-BALTIP ! -COMMAND\
+        {EG::CellTip $it $i {$typ}} -UNDER 2 -PER10 999999}}"]
+      $EGOBJ makeWidgetMethod $wpar .$wn
+    }
+    set wn .LaBI$it
+  }
+  return $lwidgets
+}
+#_______________________
+
 proc EG::_create {} {
   # Creates the app's main window.
 
@@ -3255,49 +3314,7 @@ proc EG::_create {} {
     {fral.Frabts fratop T 1 1 {pack -fill x}}
     {.btsBar  - - - - {pack -fill x}}
     {fral.fra - - - - {pack}}
-    {.tcl {
-      # heading: week days
-      %C ".LaBIh - - - - {-st ews -pady 0 -padx 0} {-t {} -w $::EG::ITWIDTH\
-        -fg $::EG::Colors(fghot) -bg $::EG::Colors(bg)}"
-      for {set i 0} {$i<7} {incr i} {
-        %C ".LaBIh$i + L 1 1 {-st ews} {-t [lindex $::EG::D(WeekDays) $i]\
-        -anchor center -fg $::EG::Colors(fghot) -bg $::EG::Colors(bg)\
-        -onevent {<ButtonPress-3> {EG::PopupOnWeekTitle $i %X %Y}}\
-        -tip {Right click to clear}}"
-      }
-      set n .laBIh
-      # cells of items
-      foreach item $::EG::D(Items) typ $::EG::D(ItemsTypes) {
-        if {$item eq {EG}} {
-          %C ".seheg $n T 1 8 {-st ew -pady 4}"
-          set n .seheg
-        }
-        # item name and its normalized version
-        set it [EG::NormItem $item]
-        %C ".LaBI$it $n T - - {-st ews} {-t {$item } -anchor w}"
-        # item values day by day
-        for {set i 0} {$i<7} {incr i} {
-          if {$typ eq {chk}} {
-            set n BuTSTD$it$i
-            set atr "-image none -compound center -com"
-          } else {
-            set n EnTSTD$it$i
-            set atr "-textvar ::EG::D($it$i) -justify center -w $::EG::itwidth\
-              -validate key -validatecommand"
-          }
-          set ::EG::D(fld$it,$i) $n
-          set lwid ".$n + L 1 1 {-st ewn} {$atr {EG::ValidIt $n {$typ} {$item}\
-            $i %P %V} -onevent {<FocusIn> {EG::FocusedIt {$item} $i; EG::SelIt}\
-            <FocusOut> {EG::StoreItem; EG::SelIt -1}\
-            <KeyPress> {EG::KeyPress %W %K %s {$item} $i}\
-            <ButtonPress-3> {EG::PopupOnItem %W %X %Y}} -tip {-BALTIP ! -COMMAND\
-            {EG::CellTip $it $i {$typ}} -UNDER 2 -PER10 999999}}"
-          %C $lwid
-        }
-        set n .LaBI$it
-      }
-      # end of .tcl
-    }}
+    {prc {EG::FillTableCells fral.fra}}
     #####-comments-on-cell
     {.h_ + T 1 1 {-pady 4}}
     {fral.Lfr1 - - - - {pack -expand 1 -fill both} {-t { } -labelanchor n}}

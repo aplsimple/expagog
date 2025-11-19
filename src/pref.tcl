@@ -511,47 +511,71 @@ proc pref::Items_Tab {} {
   }
   return {
     {fra1 - - 1 2 {-st nsew}}
-    {.tcl {
-    # row of head
-    %C ".LaB0 - - - - {-st es -pady 0} {-t {} -w 3}"
-    %C ".fra + L"
-    %C ".fra.LaBI2 - - - - {-st es -pady 0} {-t Topic -fg $::EG::Colors(fgit)\
-      -bg $::EG::Colors(bg)}"
-    %C ".fra.btT1 + L - - {-st ws -pady 0} {-image img_up\
-      -com {EG::pref::SwopIt -1}}"
-    %C ".fra.btT2 + L - - {-st ws -pady 0} {-image img_down\
-      -com {EG::pref::SwopIt 1}}"
-    %C ".LaBI3 .fra L - - {-st wes -pady 0} {-t Format -fg $::EG::Colors(fgit)\
-      -bg $::EG::Colors(bg)}"
-    %C ".LaBI1 + L - - {-st wes -pady 0} {-t Color -fg $::EG::Colors(fgit)\
-      -bg $::EG::Colors(bg)}"
-    set n .laB0
-    set iitmax [expr {[llength $::EG::D(Items)]-1}] ;# excluding EG
-    # rows of items
-    for {set iit 0} {$iit<$::EG::D(MAXITEMS)} {} {
-      if {$iit<$iitmax} {
-        set item [lindex $::EG::D(Items) $iit]
-        set frmi [lindex $::EG::D(ItemsTypes) $iit]
-      } else {
-        set item [set frmi {}]
-      }
-      incr iit
-      set ::EG::pref::ClrI$iit $::EG::Colors(my$iit)
-      set ::EG::pref::EntI$iit $item
-      set ::EG::pref::EntF$iit $frmi
-      %C ".labI_$iit $n T 1 1 {-st es} {-t $iit. -w 3 -anchor e}"
-      %C ".EntI_$iit + L 1 1 {-st ws -padx 6} {-tvar ::EG::pref::EntI$iit -w 12\
-        -onevent {<Button> {EG::pref::Message {}}}}"
-      %C ".EntF_$iit + L 1 1 {-st ews} {-tvar ::EG::pref::EntF$iit -w 45\
-        -onevent {<Button> {EG::pref::Message {}}}}"
-      %C ".ClrIGEO_$iit + L 1 1 {-st ws} {-tvar ::EG::pref::ClrI$iit -w 8\
-        -onevent {<Button> {EG::pref::Message {}}}}"
-      set n .labI_$iit
-    }}}
+    {prc {EG::pref::FillItems fra1}}
     {labagg fra1 T 1 1 {-st se -pady 8} {-anchor center -t {AggrEG formula: }
       -foreground $::EG::Colors(fgit)}}
     {entagg + L 1 8 {-st sw -pady 8} {-tvar ::EG::pref::DP(AggrEG) -w 60}}
   }
+}
+#_______________________
+
+proc pref::FillItems {wpar lwidgets ilw} {
+  # Fills item widgets.
+  #   wpar - parent window
+  #   lwidgets - list of widgets
+  #   ilw - current index in lwidgets
+  # Returns updated list of widgets.
+
+  fetchVars
+  # row of head
+  set lwidgets [linsert $lwidgets [incr ilw] ".LaB0 - - - - \
+    {-st es -pady 0} {-t {} -w 3}"]
+  $obPrf makeWidgetMethod $wpar .LaB0
+  set lwidgets [linsert $lwidgets [incr ilw] ".fra + L"]
+  set lwidgets [linsert $lwidgets [incr ilw] ".fra.LaBI2 - - - - \
+    {-st es -pady 0} {-t Topic -fg $::EG::Colors(fgit) -bg $::EG::Colors(bg)}"]
+  $obPrf makeWidgetMethod $wpar .fra.LaBI2
+  set lwidgets [linsert $lwidgets [incr ilw] ".fra.btT1 + L - - \
+    {-st ws -pady 0} {-image img_up -com {EG::pref::SwopIt -1}}"]
+  set lwidgets [linsert $lwidgets [incr ilw] ".fra.btT2 + L - - \
+    {-st ws -pady 0} {-image img_down -com {EG::pref::SwopIt 1}}"]
+  set lwidgets [linsert $lwidgets [incr ilw] ".LaBI3 .fra L - - \
+    {-st wes -pady 0} {-t Format -fg $::EG::Colors(fgit) -bg $::EG::Colors(bg)}"]
+  $obPrf makeWidgetMethod $wpar .LaBI3
+  set lwidgets [linsert $lwidgets [incr ilw] ".LaBI1 + L - - \
+    {-st wes -pady 0} {-t Color -fg $::EG::Colors(fgit) -bg $::EG::Colors(bg)}"]
+  $obPrf makeWidgetMethod $wpar .LaBI1
+  set n .laB0
+  set iitmax [expr {[llength $::EG::D(Items)]-1}] ;# excluding EG
+  # rows of items
+  for {set iit 0} {$iit<$::EG::D(MAXITEMS)} {} {
+    if {$iit<$iitmax} {
+      set item [lindex $::EG::D(Items) $iit]
+      set frmi [lindex $::EG::D(ItemsTypes) $iit]
+    } else {
+      set item [set frmi {}]
+    }
+    incr iit
+    set ::EG::pref::ClrI$iit $::EG::Colors(my$iit)
+    set ::EG::pref::EntI$iit $item
+    set ::EG::pref::EntF$iit $frmi
+    set lwidgets [linsert $lwidgets [incr ilw] ".labI_$iit $n T 1 1\
+      {-st es} {-t $iit. -w 3 -anchor e}"]
+    set lwidgets [linsert $lwidgets [incr ilw] ".EntI_$iit + L 1 1 \
+      {-st ws -padx 6} {-tvar ::EG::pref::EntI$iit -w 12 \
+      -onevent {<Button> {EG::pref::Message {}}}}"]
+    $obPrf makeWidgetMethod $wpar .EntI_$iit
+    set lwidgets [linsert $lwidgets [incr ilw] ".EntF_$iit + L 1 1 \
+      {-st ews} {-tvar ::EG::pref::EntF$iit -w 45 \
+      -onevent {<Button> {EG::pref::Message {}}}}"]
+    $obPrf makeWidgetMethod $wpar .EntF_$iit
+    set lwidgets [linsert $lwidgets [incr ilw] ".ClrIGEO_$iit + L 1 1 \
+      {-st ws} {-tvar ::EG::pref::ClrI$iit -w 8 \
+      -onevent {<Button> {EG::pref::Message {}}}}"]
+    $obPrf makeWidgetMethod $wpar .ClrIGEO_$iit
+    set n .labI_$iit
+  }
+  return $lwidgets
 }
 #_______________________
 

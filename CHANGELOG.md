@@ -1,9 +1,10 @@
 # Last changes:
 
 
-Version `v1.5.4 (17 Nov'25)`
+Version `v1.6.0 (19 Nov'25)`
 
   - BUGFIX: slowdown after entering data, cause in EG::StoreItem
+  - CHANGE: changes due to apave 4.8.0
 
 
 Version `v1.5.3 (12 Nov'25)`
