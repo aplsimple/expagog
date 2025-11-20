@@ -3214,8 +3214,8 @@ proc EG::MaxItemWidth {} {
 }
 #_______________________
 
-proc EG::FillTableCells {wpar lwidgets ilw} {
-  # Fills table cell widgets.
+proc EG::PaveTableCells {wpar lwidgets ilw} {
+  # Creates table cell widgets in list of widgets.
   #   wpar - parent window
   #   lwidgets - list of widgets
   #   ilw - current index in lwidgets
@@ -3226,18 +3226,16 @@ proc EG::FillTableCells {wpar lwidgets ilw} {
   set lwidgets [linsert $lwidgets [incr ilw] \
     ".LaBIh - - - - {-st ews -pady 0 -padx 0} {-t {} -w $ITWIDTH\
     -fg $Colors(fghot) -bg $Colors(bg)}"]
-  $EGOBJ makeWidgetMethod $wpar .LaBIh
   for {set i 0} {$i<7} {incr i} {
     set lwidgets [linsert $lwidgets [incr ilw] \
       ".LaBIh$i + L 1 1 {-st ews} {-t [lindex $D(WeekDays) $i]\
       -anchor center -fg $Colors(fghot) -bg $Colors(bg)\
       -onevent {<ButtonPress-3> {EG::PopupOnWeekTitle $i %X %Y}}\
       -tip {Right click to clear}}"]
-    $EGOBJ makeWidgetMethod $wpar .LaBIh$i
   }
   set wn .laBIh
   # cells of items
-  foreach item $::EG::D(Items) typ $::EG::D(ItemsTypes) {
+  foreach item $D(Items) typ $D(ItemsTypes) {
     if {$item eq {EG}} {
       set lwidgets [linsert $lwidgets [incr ilw] ".seheg $wn T 1 8 {-st ew -pady 4}"]
       set n .seheg
@@ -3246,7 +3244,6 @@ proc EG::FillTableCells {wpar lwidgets ilw} {
     set it [EG::NormItem $item]
     set lwidgets [linsert $lwidgets [incr ilw] \
       ".LaBI$it $wn T - - {-st ews} {-t {$item } -anchor w}"]
-    $EGOBJ makeWidgetMethod $wpar .LaBI$it
     # item values day by day
     for {set i 0} {$i<7} {incr i} {
       if {$typ eq {chk}} {
@@ -3265,7 +3262,6 @@ proc EG::FillTableCells {wpar lwidgets ilw} {
         <KeyPress> {EG::KeyPress %W %K %s {$item} $i}\
         <ButtonPress-3> {EG::PopupOnItem %W %X %Y}} -tip {-BALTIP ! -COMMAND\
         {EG::CellTip $it $i {$typ}} -UNDER 2 -PER10 999999}}"]
-      $EGOBJ makeWidgetMethod $wpar .$wn
     }
     set wn .LaBI$it
   }
@@ -3314,7 +3310,7 @@ proc EG::_create {} {
     {fral.Frabts fratop T 1 1 {pack -fill x}}
     {.btsBar  - - - - {pack -fill x}}
     {fral.fra - - - - {pack}}
-    {prc {EG::FillTableCells fral.fra}}
+    {prc {EG::PaveTableCells fral.fra}}
     #####-comments-on-cell
     {.h_ + T 1 1 {-pady 4}}
     {fral.Lfr1 - - - - {pack -expand 1 -fill both} {-t { } -labelanchor n}}
