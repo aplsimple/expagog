@@ -38,6 +38,7 @@ namespace eval diagr {
   variable WeekColWidth [expr {$DayColWidth*7}]  ;# width of week column
   variable idDayLine {}
   variable WKcolor
+  variable tipslist
 
 }
 #_______________________
@@ -75,6 +76,7 @@ proc diagr::fetchVars {} {
     variable WeekColWidth
     variable idDayLine
     variable WKcolor
+    variable tipslist
   }
 }
 #_______________________
@@ -114,7 +116,7 @@ proc diagr::MoveToDay {day1} {
   #   day1 - day to go on
 
   EG::StoreItem
-  EG::MoveToDay $day1
+  EG::MoveToDay $day1 no
 }
 
 # ________________________ Lay out _________________________ #
@@ -194,20 +196,64 @@ proc diagr::Title {{lab ""}} {
 }
 #_______________________
 
-proc diagr::DayLine {} {
+proc diagr::DayLine {{doit no}} {
   # Draws a vertical line of current day.
+  #   doit - yes for diagr::TagTip to update
 
   fetchVars
   if {[catch {
     set day1 [EG::ScanDatePG $::EG::D(egdDate1)]
     set day2 [EG::ScanDate]
     set dd [expr {($day2 - $day1)/86400}]
-    set x [expr {$dd*$DayColWidth + $X0 + $DayColWidth/2 + 1}]
+    set X [expr {$dd*$DayColWidth + $X0 + $DayColWidth/2 + 1}]
     catch {$C delete $idDayLine}
-    set idDayLine [$C create polygon $x 0 $x [expr {$BodyHeight + $BarHeight}]\
+    set idDayLine [$C create polygon $X 0 $X [expr {$BodyHeight + $BarHeight}]\
       -outline $::EG::Colors(fgsel) -width 2 -dash {2 7}]
+    if {$byWeek} {set xRange $WeekColWidth} {set xRange $DayColWidth}
+    foreach xl $x1list {
+      lassign $xl x
+      if {$X >= $x && $X <= ($x + $WeekColWidth)} {
+        foreach tl $tipslist  {
+          lassign $tl tag x1 tip
+          if {$X >= $x1 && $X <= ($x1 + $xRange)} {
+            ::baltip::tip $C $tip -ctag $idDayLine
+            after idle [list EG::diagr::TagTip $tag $tip $doit]
+            break
+          }
+        }
+        break
+      }
+    }
   }]} {
     after 200 EG::diagr::DayLine
+  }
+}
+#_______________________
+
+proc diagr::TagTip {tag tip {doit no}} {
+  # Shows balloon with info on current day/week
+  #   tag - canvas tag of current day/week
+  #   tip - balloon's text
+  #   doit - yes to force update
+
+  fetchVars
+  if {!$doit && [info exists ::EG::diagr::tagtip($tag,$tip)]} return
+  set per10 2000
+  set aftertime [expr {$per10*[string length $tip]/10}]
+  lassign [$C bbox $tag] x y
+  lassign [split [wm geometry $::EG::WIN] x+] - - x1 y1
+  lassign [split [winfo geometry $::EG::WIN.fra.frar1] x+] w2 - x2 y2
+  lassign [$C xview] sx1
+  set totalWidth [expr {$NWeeks * ($WeekColWidth - ($byWeek ? 1:0))}]
+  set x [expr {$X0*4 + $x - int($sx1*$totalWidth)}]
+  if {$x > $X0 && $x<$w2} {
+    ::baltip hide $::EG::WIN
+    set x [expr {$x1 + $x2 + $x}]
+    set y [expr {$y1 + $y2 + $y}]
+    ::baltip showBalloon $tip -balloonwindow $::EG::WIN -geometry +$x+$y \
+      -per10 $per10 -pause 500 -fade 500 -ontop 0
+    array set ::EG::diagr::tagtip [list $tag,$tip 1]
+    after $aftertime "catch {array unset ::EG::diagr::tagtip}"
   }
 }
 
@@ -246,7 +292,7 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
   fetchVars
   set maxsum -999999999
   set cumulatedsum 0
-  set coldata [list]
+  set tipslist [set coldata [list]]
   # collect data
   foreach {dk data} $::EG::LS {
     set date [EG::ScanDatePG $dk]
@@ -270,7 +316,7 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
   # ready to show data in diagram
   set colWidth [expr {$byWeek ? $WeekColWidth : $DayColWidth}]
   set colorCol [EG::ItemColor $item $ColorBg3]
-  set x1prev [set xPREV 0]
+  set x1prev [set xPREV [set x1 0]]
   if {$maxsum>0} {
     set itemtype [EG::ItemType $item]
     set cumulatedsum 0
@@ -322,9 +368,12 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
       }
       set tag [DrawColumn $item $iw $x1 $colWidth $colHeight \
         $color $color2 $ispoly]
-      set tip "[EG::FormatDate $day1]$::EG::TipUnderLine"
+      set dt [EG::FormatDate $day1]
+      if {$byWeek} {set tip "Week [EG::WeekNumber $dt]\n"} {set tip {}}
+      append tip "$dt$::EG::TipUnderLine"
       if {$ispoly} {append tip \n\"$item\"}
       append tip "\nSum: [EG::Round $sum 2]\nCells: $cnt"
+      lappend tipslist [list $tag $x1 $tip]
       ::baltip::tip $C $tip -ctag $tag -per10 4000
       $C bind $tag <Button-1> [list EG::diagr::MoveToDay $day1]
     }

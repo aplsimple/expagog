@@ -116,6 +116,7 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   set D(MsgFont) {}   ;# font of messages
   set D(TextTags) {}  ;# text tags
   set D(Date1) {}     ;# current date (of EG main window)
+  set D(Date1sav) {}  ;# saved current date
   set D(egdDate1) {}  ;# Date1 (included) of current .egd data
   set D(egdDate2) {}  ;# Date2 (excluded) of current .egd data
   set D(previtem) ""  ;# previous choosen item
@@ -774,10 +775,13 @@ proc EG::FocusedIt {{item ""} {wday ""} {dt ""}} {
     $cw configure -fg $Colors(fgsel) -font [$EGOBJ boldDefFont]
     $cttl configure -fg $Colors(fgsel) -font [$EGOBJ boldDefFont]
   }
+  if {$D(Date1sav) ne $D(Date1)} {
+    set D(Date1sav) $D(Date1)
+    after idle EG::diagr::DayLine
+  }
   set D(curritem) $item
   set D(currwday) $wday
   ShowText $item $wday
-  after idle EG::diagr::DayLine
 }
 #_______________________
 
@@ -1546,6 +1550,13 @@ proc EG::FirstWDay {{dt ""}} {
 }
 #_______________________
 
+proc EG::WeekNumber {{dt ""}} {
+  # Gets current week's number.
+
+  return #[clock format [ScanDate $dt] -format %V]\ :
+}
+#_______________________
+
 proc EG::ChooseDay {dtvar args} {
   # Calls a calendar to pick a date.
   #   dtvar - date variable name
@@ -1698,7 +1709,7 @@ proc EG::MoveToWeek {wdays {dt ""} {doit no}} {
   # Moves to week(s).
   #   wdays - week days to and fro
   #   dt - time in week day
-  #   doit - yes if force moving
+  #   doit - yes, if update diagram too
 
   fetchVars
   if {$wdays} {
@@ -1712,16 +1723,26 @@ proc EG::MoveToWeek {wdays {dt ""} {doit no}} {
     ShowTable
     AfterWeekSwitch
     FocusedIt {} {} $dt
+    if {$wdays || $doit} {
+      update
+      EG::diagr::Draw yes
+      set date2 [ScanDatePG $D(egdDate2)]
+      set date2 [clock add $date2 -7 days]
+      if {[ScanDatePG] >= $date2} {
+        [$EGOBJ BtT3] invoke  ;# last week
+      }
+    }
   }
 }
 #_______________________
 
-proc EG::MoveToDay {{dt ""}} {
+proc EG::MoveToDay {{dt ""} {doit yes}} {
   # Move to specific day.
   #   dt - date to move to
+  #   doit - yes, if update diagram when dt is set
 
   CurrentItemDay "" [FormatDatePG $dt]
-  MoveToWeek 0 $dt
+  MoveToWeek 0 $dt [expr {$doit && $dt ne ""}]
 }
 #_______________________
 
@@ -1823,8 +1844,7 @@ proc EG::ShowTextR {} {
   fetchVars
   set textR [DataValue $D(WeeklyKEY) {*}$D(WeeklyITEM)]
   $EGOBJ displayText [$EGOBJ TextR] $textR
-  set week [clock format [ScanDate] -format %V]
-  [$EGOBJ Lfr2] configure -text " Weekly #$week "
+  [$EGOBJ Lfr2] configure -text " Weekly [WeekNumber] "
 
 }
 #_______________________
@@ -2616,7 +2636,7 @@ proc EG::Actions {} {
       -command EG::SwitchLock -accelerator Ctrl+L
     $pmenu add separator
     $pmenu add command -label Diagram -image mnu_diagram -compound left \
-      -command EG::diagr::Draw -accelerator F5
+      -command {EG::diagr::Draw yes} -accelerator F5
     $pmenu add command -label Statistics... -image mnu_info -compound left \
       -command EG::stat::_run -accelerator F6
     $pmenu add command -label Report... -image mnu_print -compound left \
@@ -3333,14 +3353,14 @@ proc EG::_create {} {
     {.Can - - - - {pack -expand 1 -fill both -side top} {-w 70 -h 360 -closeenough 0.0}}
     {.frar2 - - - - {pack -side bottom -fill x -pady 2}}
     {.frar2.btT - - - - {-st w}
-      {-image $::EG::img_diagram -com EG::diagr::Draw -tip "Redraw diagram\nF5"}}
+      {-image $::EG::img_diagram -com {EG::diagr::Draw yes} -tip "Redraw diagram\nF5"}}
     {.frar2.btT0 + L 1 1 {-st w} {-image $::EG::img_arrleft2
       -com {EG::diagr::Scroll -8 pages} -tip "To beginning"}}
     {.frar2.btT1 + L 1 1 {-st w} {-image $::EG::img_arrleft
       -com {EG::diagr::Scroll -3} -tip "To left"}}
     {.frar2.btT2 + L 1 1 {-st w} {-image $::EG::img_arrright
       -com {EG::diagr::Scroll 3} -tip "To right"}}
-    {.frar2.btT3 + L 1 1 {-st w} {-image $::EG::img_arrright2
+    {.frar2.BtT3 + L 1 1 {-st w} {-image $::EG::img_arrright2
       -com {EG::diagr::Scroll 8 pages} -tip "To end"}}
     {.frar2.opc1 + L 1 1 {-st w -padx 20} {::EG::Opcvar ::EG::OpcItems {-width -4
       -takefocus 0} {EG::opcPre {%a}} -command EG::Diagram}}
@@ -3381,7 +3401,7 @@ proc EG::_create {} {
     "EG::ScheduleWeek; EG::diagr::Title;\
     EG::ShowTable 1; EG::AfterWeekSwitch; after 300 {EG::diagr::Draw 1}"
   bind $WIN <F1> EG::Help
-  bind $WIN <F5> EG::diagr::Draw
+  bind $WIN <F5> {EG::diagr::Draw yes}
   bind $WIN <F6> EG::stat::_run
   bind $WIN <F7> EG::Report
   bind $WIN <F10> EG::Actions

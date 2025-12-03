@@ -1,37 +1,32 @@
 # Last changes:
 
 
+Version `v1.6.1 (3 Dec'25)`
+
+  - NEW   : updating diagram at switching weeks / selecting day from calendar
+  - NEW   : show balloon in diagram at changing current day
+  - NEW   : tooltip for red line of current day
+  - NEW   : F5 key & Co. show current week in diagram
+  - CHANGE: packages: apave 4.8.1, baltip 1.6.4
+
+
 Version `v1.6.0 (19 Nov'25)`
 
   - BUGFIX: slowdown after entering data, cause in EG::StoreItem
-  - CHANGE: changes due to apave 4.8.0
-
-
-Version `v1.5.3 (12 Nov'25)`
-
   - BUGFIX: Preferences: updating "on fly" of Polygon diagram
   - BUGFIX: Preferences: comparison of settings, at updating "on fly"
-  - CHANGE: tip of bartabs' Merge
-  - CHANGE: packages: apave 4.7.3
-
-
-Version `v1.5.2 (25 Aug'25)`
-
   - BUGFIX: some msg dialogs crashed
-  - NEW   : message at errors of backups
-  - CHANGE: msg dialog's message trimmed
-  - CHANGE: packages: apave 4.7.0
-
-
-Version `v1.5.1 (6 Aug'25)`
-
   - BUGFIX: F6, F7, click Cancel button -> close window actions not working
+  - NEW   : message at errors of backups
   - NEW   : text cell's value: leading 1+, 2+.. 1-, 2-.. sets value
+  - CHANGE: changes due to apave 4.8.0
+  - CHANGE: tip of bartabs' Merge
+  - CHANGE: msg dialog's message trimmed
   - CHANGE: Preferences/General: Tab order
   - CHANGE: Preferences/Topics: names first, colors last
   - CHANGE: EG.tcl: unit tree reordered
   - CHANGE: appearance of some fields
-  - CHANGE: packages: apave 4.6.5
+  - CHANGE: packages: apave 4.8.0
 
 Version `v1.5.0 (14 Jul'25)`
 
