@@ -1871,6 +1871,7 @@ proc EG::StoreTextR {} {
   fetchVars
   set wtxt [$EGOBJ TextR]
   set tex [string trimright [$wtxt get 1.0 end]]
+  if {$tex eq $EMPTY} {set tex {}}
   StoreValue $D(WeeklyKEY) $tex {*}$D(WeeklyITEM)
 }
 #_______________________
@@ -3356,10 +3357,10 @@ proc EG::_create {} {
       {-image $::EG::img_diagram -com {EG::diagr::Draw yes} -tip "Redraw diagram\nF5"}}
     {.frar2.btT0 + L 1 1 {-st w} {-image $::EG::img_arrleft2
       -com {EG::diagr::Scroll -8 pages} -tip "To beginning"}}
-    {.frar2.btT1 + L 1 1 {-st w} {-image $::EG::img_arrleft
-      -com {EG::diagr::Scroll -3} -tip "To left"}}
-    {.frar2.btT2 + L 1 1 {-st w} {-image $::EG::img_arrright
-      -com {EG::diagr::Scroll 3} -tip "To right"}}
+    {.frar2.BtT1 + L 1 1 {-st w} {-image $::EG::img_arrleft
+      -com {EG::diagr::Scroll -1} -tip "To left\n(scroll backward)"}}
+    {.frar2.BtT2 + L 1 1 {-st w} {-image $::EG::img_arrright
+      -com {EG::diagr::Scroll 1} -tip "To right\n(scroll forward)"}}
     {.frar2.BtT3 + L 1 1 {-st w} {-image $::EG::img_arrright2
       -com {EG::diagr::Scroll 8 pages} -tip "To end"}}
     {.frar2.opc1 + L 1 1 {-st w -padx 20} {::EG::Opcvar ::EG::OpcItems {-width -4
@@ -3405,6 +3406,11 @@ proc EG::_create {} {
   bind $WIN <F6> EG::stat::_run
   bind $WIN <F7> EG::Report
   bind $WIN <F10> EG::Actions
+  if {[::isunix]} {
+    bind $C <Button-4> "EG::diagr::wheelScroll -1"
+    bind $C <Button-5> "EG::diagr::wheelScroll 1"
+  }
+  bind $C <MouseWheel> "EG::diagr::wheelScroll %D"
   set geo [ResourceData Geometry]
   if {$geo ne {}} {
     set geo [list -geometry [apave::checkGeometry $geo]]

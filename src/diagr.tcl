@@ -281,6 +281,14 @@ proc diagr::Scroll {to {what units}} {
   fetchVars
   catch {$C xview scroll $to $what}
 }
+#_______________________
+
+proc diagr::wheelScroll {D} {
+  # Scrolls canvas left/right by mouse wheel.
+
+  if {$D>0} {set but 1} {set but 2}
+  [$::EG::EGOBJ BtT$but] invoke
+}
 
 # ________________________ Draw _________________________ #
 
