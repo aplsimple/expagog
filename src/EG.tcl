@@ -3410,7 +3410,7 @@ proc EG::_create {} {
     bind $C <Button-4> "EG::diagr::wheelScroll -1"
     bind $C <Button-5> "EG::diagr::wheelScroll 1"
   }
-  bind $C <MouseWheel> "EG::diagr::wheelScroll %D"
+  bind $C <MouseWheel> "EG::diagr::wheelScroll -%D"
   set geo [ResourceData Geometry]
   if {$geo ne {}} {
     set geo [list -geometry [apave::checkGeometry $geo]]

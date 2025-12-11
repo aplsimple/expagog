@@ -289,7 +289,7 @@ proc diagr::Scroll {to {what units}} {
 proc diagr::wheelScroll {D} {
   # Scrolls canvas left/right by mouse wheel.
 
-  if {$D>0} {set but 1} {set but 2}
+  if $D>0 {set but 1} {set but 2}
   [$::EG::EGOBJ BtT$but] invoke
 }
 
