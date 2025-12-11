@@ -209,19 +209,22 @@ proc diagr::DayLine {{doit no}} {
     catch {$C delete $idDayLine}
     set idDayLine [$C create polygon $X 0 $X [expr {$BodyHeight + $BarHeight}]\
       -outline $::EG::Colors(fgsel) -width 2 -dash {2 7}]
-    if {$byWeek} {set xRange $WeekColWidth} {set xRange $DayColWidth}
-    foreach xl $x1list {
-      lassign $xl x
-      if {$X >= $x && $X <= ($x + $WeekColWidth)} {
-        foreach tl $tipslist  {
-          lassign $tl tag x1 tip
-          if {$X >= $x1 && $X <= ($x1 + $xRange)} {
-            ::baltip::tip $C $tip -ctag $idDayLine
-            after idle [list EG::diagr::TagTip $tag $tip $doit]
-            break
+    # in test mode, don't allow overlapping these tips & test balloon
+    if {!$::EG::TestMode } {
+      if {$byWeek} {set xRange $WeekColWidth} {set xRange $DayColWidth}
+      foreach xl $x1list {
+        lassign $xl x
+        if {$X >= $x && $X <= ($x + $WeekColWidth)} {
+          foreach tl $tipslist  {
+            lassign $tl tag x1 tip
+            if {$X >= $x1 && $X <= ($x1 + $xRange)} {
+              ::baltip::tip $C $tip -ctag $idDayLine
+              after idle [list EG::diagr::TagTip $tag $tip $doit]
+              break
+            }
           }
+          break
         }
-        break
       }
     }
   }]} {

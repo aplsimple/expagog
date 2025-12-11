@@ -1,7 +1,7 @@
 # Last changes:
 
 
-Version `v1.7.0 (10 Dec'25)`
+Version `v1.7.0 (11 Dec'25)`
 
   - NEW   : scrolling diagram with mouse wheel
   - NEW   : updating diagram at switching weeks / selecting day from calendar

@@ -2369,8 +2369,8 @@ proc EG::Balloon {msg args} {
   fetchVars
   lassign [split [winfo geometry $WIN] x+] w h x y
   set geo "+([expr {$w+$x}]-W-8)+$y"
-  ::baltip tip $WIN $msg -geometry $geo -fg white -bg red \
-    -pause 1400 -fade 1400 -padx 20 -pady 20 \
+  ::baltip showBalloon $msg -geometry $geo -fg white -bg red \
+    -pause 1500 -fade 1500 -padx 20 -pady 20 -balloonwindow $WIN \
     -per10 3000 -font [$EGOBJ boldDefFont] {*}$args
 }
 
@@ -3259,7 +3259,7 @@ proc EG::PaveTableCells {wpar lwidgets ilw} {
   foreach item $D(Items) typ $D(ItemsTypes) {
     if {$item eq {EG}} {
       set lwidgets [linsert $lwidgets [incr ilw] ".seheg $wn T 1 8 {-st ew -pady 4}"]
-      set n .seheg
+      set wn .seheg
     }
     # item name and its normalized version
     set it [EG::NormItem $item]
@@ -3417,8 +3417,8 @@ proc EG::_create {} {
   }
   after 100 EG::note::OpenNotes
   if {[IsTestMode]} {
-    after 500 [list EG::Balloon \
-      "Test mode.\n\nClose this EG\nafter testing."]
+    after 1000 [list EG::Balloon \
+      "Test mode.\n\nClose this EG application\nafter testing it."]
   }
   $EGOBJ showModal $WIN -onclose EG::Exit -escape no {*}$geo
 }
