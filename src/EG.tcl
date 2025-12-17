@@ -2369,8 +2369,8 @@ proc EG::Balloon {msg args} {
   fetchVars
   lassign [split [winfo geometry $WIN] x+] w h x y
   set geo "+([expr {$w+$x}]-W-8)+$y"
-  ::baltip showBalloon $msg -geometry $geo -fg white -bg red \
-    -pause 1500 -fade 1500 -padx 20 -pady 20 -balloonwindow $WIN \
+  ::baltip showBalloon $WIN $msg -geometry $geo -fg white -bg red \
+    -pause 1500 -fade 1500 -padx 20 -pady 20 \
     -per10 3000 -font [$EGOBJ boldDefFont] {*}$args
 }
 

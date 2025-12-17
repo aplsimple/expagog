@@ -561,6 +561,7 @@ proc repo::Report {} {
   if {$doDiagr} {
     catch {
       # save the diagram to a file, to show it in the report
+      ::baltip sleep 2000
       EG::diagr::Draw
       set img [canvas::snap $::EG::C]
       $img write $diagrRepo

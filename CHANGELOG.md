@@ -1,7 +1,7 @@
 # Last changes:
 
 
-Version `v1.7.0 (11 Dec'25)`
+Version `v1.7.0 (17 Dec'25)`
 
   - NEW   : scrolling diagram with mouse wheel
   - NEW   : updating diagram at switching weeks / selecting day from calendar
@@ -9,7 +9,7 @@ Version `v1.7.0 (11 Dec'25)`
   - NEW   : tooltip for red line of current day
   - NEW   : F5 key & Co. show current week in diagram
   - CHANGE: "?" of Weekly isn't saved, yet shown at switching to new week
-  - CHANGE: packages: apave 4.8.2, baltip 1.6.4
+  - CHANGE: packages: apave 4.8.3, baltip 1.6.5
 
 
 Version `v1.6.0 (19 Nov'25)`

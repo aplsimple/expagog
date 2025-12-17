@@ -210,7 +210,7 @@ proc diagr::DayLine {{doit no}} {
     set idDayLine [$C create polygon $X 0 $X [expr {$BodyHeight + $BarHeight}]\
       -outline $::EG::Colors(fgsel) -width 2 -dash {2 7}]
     # in test mode, don't allow overlapping these tips & test balloon
-    if {!$::EG::TestMode } {
+    if {!$::EG::TestMode} {
       if {$byWeek} {set xRange $WeekColWidth} {set xRange $DayColWidth}
       foreach xl $x1list {
         lassign $xl x
@@ -253,7 +253,7 @@ proc diagr::TagTip {tag tip {doit no}} {
     ::baltip hide $::EG::WIN
     set x [expr {$x1 + $x2 + $x}]
     set y [expr {$y1 + $y2 + $y}]
-    ::baltip showBalloon $tip -balloonwindow $::EG::WIN -geometry +$x+$y \
+    ::baltip showBalloon $::EG::WIN $tip -geometry +$x+$y \
       -per10 $per10 -pause 500 -fade 500 -ontop 0
     array set ::EG::diagr::tagtip [list $tag,$tip 1]
     after $aftertime "catch {array unset ::EG::diagr::tagtip}"
