@@ -145,7 +145,6 @@ method mouse_Drag {mode went X Y} {
       set _X 0
       $went selection clear
       apave::focusByForce $went
-      after idle EG::SaveDataFile  ;# let it be that often
     }
   }
 }
@@ -207,7 +206,8 @@ method createNote {n onlyshow} {
   } else {
     pack forget [$Pobj Siz]
   }
-  bind $Win <FocusOut> "+ $Self saveNoteData"
+  bind $went <FocusOut> "$Self saveNoteData"
+  bind $wtxt <FocusOut> "$Self saveNoteData"
   if {$onlyshow} {
     wm protocol $Win WM_DELETE_WINDOW "$Self saveNoteData; $Self exitNote"
     after idle "::apave::deiconify $Win; wm geometry $Win $Ngeometry"

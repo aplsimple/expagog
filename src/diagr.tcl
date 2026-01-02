@@ -249,7 +249,7 @@ proc diagr::TagTip {tag tip {doit no}} {
   lassign [$C xview] sx1
   set totalWidth [expr {$NWeeks * ($WeekColWidth - ($byWeek ? 1:0))}]
   set x [expr {$X0*4 + $x - int($sx1*$totalWidth)}]
-  if {$x > $X0 && $x<$w2} {
+  if {$x > $X0 && $x<[incr w2 $WeekColWidth]} {
     ::baltip hide $::EG::WIN
     set x [expr {$x1 + $x2 + $x}]
     set y [expr {$y1 + $y2 + $y}]
@@ -334,6 +334,7 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
     set cumulatedcnt 0
     foreach data $coldata {
       lassign $data x1 cnt cnt0 sum color day1 tagcmnt
+      if {[EG::FormatDatePG $day1] >= $::EG::D(egdDate2)} continue
       set iw [expr {$x1/$WeekColWidth}]
       set colorname [EG::ColorName $color]
       if {![info exists WKcolor($iw)] || $WKcolor($iw) eq {} ||
@@ -509,9 +510,13 @@ proc diagr::Drawing {atStart} {
   if {$atStart} {
     # at start, scroll to current week
     Scroll -8 pages
-    set w1 [EG::Oct2Dec [clock format [EG::ScanDatePG $::EG::D(egdDate1)] -format %V]]
-    set w2 [EG::Oct2Dec [clock format [EG::ScanDate] -format %V]]
-    set curweek [expr {$w2 - $w1 + 1}]
+    if {[EG::IsLastWeek]} {
+      set curweek $NWeeks
+    } else {
+      set w1 [EG::Oct2Dec [clock format [EG::ScanDatePG $::EG::D(egdDate1)] -format %V]]
+      set w2 [EG::Oct2Dec [clock format [EG::ScanDate] -format %V]]
+      set curweek [expr {$w2 - $w1 + 1}]
+    }
     foreach _ {1 2 3 4} {
       lassign [$C xview] fr1 fr2
       set week2 [expr {$NWeeks*$fr2}]

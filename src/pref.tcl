@@ -675,8 +675,6 @@ proc pref::CheckEgdDate1 {} {
   if {$DP(egdDate1)>$DP(egdDate2) || $DP(egdDate2)>$egdDate2} {
     set DP(egdDate2) $egdDate2
     Message "Week range's Date2 is set to $egdDate2"
-  } elseif {$DP(egdDate2) != $egdDate2} {
-    Message "Week range's Date2 is advised to be $egdDate2"
   }
   CheckEgdDates
 }
@@ -693,15 +691,13 @@ proc pref::CheckEgdDate2 {} {
   if {$DP(egdDate1)>$DP(egdDate2) || $DP(egdDate1)<$egdDate1} {
     set DP(egdDate1) $egdDate1
     Message "Week range's Date1 is set to $egdDate1"
-  } elseif {$DP(egdDate1) != $egdDate1} {
-    Message "Week range's Date1 is advised to be $egdDate1"
   }
   CheckEgdDates
 }
 #_______________________
 
 proc pref::CheckEgdDates {} {
-  # Checks 1st & last .egd dates against the curren data.
+  # Checks 1st & last .egd dates against the current data.
 
   fetchVars
   set dkeys [EG::DatesKeys]

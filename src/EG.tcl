@@ -634,6 +634,37 @@ proc EG::ScanDatePG {{dt ""}} {
   if {$dt eq {}} {return [ScanDate]}
   clock scan $dt -format $D(DatePG)
 }
+#_______________________
+
+proc EG::YearWeek {inpdate month day {iy 0} {iw 0}} {
+  # Gets year week's first day.
+  #   inpdate - input date
+  #   month - month of year
+  #   day - day of month
+  #   iy - increment for extra year
+  #   iw - increment for extra week
+
+  set year [clock format [ScanDatePG $inpdate] -format %Y]
+  set dt [string map [list %Y [incr year $iy] %m $month %d $day] $::EG::D(DatePG)]
+  set dt [FirstWDay [ScanDatePG $dt]]
+  FormatDatePG [clock add $dt $iw week]
+}
+#_______________________
+
+proc EG::FirstYearWeek {inpdate} {
+  # Gets first year week.
+  #   inpdate - input date
+
+  YearWeek $inpdate 1 1
+}
+#_______________________
+
+proc EG::NextYearWeek {inpdate} {
+  # Gets first week of next year.
+  #   inpdate - input date
+
+  YearWeek $inpdate 12 31 1 1
+}
 
 # ________________________ Items _________________________ #
 
@@ -826,19 +857,7 @@ proc EG::KeyPress {wid K s item wday} {
 
   fetchVars
   if {$s>1} {
-    switch -exact $K {
-      n - N {set com New}
-      o - O {set com Open}
-      s - S {set com Save}
-      d - D {set com ChooseWeek}
-      h - H {set com MoveToDay}
-      l - L {set com SwitchLock}
-      f - F {set com Find}
-    }
-    if {[info exists com]} {
-      $com
-      return break
-    }
+    # old stuff
   } elseif {[ItemType $item] eq {chk}} {
     switch -exact -- $K {
       Delete - BackSpace {
@@ -1586,7 +1605,8 @@ proc EG::ChooseWeek {{dtvar ""}} {
   focus [$EGOBJ EntDate]
   set dt [ChooseDay $dtvar]
   if {$dt ne {}} {
-    MoveToDay $dt
+    MoveToDay $dt no
+    after idle after 10 {EG::diagr::Draw yes}
   } else {
     FocusedIt
   }
@@ -1676,6 +1696,15 @@ proc EG::AfterWeekSwitch {} {
   ConfigLock
   ShowTextR
 }
+#_______________________
+
+proc EG::IsLastWeek {} {
+  # Checks if the current week is last in the week range.
+
+  set d1 [EG::ScanDatePG]
+  set d2 [clock add [EG::ScanDatePG $::EG::D(egdDate2)] -7 days]
+  expr {[FirstWDay $d1] == [FirstWDay $d2]}
+}
 
 # ________________________ Move to _________________________ #
 
@@ -1694,11 +1723,13 @@ proc EG::IsMoveWeek {} {
       -timeout {9 ButOK}
     if {$isBad1} {
       set date [ScanDatePG $D(egdDate1)]
+      set D(currwday) 0
     } else {
       set date [ScanDatePG $D(egdDate2)]
-      set date [clock add $date -7 days]
+      set date [clock add $date -1 days]
+      set D(currwday) 6
     }
-    after idle [list EG::MoveToWeek 0 $date]
+    after idle [list EG::MoveToWeek 0 $date yes]
     return no
   }
   return yes
@@ -1903,8 +1934,8 @@ proc EG::CellTip {item wday typ} {
     append tip $textcomment  ;# text comments added
   }
   set tip [string trim $tip]
-  if {$tip eq {} && [incr ::EG::_MAXTIP]<333} {
-    # for empty tips - annoying reminders (soon, pointer moves will disable them)
+  if {$tip eq {} && [incr ::EG::_MAXTIP]<64} {
+    # for empty tips: annoying reminders (pointer moves disable them)
     set tip "After change\npress Enter to save"
   }
   fromEOL $tip
@@ -2905,7 +2936,7 @@ proc EG::Exit {args} {
   if {$D(AUTOBAK)} {Backup yes}
   catch {$EGOBJ destroy}
   if {"-restart" in $args} {
-    exec -- [info nameofexecutable] $SCRIPT {*}$::argv {*}$args2 &
+    exec -- [info nameofexecutable] $SCRIPT {*}$::argv {*}$args2 [ResourceFileName] &
   }
   exit
 }
@@ -2918,10 +2949,8 @@ proc EG::New {} {
   fetchVars
   set types {}
   set D(NEWFILE) [CloneFileName $D(FILE)]
-  set dt [ScanDatePG $D(egdDate2)]
-  set D(NEWFILEDATE1) [FormatDatePG [FirstWDay $dt]]
-  set dt [ScanDatePG $D(NEWFILEDATE1)]
-  set D(NEWFILEDATE2) [FormatDatePG [clock add $dt $::EG::diagr::NDays days]]
+  set D(NEWFILEDATE1) [FirstYearWeek $D(egdDate2)]
+  set D(NEWFILEDATE2) [NextYearWeek $D(NEWFILEDATE1)]
   set pobj [set D(NEWFILEPOBJ) ::apave::pavedObj_newfile]
   set win $WIN.newfile
   ::apave::APave create $pobj $win
@@ -2930,7 +2959,8 @@ proc EG::New {} {
     {fra1 - - - - {-st nsew -pady 16}}
     {.lab - - - - {-pady 0} {-t {File name:}}}
     {.fis + L 1 99 {-pady 0} {-w 60 -filetypes {{{EG Data Files} {.egd}}}
-      -defaultextension .egd -title {New file} -tvar ::EG::D(NEWFILE)}}
+      -defaultextension .egd -title {New file} -tvar ::EG::D(NEWFILE)
+      -afteridle "::EG::SetCursorAtExtension %w"}}
     {.v_ + T 1 1 {-pady 8}}
     {.labegdD1 + T 1 1 {-st w} {-t "Week range:    \["}}
     {.EntegdD1 + L 1 1 {-st w} {-tvar ::EG::D(NEWFILEDATE1) -w 11 -justify center
@@ -2955,6 +2985,7 @@ proc EG::New {} {
   $pobj destroy
   if {$res && [set fname [string trim $D(NEWFILE)]] ne {}} {
     if {[file exists $fname]} {
+      bell
       Message "File $fname already exists."
     } else {
       OpenData $fname -newfile
@@ -2964,6 +2995,16 @@ proc EG::New {} {
   unset D(NEWFILEDATE1)
   unset D(NEWFILEDATE2)
   unset D(NEWFILEPOBJ)
+}
+#_______________________
+
+proc EG::SetCursorAtExtension {w} {
+  # Sets cursor at file extension of file entry.
+  #   w - entry's path
+
+  set epos [expr {[string length [$w get]] - 4}]
+  $w icursor $epos
+  after 10 "$w selection range [expr {$epos-3}] $epos"
 }
 #_______________________
 
@@ -2999,8 +3040,6 @@ proc EG::CheckEgdDate1 {} {
   if {$D(NEWFILEDATE1)>$D(NEWFILEDATE2) || $D(NEWFILEDATE2)>$egdDate2} {
     set D(NEWFILEDATE2) $egdDate2
     Message "Week range's Date2 is set to $egdDate2"
-  } elseif {$D(NEWFILEDATE2) != $egdDate2} {
-    Message "Week range's Date2 is advised to be $egdDate2"
   }
 }
 #_______________________
@@ -3016,8 +3055,6 @@ proc EG::CheckEgdDate2 {} {
   if {$D(NEWFILEDATE1)>$D(NEWFILEDATE2) || $D(NEWFILEDATE1)<$egdDate1} {
     set D(NEWFILEDATE1) $egdDate1
     Message "Week range's Date1 is set to $egdDate1"
-  } elseif {$D(NEWFILEDATE1) != $egdDate1} {
-    Message "Week range's Date1 is advised to be $egdDate1"
   }
 }
 #_______________________
@@ -3406,6 +3443,19 @@ proc EG::_create {} {
   bind $WIN <F6> EG::stat::_run
   bind $WIN <F7> EG::Report
   bind $WIN <F10> EG::Actions
+  foreach K {n o s d h l f} {
+    switch -exact $K {
+      n {set com New}
+      o {set com Open}
+      s {set com Save}
+      d {set com ChooseWeek}
+      h {set com MoveToDay}
+      l {set com SwitchLock}
+      f {set com Find}
+    }
+    bind $WIN <Control-$K> EG::$com
+    bind $WIN <Control-[string toupper $K]> EG::$com
+  }
   if {[::isunix]} {
     bind $C <Button-4> "EG::diagr::wheelScroll -1"
     bind $C <Button-5> "EG::diagr::wheelScroll 1"
