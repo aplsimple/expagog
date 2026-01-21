@@ -203,6 +203,7 @@ proc stat::StatData {} {
   set aggrdata(daysCnt0) 0
   set aggrdata(Date1st) {}
   set aggrdata(DateLast) {}
+  set aggrdata(totAggrEG) 0.0
   foreach day $dkeys {
     if {$aggrdata(DateLast) eq {}} {set aggrdata(DateLast) $day}
     set itv {0 0 0 0 0 0 0}
@@ -362,9 +363,9 @@ proc stat::DoHeading {} {
   PutLine Table1 "<t>Data range   : \[</t> $aggrdata(Date1st) <t>-</t>\
     $aggrdata(DateLast) <t>\)</t>"
   PutLine Table1 "<t>Data days    :</t> $aggrdata(daysAll)\n"
-  set todoweeks [expr {($aggrdata(daysCnt)+6)/7}]
+  set aggrdata(weeksCnt) [expr {($aggrdata(daysCnt)+6)/7}]
   PutLine Table1 "<t>Planned days :</t> $aggrdata(daysCnt)\
-    <t>(planned weeks :</t> $todoweeks<t>)</t>"
+    <t>(planned weeks :</t> $aggrdata(weeksCnt)<t>)</t>"
   PutLine Table1 "<t>Checked days :</t> $aggrdata(daysCnt1)"
   PutLine Table1 "<t>Empty days   :</t> $aggrdata(daysCnt0)\n"
 }
@@ -623,6 +624,7 @@ proc stat::DoTable1 {} {
 proc stat::DoTable2 {} {
   # Makes 2nd table (data on previous, current and next weeks).
 
+  variable aggrdata
   variable fmt2
   variable fmtX
   variable DS
@@ -718,10 +720,13 @@ proc stat::DoTable2 {} {
   set prevsum [set itmp1 [set itmp2 0]]
   set itemtype AggrEG
   set res {}
+  set icol4 [expr {($icol-4)}]
   for {set ic 0} {$ic<$icol} {incr ic} {
     set aeg [AggregateValue $ic]
-    if {$ic==($icol-4)} {
+    if {$ic==$icol4} {
       append res " <t>|[TableValue $fmt2 $totalsum]*| </t>"
+    } elseif {$ic<$icol4} {
+      set aggrdata(totAggrEG) [expr {$aggrdata(totAggrEG) + $aeg}]
     }
     Table2Value itmp1 itmp2 aeg prevsum itemtype ic rlen res
   }
@@ -763,8 +768,14 @@ proc stat::Legend1 {} {
 proc stat::Legend2 {} {
   # Gets Table2's legend.
 
+  variable aggrdata
   variable maxdiff
-  return " <t>AggrEG formula:</t> $::EG::D(AggrEG)\n\
+  set perweek [expr {$aggrdata(totAggrEG) / $aggrdata(weeksCnt)}]
+  set perday [expr {$aggrdata(totAggrEG) / $aggrdata(daysCnt)}]
+  return " <t>AggrEG : Total </t>[EG::Round $aggrdata(totAggrEG) 1]  \
+    <t>Per week </t>[EG::Round $perweek 1]  \
+    <t>Per day </t>[EG::Round $perday 1]\n\n\
+    <t>AggrEG formula:</t> $::EG::D(AggrEG)\n\
     <s>\n\
     Previous weeks   - total sum for weeks before \"Date (-4 week)\"\n\
     Date (-4 week)   - total sum for week \"Date1 -4 week\"\n\
@@ -773,7 +784,7 @@ proc stat::Legend2 {} {
     Date (-1 week)   - total sum for week \"Date1 -1 week\"\n\
     Date1-Date2      - total sum for week \"Date1 - Date2\"\n\
     Next weeks       - total sum for weeks after \"Date1 - Date2\"\n\
-    Total*           - rather \"total activity\" than anything real\n\
+    <t>Total*</t>           - \"total activity\" rather than anything real\n\
     Average previous - average for \"Previous weeks\"\n\
     Average current  - average for \"Date1 -4 week\" to Date2\n\
     Average next     - average for \"Next weeks\"\n\

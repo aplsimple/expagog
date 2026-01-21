@@ -1,6 +1,12 @@
 # Last changes:
 
 
+Version `v1.7.2 (21 Jan'26)`
+
+  - NEW   : Info / Report: AggrEG total + averages per week/day
+  - CHANGE: packages: baltip 1.6.7
+
+
 Version `v1.7.1 (2 Jan'26)`
 
   - BUGFIX: some issues of HNY

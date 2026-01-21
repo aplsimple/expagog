@@ -144,7 +144,7 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   variable DebugMode 0 ;# debugging mode
   variable globalOK 1 ;# global "all right"
 
-  ## ________________________ Pathes ________________________ ##
+  ## ________________________ Paths ________________________ ##
 
   variable SCRIPT [info script]
   variable SCRIPTNORMAL [file normalize $SCRIPT]
