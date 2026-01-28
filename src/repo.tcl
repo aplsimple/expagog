@@ -630,41 +630,42 @@ proc repo::_create {parent} {
     {fra1 - - - - {-st nsew}}
     {.v_ - - - - {-pady 8}}
     {.lab0 + T 1 1 {-st es -cw 1 -padx 4} {-t {From template file:} -anchor e}}
-    {.FilIn + L 1 1 {-st swe} {-w 63 -tvar ::EG::repo::tplRepo
+    {.FilIn + L 1 2 {-st swe} {-w 63 -tvar ::EG::repo::tplRepo
       -tip "expagog/data/tpl/repo.html\nby default"}}
     {.lab1 .lab0 T 1 1 {-st es -padx 4} {-t {To resulting .html:} -anchor e}}
     {.fisOut + L 1 1 {-st swe} {-w 63 -tvar ::EG::repo::outRepo}}
+    {.btTOpen + L 1 1 {-st sne} {-relief flat -takefocus 0 -com EG::OpenReport -tip {View reports}}}
     {.v_1 .lab1 T 1 1 {-pady 8}}
     {.lab2 + T 1 1 {-st en} {-t {Include diagram:} -anchor e}}
-    {.chbDiagr + L 2 99 {-st nw} {-var ::EG::repo::doDiagr -state $diagrst}}
+    {.chbDiagr + L 2 2 {-st nw} {-var ::EG::repo::doDiagr -state $diagrst}}
     {.v_2 .lab2 T 1 1 {-pady 8}}
     {.lab3 + T 1 1 {-st es -padx 4} {-t {Css file:} -anchor e}}
-    {.filCss + L 1 1 {-st swe} {-w 63 -tvar ::EG::repo::cssRepo
+    {.filCss + L 1 2 {-st swe} {-w 63 -tvar ::EG::repo::cssRepo
       -initialdir {::EG::repo::InitialDir cssRepo}}}
     {.lab4 .lab3 T 1 1 {-st es -padx 4} {-t {Icon file:} -anchor e}}
-    {.filIco + L 1 1 {-st swe} {-w 63 -tvar ::EG::repo::icoRepo
+    {.filIco + L 1 2 {-st swe} {-w 63 -tvar ::EG::repo::icoRepo
       -initialdir {::EG::repo::InitialDir icoRepo}}}
     {.v_3 .lab4 T 1 1 {-pady 8}}
     {lfr + T 1 2 {-st nswe} {-t Optional}}
     {.lab5 + T 1 1 {-st es -padx 4} {-t {1st .js file:} -anchor e}}
-    {.filJS1 + L 1 1 {-st swe} {-w 70 -tvar ::EG::repo::file1Repo
+    {.filJS1 + L 1 1 {-st swe} {-w 72 -tvar ::EG::repo::file1Repo
       -initialdir {::EG::repo::InitialDir file1Repo}}}
     {.lab6 .lab5 T 1 1 {-st es -padx 4} {-t {2nd .js file:} -anchor e}}
-    {.filJS2 + L 1 1 {-st swe} {-w 70 -tvar ::EG::repo::file2Repo
+    {.filJS2 + L 1 1 {-st swe} {-tvar ::EG::repo::file2Repo
       -initialdir {::EG::repo::InitialDir file2Repo}}}
     {.v_4 .lab6 T 1 1 {-pady 8}}
     {.lab7 + T 1 1 {-st en} {-t {JS code:} -anchor e}}
-    {.TexJS + L 2 99 {-st nswe} {-w 70 -h 4 -tabnext *.entHead}}
+    {.TexJS + L 2 2 {-st nswe} {-w 70 -h 4 -tabnext *.entHead}}
     {lfr2 lfr T 1 2 {-st nswe} {-t Heading}}
     {.lab - - - - {-st en -padx 4} {-t Title: -anchor e}}
-    {.entHead + L 1 1 {-st swe} {-w 74 -tvar ::EG::repo::headRepo}}
+    {.entHead + L 1 1 {-st swe} {-w 73 -tvar ::EG::repo::headRepo}}
     {.lab1 .lab T 1 1 {-st en} {-t {Include notes:} -anchor e}}
     {.chbNotes + L 1 1 {-st nw} {-var ::EG::repo::doNotes -com EG::repo::CheckNotes}}
     {.lab2 .lab1 T 1 1 {-st en -padx 4} {-t {Normal note:} -anchor e}}
-    {.TexBlack + L 2 99 {-st nswe} {-w 74 -h 4 -tabnext *.texRed}}
+    {.TexBlack + L 2 2 {-st nswe} {-w 70 -h 4 -tabnext *.texRed}}
     {.v_4 .lab2 T 1 1 {-pady 8}}
     {.lab3 + T 1 1 {-st en} {-t {Red note:} -anchor e}}
-    {.TexRed + L 2 99 {-st nswe} {-w 74 -h 4 -tabnext *.butExpo}}
+    {.TexRed + L 2 2 {-st nswe} {-w 70 -h 4 -tabnext *.butExpo}}
     {seh lfr2 T 1 2 {-pady 8 -st ew}}
     {frabot + T 1 2 {-st ew} {}}
     {.TexTmp - - - - {pack forget -side left}}

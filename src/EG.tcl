@@ -335,14 +335,15 @@ proc EG::Oct2Dec {oct} {
 }
 #_______________________
 
-proc EG::WriteTextFile {fname contVar} {
+proc EG::WriteTextFile {fname contVar {doit no}} {
   # Writes contents to a file.
   #   fname - file name
   #   contVar - variable for contents
+  #   doit - yes to force writing
 
   variable globalOK
   upvar $contVar cont
-  if {![IsLockedBase]} {
+  if {![IsLockedBase] || $doit} {
     set tmpcont $cont
     set globalOK [apave::writeTextFile $fname tmpcont]
   }
@@ -919,7 +920,7 @@ proc EG::AddTag {tag {doit 0}} {
     return
   }
   if {[LockedChanges]} return
-  set wtxt [$EGOBJ Text]
+  set wtxt [$EGOBJ TextR1]
   set text [$wtxt get 1.0 end]
   set ltext [split $text \n]
   set line1 [string trim [lindex $ltext 0]]
@@ -1389,11 +1390,12 @@ proc EG::SaveAllData {args} {
 
   fetchVars
   StoreItem
-  set t [[$EGOBJ Text] get 1.0 end]
+  set t [[$EGOBJ TextR1] get 1.0 end]
   StoreText $t
   if {"-openfile" ni $args} {
-    if {"-newfile" in $args} {set newfile yes} {set newfile no}
-    if {[catch {SaveDataFile $newfile} err]} {puts $err}
+    set newfile [expr {"-newfile" in $args}]
+    set updfile [expr {"-restart" in $args}]
+    if {[catch {SaveDataFile "" $newfile $updfile} err]} {puts $err}
   }
   SaveRC
   foreach n $NOTESN {
@@ -1694,7 +1696,7 @@ proc EG::AfterWeekSwitch {} {
   set d2 [ScanDate [FormatDate [FirstWDay]]]
   set D(lockdata) [expr {[IsLockedBase] || $d1 < $d2}]
   ConfigLock
-  ShowTextR
+  ShowTextW
 }
 #_______________________
 
@@ -1865,16 +1867,16 @@ proc EG::ShowText {item wday} {
 
   fetchVars
   set val [DataValue t $item $wday]
-  $EGOBJ displayText [$EGOBJ Text] $val
+  $EGOBJ displayText [$EGOBJ TextR1] $val
 }
 #_______________________
 
-proc EG::ShowTextR {} {
+proc EG::ShowTextW {} {
   # Shows weekly text.
 
   fetchVars
-  set textR [DataValue $D(WeeklyKEY) {*}$D(WeeklyITEM)]
-  $EGOBJ displayText [$EGOBJ TextR] $textR
+  set val [DataValue $D(WeeklyKEY) {*}$D(WeeklyITEM)]
+  $EGOBJ displayText [$EGOBJ TextR1W] $val
   [$EGOBJ Lfr2] configure -text " Weekly [WeekNumber] "
 
 }
@@ -1885,7 +1887,7 @@ proc EG::StoreText {{tex ?@-*}} {
   #   tex - text to store (taken from Text field, if omitted)
 
   fetchVars
-  set wtxt [$EGOBJ Text]
+  set wtxt [$EGOBJ TextR1]
   if {$tex eq {?@-*}} {
     set tex [string trimright [$wtxt get 1.0 end]]
   } else {
@@ -1900,7 +1902,7 @@ proc EG::StoreTextR {} {
   # Stores weekly comments.
 
   fetchVars
-  set wtxt [$EGOBJ TextR]
+  set wtxt [$EGOBJ TextR1W]
   set tex [string trimright [$wtxt get 1.0 end]]
   if {$tex eq $EMPTY} {set tex {}}
   StoreValue $D(WeeklyKEY) $tex {*}$D(WeeklyITEM)
@@ -1993,6 +1995,7 @@ proc EG::FillBar {} {
   catch {::bartabs::Bars create D(bts)}   ;# D(bts) is Bars object
   if {![IsTabFiles]} return
   update ;# to get real sizes of -wbase
+  $EGOBJ untouchWidgets *Tool_* *.textR1*
   set wbase [$EGOBJ Lfr1]
   set wframe [$EGOBJ Frabts]
   set curtab 0
@@ -2208,10 +2211,13 @@ proc EG::SwitchLock {} {
   # Switches lock mode.
 
   fetchVars
-  if {[IsTestMode]} return
-  set D(lockdata) [expr {!$D(lockdata)}]
-  ConfigLock
-  after 500 EG::MessageState
+  if {$TestMode || [IsLockedBase]} {
+    LockedChanges
+  } else {
+    set D(lockdata) [expr {!$D(lockdata)}]
+    ConfigLock
+    after 500 EG::MessageState
+  }
 }
 #_______________________
 
@@ -2229,7 +2235,7 @@ proc EG::ConfigLock {} {
     set bg $Colors(bg)
     set bg2 $Colors(bg2)
   }
-  foreach wt {Text TextR} {
+  foreach wt {TextR1 TextR1W} {
     set wtxt [$EGOBJ $wt]
     $wtxt configure -state $st
     $wtxt configure -fg [lindex [$EGOBJ csGet] 0]
@@ -2456,7 +2462,7 @@ proc EG::Resource {args} {
     foreach key [dict keys $::EG::contRC] {
       append contRC "$key {[dict get $::EG::contRC $key]}\n"
     }
-    WriteTextFile $fname contRC
+    WriteTextFile $fname contRC yes
   }
   return $::EG::contRC
 }
@@ -2562,10 +2568,11 @@ proc EG::OpenDataFile {fname} {
 }
 #_______________________
 
-proc EG::SaveDataFile {{newfile no} {fname ""}} {
+proc EG::SaveDataFile {{fname ""} {newfile no} {updfile no}} {
   # Saves data file.
-  #   newfile - yes for creating new file
   #   fname - file name to save to
+  #   newfile - yes for creating new file
+  #   updfile - yes for updating file
 
   fetchVars
   CommonData ITEMS $D(Items)
@@ -2594,7 +2601,7 @@ proc EG::SaveDataFile {{newfile no} {fname ""}} {
     set line [toEOL $line]
     append output $key\ [list $line]\n
   }
-  WriteTextFile $fname output
+  WriteTextFile $fname output [expr {$newfile || $updfile}]
 }
 #_______________________
 
@@ -2673,6 +2680,8 @@ proc EG::Actions {} {
       -command EG::stat::_run -accelerator F6
     $pmenu add command -label Report... -image mnu_print -compound left \
       -command EG::Report -accelerator F7
+    $pmenu add command -label {View reports...} -image mnu_none -compound left \
+      -command EG::OpenReport
     menu $pmenu.notes -tearoff 0
     $pmenu add cascade -label Stickers -menu $pmenu.notes -compound left -image none
     $pmenu add separator
@@ -2790,13 +2799,13 @@ proc EG::Backup {{auto no}} {
   if {$auto} {
     set globalOK 1
     set fsave $D(FILEBAK)
-    SaveDataFile no $fsave
+    SaveDataFile $fsave
     if {$globalOK} {
       # additional save of "week day" version
       set wd [clock format [Date1Seconds] -format %u]
       set bak _$wd.bak
       set fsave [file root $D(FILEBAK)]$bak
-      SaveDataFile no $fsave
+      SaveDataFile $fsave
       set fname [ResourceFileName]
       set fback [file rootname $fname]_rc$bak
       catch {file copy $fname $fback}
@@ -2839,6 +2848,20 @@ proc EG::Report {} {
 
   Source repo
   repo::_run
+}
+#_______________________
+
+proc EG::OpenReport {} {
+
+  fetchVars
+  Source repo
+  EG::repo::ReadPreferences
+  set dir [file dirname $::EG::repo::outRepo]
+  set D(filetmp) $::EG::repo::outRepo
+  set types {{{EG Reports} .html} {All *}}
+  set fname [$EGOBJ chooser tk_getOpenFile ::EG::D(filetmp) -initialdir $dir \
+    -title {View reports} -defaultextension .html -filetypes $types -parent $WIN]
+  if {$fname ne {}} {openDoc $fname}
 }
 #_______________________
 
@@ -3116,21 +3139,26 @@ proc EG::Init {} {
       lassign $argv arg1 arg2 arg3
       set fname [file normalize $arg1]
       # at starting by EG executable (see EG::Exit)
-      if {$argc==2} {
-        if {[file tail $arg1] eq {EG.tcl}} {
-          set fname [file normalize $arg2]      ;# run by EG executable
-        } else {
-          set USERDIRPG [file normalize $arg2]  ;# 2nd arg is .rc directory
-          set rc [Resource]
-        }
-      } elseif {$argc==3} {
-        if {[file tail $arg1] eq {EG.tcl}} {
-          set fname [file normalize $arg2]      ;# run by EG executable
-          set USERDIRPG [file normalize $arg3]  ;# 3rd arg is .rc directory
-          set rc [Resource]
-        } else {
-          set err yes
-        }
+      switch $argc {
+        1 {
+          if {[file isdirectory $arg1]} {
+            set USERDIRPG $arg1
+          }}
+        2 {
+          if {[file tail $arg1] eq {EG.tcl}} {
+            set fname [file normalize $arg2]      ;# run by EG executable
+          } else {
+            set USERDIRPG [file normalize $arg2]  ;# 2nd arg is .rc directory
+            set rc [Resource]
+          }}
+        3 {
+          if {[file tail $arg1] eq {EG.tcl}} {
+            set fname [file normalize $arg2]      ;# run by EG executable
+            set USERDIRPG [file normalize $arg3]  ;# 3rd arg is .rc directory
+            set rc [Resource]
+          } else {
+            set err yes
+          }}
       }
       if {[file isfile $USERDIRPG]} {
         set USERFILEPG $USERDIRPG
@@ -3142,8 +3170,9 @@ proc EG::Init {} {
     }
   }
   if {$err} {
-    puts "$::EG::TITLE is run so:\n\n  tclsh [file tail $SCRIPT] ?NAME?\
-      \n  where NAME is a data file (e.g. 2025.egd) or a directory of data files.\
+    puts "\n$::EG::TITLE is run so:\n\n  tclsh [file tail $SCRIPT] ?NAME? ?DIR?\
+      \n\n  where NAME is a data file (e.g. 2025.egd) or a directory of data files\
+      \n        DIR is a directory of data file\
       \n\nLook README.md for details."
     exit
   }
@@ -3236,7 +3265,7 @@ proc EG::Init {} {
     image create photo Tool_$icon -data [apave::iconData $icon $ICONTYPE]
   }
   foreach icon {none lamp ques yes no -info -color -lock -find -config -diagram
-  -help -exit -OpenFile -SaveFile -double -more -file -print -download -undo} {
+  -help -exit -OpenFile -SaveFile -double -more -file -print -none -download -undo} {
     set img [string map {- mnu_} $icon]
     set ico [string map {- {}} $icon]
     image create photo $img -data [apave::iconData $ico small]
@@ -3372,11 +3401,11 @@ proc EG::_create {} {
     #####-comments-on-cell
     {.h_ + T 1 1 {-pady 4}}
     {fral.Lfr1 - - - - {pack -expand 1 -fill both} {-t { } -labelanchor n}}
-    {fral.lfr1.Text - - - - {pack -side left -expand 1 -fill both}
-      {-wrap word -h 4 -w 10 -tabnext {*.textR}
+    {.TextR1 - - - - {pack -side left -expand 1 -fill both}
+      {-wrap word -h 4 -w 10 -tabnext {*.textR1W}
       -onevent {<FocusIn> EG::StoreItem <<Modified>> {+ EG::StoreText}
       <KeyRelease> {+ EG::StoreText} <FocusOut> {+ EG::StoreText; EG::ShowTable}}}}
-    {fral.lfr1.sbv fral.lfr1.text L - - {pack -side left}}
+    {.sbv fral.lfr1.textR1 L - - {pack -side left}}
     #####-right-frame
     {sev fral L 4 1 {-st ns -padx 4}}
     {LabWeekRange + L 1 1 {-st we} {-anchor center}}
@@ -3408,11 +3437,11 @@ proc EG::_create {} {
       -var ::EG::cumulate -takefocus 0 -com EG::diagr::Draw}}
     #####-comments-on-diagram-and-all
     {Lfr2 frar1 T 1 1 {-st nswe -cw 1 -rw 99 -pady 4} {-t Weekly -labelanchor n}}
-    {.TextR - - - - {pack -side left -expand 1 -fill both}
+    {.TextR1W - - - - {pack -side left -expand 1 -fill both}
       {-wrap word -h 4 -w 8 -tip "Comments on the week" -tabnext {[EG::FirstCell]}
       -onevent {<<Modified>> {+ EG::StoreTextR}
       <KeyRelease> {+ EG::StoreTextR} <FocusOut> {+ EG::StoreTextR}}}}
-    {.sbvR .textR L - - {pack -side left}}
+    {.sbvR .textR1W L - - {pack -side left}}
     #####-status-bar
     {fras fral T 1 3 {-st we}}
     {.stat - - - - pack {-array {
@@ -3429,7 +3458,7 @@ proc EG::_create {} {
   ColorItemLabels
   [$EGOBJ LabWeekRange] configure -foreground $Colors(fgit) \
     -text "\[ $D(egdDate1)  -  $D(egdDate2) \)"
-  ::baltip tip [$EGOBJ Text] Comments -command EG::TextTip
+  ::baltip tip [$EGOBJ TextR1] Comments -command EG::TextTip
   set C [$EGOBJ Can]
   set W [winfo reqwidth $WIN]
   set H [winfo reqheight $WIN]

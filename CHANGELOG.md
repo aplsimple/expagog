@@ -1,17 +1,17 @@
 # Last changes:
 
 
-Version `v1.7.2 (21 Jan'26)`
-
-  - NEW   : Info / Report: AggrEG total + averages per week/day
-  - CHANGE: packages: baltip 1.6.7
-
-
-Version `v1.7.1 (2 Jan'26)`
+Version `v1.8.0a1 (28 Jan'26)`
 
   - BUGFIX: some issues of HNY
+  - BUGFIX: some issues of switching data files
+  - BUGFIX: unnecessary theming texts and tools at opening data file
   - NEW   : Ctrl-hotkeys for texts
   - NEW   : "New" dialogue: selected entry's part; bell at existing file
+  - NEW   : Info / Report: AggrEG total + averages per week/day
+  - NEW   : Open report: item in menu + button in Report
+  - NEW   : maximum sum in diagram
+  - CHANGE: packages: baltip 1.6.7
   - CHANGE: same .rc at switching .egd file
   - CHANGE: note.tcl: bind "FocusOut" event to entry & text
   - CHANGE: packages: apave 4.8.4, baltip 1.6.6

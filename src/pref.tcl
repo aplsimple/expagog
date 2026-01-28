@@ -259,14 +259,11 @@ proc pref::Save {{istest 0} args} {
   #   istest - if true, starts EG in testing mode
 
   fetchVars
-  set savedUSERFILEPG $::EG::USERFILEPG
+  set tmpUSERFILEPG $::EG::USERFILEPG
   set tmpD [array get ::EG::D]
   set tmpDateUser $::EG::D(DateUser)
   set tmpcolors [array get ::EG::Colors]
   set tmprc [file join $::EG::USERDIR _tmp_.rc]
-  if {$istest} {
-    set ::EG::USERFILEPG $tmprc
-  }
   set Items [set ItemsNew [list]]
   set ItemsTypes [list]
   for {set iit 1} {$iit<=$::EG::D(MAXITEMS)} {incr iit} {
@@ -343,20 +340,15 @@ proc pref::Save {{istest 0} args} {
   if {$istest} {
     set argvsav $::argv
     set argcsav $::argc
-    if {$::argc>1} {
-      set ::argv [lreplace $::argv 1 1 $tmprc]
-    } elseif {$::argc==1} {
-      lappend ::argv $tmprc
-    } else {
-      set ::argv [list $::EG::D(FILE) $tmprc]
-    }
+    set ::argv [list $::EG::D(FILE) $tmprc]
     set ::argc [llength $::argv]
-    set ::EG::D(DateUser) $tmpDateUser
+    set ::EG::USERFILEPG $tmprc
     EG::SaveAllData
     catch {exec -- [info nameofexecutable] $::EG::SCRIPT {*}$::argv -test}
     set ::argv $argvsav
     set ::argc $argcsav
-    set ::EG::USERFILEPG $savedUSERFILEPG
+    set ::EG::USERFILEPG $tmpUSERFILEPG
+    set ::EG::D(DateUser) $tmpDateUser
     array set ::EG::Colors $tmpcolors
     array set ::EG::D $tmpD
     EG::SaveAllData

@@ -17,9 +17,10 @@ namespace eval diagr {
   variable MnsHeight 30  ;# height of month bar
   variable BodyHeight    ;# height of diagram body
   variable HotColor      ;# color of layout titles and lines
-  variable ColorBg       ;# color of week boxes #1
   variable ColorBg2      ;# color of week boxes #2
   variable ColorBg3      ;# color of week boxes #3
+  variable Font          ;# font for text
+  variable FontColor     ;# font color for text
   variable idlist [list] ;# list of canvas item IDs
   variable NWeeks 53     ;# weeks for diagram
   variable x1list [list] ;# list of x-coordinates of weeks
@@ -55,9 +56,10 @@ proc diagr::fetchVars {} {
     variable MnsHeight
     variable BodyHeight
     variable HotColor
-    variable ColorBg
     variable ColorBg2
     variable ColorBg3
+    variable Font
+    variable FontColor
     variable idlist
     variable NWeeks
     variable x1list
@@ -89,7 +91,6 @@ proc diagr::initVars {} {
   set TAGS $::EG::D(TAGS)
   set EOL $::EG::D(EOL)
   set HotColor $::EG::Colors(fghot)
-  set ColorBg $::EG::Colors(bg)
   set ColorBg2 $::EG::Colors(bg2)
   set ColorBg3 $::EG::Colors(bg3)
   set C $::EG::C
@@ -108,6 +109,12 @@ proc diagr::initVars {} {
   set idlist [list]
   catch {array unset WKcolor}
   array set WKcolor [list]
+  set Font $::apave::FONTMAIN
+  catch {
+    set fs [dict get $Font -size]
+    dict set Font -size [expr {int($fs/2)}]
+  }
+  lassign [apave::InvertBg $ColorBg2] FontColor
 }
 #_______________________
 
@@ -309,7 +316,8 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
     set date [EG::ScanDatePG $dk]
     set x1 [WeekX1 $dk]
     if {$x1==0} {
-      puts "EG: $dk date not found. Error of data?"
+      puts "EG: $dk date not found in \[$::EG::D(egdDate1) - $::EG::D(egdDate2)\).\
+        Error of data?"
       continue
     }
     if {!$byWeek} {
@@ -389,6 +397,11 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
       ::baltip::tip $C $tip -ctag $tag -per10 4000
       $C bind $tag <Button-1> [list EG::diagr::MoveToDay $day1]
     }
+    set maxsum [expr {round($maxsum)}]
+    set id [$C create text $BarHeight $X0 -text \n$maxsum \
+      -font $Font -fill $FontColor -tag maxsum]
+    ::baltip::tip $C "Maximum sum: $maxsum" -ctag maxsum -per10 4000
+    lappend idlist $id
   }
 }
 #_______________________
@@ -455,21 +468,17 @@ proc diagr::DrawWeekNN {} {
   fetchVars
   set sh 10
   set y1 [expr {$Y1 + $sh}]
-  set fs [dict get $::apave::FONTMAIN -size]
-  set font $::apave::FONTMAIN
-  lassign [apave::InvertBg $ColorBg2] defcolor
-  append font " -size [expr {int($fs/2)}]"
   for {set iw 0} {$iw < $NWeeks} {incr iw} {
     lassign [lindex $x1list $iw] x1 - day1 tip
     set wN [clock format $day1 -format %V]
     incr x1 $sh
-    set fcolor $defcolor
+    set fcolor $FontColor
     catch {
       if {[set bg $::EG::Colors($WKcolor($iw))] ne {}} {
         lassign [apave::InvertBg $bg] fcolor
       }
     }
-    set id [$C create text $x1 $y1 -text $wN -font $font -fill $fcolor -tag WN$iw]
+    set id [$C create text $x1 $y1 -text $wN -font $Font -fill $fcolor -tag WN$iw]
     lappend idlist $id
     $C bind $id <Button-1> [list EG::diagr::MoveToDay $day1]
     ::baltip::tip $C $tip -ctag WN$iw
