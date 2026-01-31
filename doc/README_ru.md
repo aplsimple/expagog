@@ -118,9 +118,9 @@ A вот вам и узда для авантюр - *expagog*. Чтобы был
 
 Установка *EG* и в этом случае довольно проста:
 
-  * загрузите *expagog.zip* [отсюда](https://github.com/aplsimple/expagog) или [отсюда](https://chiselapp.com/user/aplsimple/repository/expagog/download)
+  * загрузите *expagog.zip* [отсюда](https://github.com/aplsimple/expagog)
 
-  *  распакуйте *expagog.zip* в какой-нибудь каталог, например *~/PG/expagog*
+  * распакуйте *expagog.zip* в какой-нибудь каталог, например *~/PG/expagog*
 
   * вызовите *EG* командой:
 
@@ -472,8 +472,6 @@ A вот вам и узда для авантюр - *expagog*. Чтобы был
 ========
 
 Исходники:
-
-  - [на ChiselApp](https://chiselapp.com/user/aplsimple/repository/expagog)
 
   - [на GitHub](https://github.com/aplsimple/expagog)
 

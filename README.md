@@ -117,7 +117,7 @@ Also, when you have [Tcl/Tk](https://wiki.tcl-lang.org/) deployed on your machin
 
 Thus, in this case the installation of *EG* is straightforward as well:
 
-  * download *expagog.zip* from [here](https://github.com/aplsimple/expagog) or from [here](https://chiselapp.com/user/aplsimple/repository/expagog/download)
+  * download *expagog.zip* from [here](https://github.com/aplsimple/expagog)
 
   * unpack *expagog.zip* to some directory, say *~/PG/expagog*
 
@@ -483,8 +483,6 @@ Installers:
   - [for Linux and Windows](https://github.com/aplsimple/expagog/releases/tag/Installers_of_EG-1.0)
 
 Sources:
-
-  - [on ChiselApp](https://chiselapp.com/user/aplsimple/repository/expagog)
 
   - [on GitHub](https://github.com/aplsimple/expagog)
 

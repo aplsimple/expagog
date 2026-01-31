@@ -1,6 +1,5 @@
  <r>$TITLE $VERSION $VersionDate</r>
 
-  • <linkChi>Chiselapp repository</linkChi>
   • <linkGit>Github repository</linkGit>
 
 

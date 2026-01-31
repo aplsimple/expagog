@@ -2354,8 +2354,6 @@ proc MessageTags {} {
     [list "r" "-font {$::apave::FONTMAINBOLD} -foreground $fS"] \
     [list "b" "-foreground $fS"] \
     [list "link" "openDoc %t@@https://%l@@"] \
-    [list "linkChi" "openDoc\
-      %t@@https://chiselapp.com/user/aplsimple/repository/expagog/@@"] \
     [list "linkGit" "openDoc %t@@https://github.com/aplsimple/expagog/@@"] \
     [list "linkapl" "openDoc %t@@https://aplsimple.github.io/@@"] \
     [list "linkMIT" "openDoc %t@@https://en.wikipedia.org/wiki/MIT_License@@"] \
@@ -2940,7 +2938,7 @@ proc EG::Merge {{doadd no} args} {
 
 proc EG::About {} {
 
-  Help about -title About... -width 30 -height {10 18} -wrap none -minsize {200 300}
+  Help about -title About... -width 30 -height {9 16} -wrap none -minsize {200 300}
 }
 #_______________________
 
@@ -2959,7 +2957,7 @@ proc EG::Exit {args} {
   if {$D(AUTOBAK)} {Backup yes}
   catch {$EGOBJ destroy}
   if {"-restart" in $args} {
-    exec -- [info nameofexecutable] $SCRIPT {*}$::argv {*}$args2 [ResourceFileName] &
+    exec -- [info nameofexecutable] $SCRIPT $D(FILE) [ResourceFileName] {*}$args2 &
   }
   exit
 }

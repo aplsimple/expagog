@@ -247,7 +247,10 @@ proc diagr::TagTip {tag tip {doit no}} {
   #   doit - yes to force update
 
   fetchVars
-  if {!$doit && [info exists ::EG::diagr::tagtip($tag,$tip)]} return
+  if {!$doit && ([info exists ::EG::diagr::tagtip($tag,$tip)] || 
+  [info exists ::EG::find::win] && [winfo exists $::EG::find::win])} {
+    return
+  }
   set per10 2000
   set aftertime [expr {$per10*[string length $tip]/10}]
   lassign [$C bbox $tag] x y
