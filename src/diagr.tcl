@@ -216,26 +216,27 @@ proc diagr::DayLine {{doit no}} {
     catch {$C delete $idDayLine}
     set idDayLine [$C create polygon $X 0 $X [expr {$BodyHeight + $BarHeight}]\
       -outline $::EG::Colors(fgsel) -width 2 -dash {2 7}]
-    # in test mode, don't allow overlapping these tips & test balloon
-    if {!$::EG::TestMode} {
-      if {$byWeek} {set xRange $WeekColWidth} {set xRange $DayColWidth}
-      foreach xl $x1list {
-        lassign $xl x
-        if {$X >= $x && $X <= ($x + $WeekColWidth)} {
-          foreach tl $tipslist  {
-            lassign $tl tag x1 tip
-            if {$X >= $x1 && $X <= ($x1 + $xRange)} {
-              ::baltip::tip $C $tip -ctag $idDayLine
+    if {$byWeek} {set xRange $WeekColWidth} {set xRange $DayColWidth}
+    foreach xl $x1list {
+      lassign $xl x
+      if {$X >= $x && $X <= ($x + $WeekColWidth)} {
+        foreach tl $tipslist  {
+          lassign $tl tag x1 tip
+          if {$X >= $x1 && $X <= ($x1 + $xRange)} {
+            ::baltip::tip $C $tip -ctag $idDayLine
+            if {$doit || ![info exists ::EG::diagr::_oldtt]
+            || $::EG::diagr::_oldtt ne $tag} {
+              set ::EG::diagr::_oldtt $tag
               after idle [list EG::diagr::TagTip $tag $tip $doit]
-              break
             }
+            break
           }
-          break
         }
+        break
       }
     }
   }]} {
-    after 200 EG::diagr::DayLine
+    after 200 "EG::diagr::DayLine $doit"
   }
 }
 #_______________________
@@ -247,8 +248,8 @@ proc diagr::TagTip {tag tip {doit no}} {
   #   doit - yes to force update
 
   fetchVars
-  if {!$doit && ([info exists ::EG::diagr::tagtip($tag,$tip)] || 
-  [info exists ::EG::find::win] && [winfo exists $::EG::find::win])} {
+  if {!$doit && ($::EG::TestMode || [info exists ::EG::diagr::tagtip($tag,$tip)]
+  || [info exists ::EG::find::win] && [winfo exists $::EG::find::win])} {
     return
   }
   set per10 2000
@@ -500,7 +501,7 @@ proc diagr::Drawing {atStart} {
   Title
   Layout
   EG::AllWeekData
-  after idle EG::diagr::DayLine
+  after idle "EG::diagr::DayLine yes"
   $C configure -scrollregion [list 1 1 [ScrollSize w] [ScrollSize h]]
   switch -glob -- $::EG::Opcvar {
     All {

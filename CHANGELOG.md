@@ -1,7 +1,7 @@
 # Last changes:
 
 
-Version `v1.8.0b1 (31 Jan'26)`
+Version `v1.8.0b2 (31 Jan'26)`
 
   - BUGFIX: some issues of HNY
   - BUGFIX: some issues of switching data files
