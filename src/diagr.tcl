@@ -248,6 +248,7 @@ proc diagr::TagTip {tag tip {doit no}} {
   #   doit - yes to force update
 
   fetchVars
+  if {!$::EG::showtip} return
   if {!$doit && ($::EG::TestMode || [info exists ::EG::diagr::tagtip($tag,$tip)]
   || [info exists ::EG::find::win] && [winfo exists $::EG::find::win])} {
     return
@@ -402,9 +403,12 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
       $C bind $tag <Button-1> [list EG::diagr::MoveToDay $day1]
     }
     set maxsum [expr {round($maxsum)}]
-    set id [$C create text $BarHeight $X0 -text \n$maxsum \
-      -font $Font -fill $FontColor -tag maxsum]
-    ::baltip::tip $C "Maximum sum: $maxsum" -ctag maxsum -per10 4000
+    set tip "Maximum sum: $maxsum"
+    set tag maxsum
+    set id [$C create text $BarHeight $X0 -text \n$maxsum -tag $tag \
+      -font $Font -fill $FontColor -activefill $HotColor]
+    ::baltip::tip $C $tip -ctag $tag -per10 4000
+    $C bind $tag <Button-1> [list ::baltip::showTip $C $tip -ctag $tag]
     lappend idlist $id
   }
 }

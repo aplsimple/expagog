@@ -21,6 +21,7 @@ namespace eval find {
   variable fgeom {}
   variable col1Width 100
   variable col2Width 100
+  variable weeklyKey [lindex $::EG::D(WeeklyITEM) 0] ;# key for weekly
 }
 
 # ________________________ Common _________________________ #
@@ -126,7 +127,7 @@ proc find::FillOpcLists {} {
   variable OpcItems
   set OpcItems [list Red Yellow Green --]
   set litems "{Tags}"
-  set tags [lsort -dictionary -nocase [split $::EG::D(TextTags)]]
+  set tags [EG::GetTags]
   set itag -1
   foreach it $tags {
     if {[incr itag]%$::EG::TAGOPCLEN==0 && $itag} {
@@ -206,7 +207,8 @@ proc find::AddFoundInfo {item date word fname where} {
   #   where - text where search was successful
 
   variable foundList
-  if {[lsearch -glob $foundList "$date\t$item\t*\t$fname\t*"]<0} {
+  variable weeklyKey  ;# weekly is processed by its own key W0
+  if {$item ne $weeklyKey && [lsearch -glob $foundList "$date\t$item\t*\t$fname\t*"]<0} {
     set word [string map [list \t { }] $word]
     set where [string map [list \t { }] $where]
     lappend foundList "$date\t$item\t$word\t$fname\t$where"

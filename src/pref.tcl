@@ -177,44 +177,6 @@ proc pref::RenameItems {remap} {
     }
   }
 }
-#_______________________
-
-proc pref::IsChangedMainSettings {} {
-  # Gets the flag "main settings' values are changed".
-  # "Main" means "require restarting".
-
-  fetchVars
-  set res no
-  foreach k {FILE Theme CS Zoom Items ItemsTypes egdDate1 egdDate2 DefFont TexFont
-  NoteOnTop} {
-    set old $::EG::D($k)
-    set new $DP($k)
-    if {$k in {Items ItemsTypes}} {
-      # items & item types include EG - don't check it
-      set old [lrange $old 0 end-1]
-    }
-    if {$old != $new} {set res yes; break}
-  }
-  lassign $::EG::D(CS) ::EG::D(CS)
-  lassign $DP(CS) DP(CS)
-  set oldDark [$obPrf csDark $::EG::D(CS)]
-  set newDark [$obPrf csDark $DP(CS)]
-  expr {$res || $oldDark != $newDark}
-}
-#_______________________
-
-proc pref::UpdateAppearance {} {
-  # Updates the appearance: colors & dates.
-
-  set opcvar $::EG::Opcvar
-  EG::CheckItems
-  EG::SaveAll
-  EG::Init
-  EG::FocusedIt $::EG::D(curritem) $::EG::D(currwday)
-  EG::ShowTable
-  set ::EG::Opcvar $opcvar ;# restore current diagram type
-  EG::Diagram
-}
 
 # ________________________ Main Frame _________________________ #
 
@@ -333,7 +295,6 @@ proc pref::Save {{istest 0} args} {
   set DP(ItemsTypes) $ItemsTypes
   set DP(Theme) $opct
   set DP(CS) [lindex [split $opcc :] 0]
-  set mainchanged [IsChangedMainSettings]
   foreach k $DPars {
     set ::EG::D($k) $DP($k)
   }
@@ -355,19 +316,15 @@ proc pref::Save {{istest 0} args} {
     return
   }
   $obPrf res $win 1
-  if {$mainchanged} {
-    if {$isnewfile} {
-      EG::FileToResource $DP(FILE)
-      set ::argc 1
-      set ::argv [list $DP(FILE)]
-      set args -newfile
-    } else {
-      set args {}
-    }
-    EG::Exit -restart {*}$args
+  if {$isnewfile} {
+    EG::FileToResource $DP(FILE)
+    set ::argc 1
+    set ::argv [list $DP(FILE)]
+    set args -newfile
   } else {
-    UpdateAppearance
+    set args {}
   }
+  EG::Exit -restart {*}$args
 }
 #_______________________
 
@@ -727,7 +684,7 @@ proc pref::_create {} {
   fetchVars
   set preview 0
   ::apave::APave create $obPrf $win
-  $obPrf makeWindow $win.fra Preferences
+  $obPrf makeWindow $win.fra "Preferences: [EG::ResourceFileName]"
   $obPrf paveWindow \
     $win.fra [MainFrame] \
     $win.fra.fraR.nbk.f1 [General_Tab] \
@@ -759,6 +716,11 @@ proc pref::_run {} {
 
   fetchVars
   if {[EG::IsTestMode]} return
+  if {[EG::IsLockedBase]} {
+    EG::LockedChanges
+    bell
+    return
+  }
   EG::SaveAllData
   set itemOrder [origItemOrder]
   foreach k $DPars {set DP($k) $::EG::D($k)}

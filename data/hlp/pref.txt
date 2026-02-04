@@ -15,8 +15,10 @@
  Tags are colors and keywords that can be set in topic cells
  by means of their <b>context menus</b>. The color tags make cells
  more visible in week table. In the text box you can write
- any keywords separated by spaces and linefeeds. Then you may
- search the tagged cells, using <b>Find</b> action.
+ any keywords separated by spaces and linefeeds. Use quoting
+ for multi-word tags, e.g. "project begins", "best practice".
+
+ You may search the tagged cells, using <b>Find</b> action.
  ____________________________________________________________
 
  The most important settings are:

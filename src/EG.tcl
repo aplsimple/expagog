@@ -136,6 +136,7 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   variable OpcItems   ;# option cascade list
   variable byWeek 1   ;# diagram for weeks
   variable cumulate 0 ;# cumulative diagram
+  variable showtip 1  ;# shows tooltips on diagram
   variable LS         ;# list of item data
   variable itwidth 0  ;# item width
   variable InpItem {} ;# input item to go to
@@ -209,6 +210,7 @@ proc EG::fetchVars {} {
     variable OpcItems
     variable byWeek
     variable cumulate
+    variable showtip
     variable TAGOPCLEN
     variable LS
     variable SCRIPT
@@ -467,6 +469,21 @@ proc EG::FormatValue {w type typ P} {
     }
   }
   return $P
+}
+#_______________________
+
+proc EG::GetTags {} {
+  # Gets text tags, including quoted ones.
+
+  if {[catch {
+    set res [list]
+    foreach tag $::EG::D(TextTags) {
+      lappend res $tag
+    }
+  }]} then {
+    set res [split $::EG::D(TextTags)]
+  }
+  lsort -dictionary -nocase $res
 }
 
 # ________________________ Cell fields _________________________ #
@@ -966,7 +983,7 @@ proc EG::PopupOnItem {wit X Y {doit 0}} {
   menu $mcasc -tearoff 0
   obj themePopup $mcasc
   $wpop add cascade -label Tags -menu $mcasc
-  set tags [lsort -dictionary -nocase [split $::EG::D(TextTags)]]
+  set tags [GetTags]
   set itag -1
   foreach it $tags {
     if {$it ne {}} {
@@ -1367,18 +1384,18 @@ proc EG::SaveRC {} {
     lappend noteopen [winfo exists [note::NoteWin $n]]
   }
   ResourceData Geometry [wm geometry $WIN]
-  ResourceData NoteOpen {*}$noteopen
+  ResourceData NoteOpen {*}$noteopen {}
   ResourceData Zoom $D(Zoom)
   ResourceData NoteOnTop $D(NoteOnTop)
-  ResourceData DefFont {*}$D(DefFont)
-  ResourceData TexFont {*}$D(TexFont)
+  ResourceData DefFont {*}$D(DefFont) {}
+  ResourceData TexFont {*}$D(TexFont) {}
   TabFilesArray
   ResourceData TabFiles {*}$D(TabFiles)
   ResourceData DATEUSER {*}[split $D(DateUser)]
   ResourceData DATEUSER2 {*}[split $D(DateUser2)]
   ResourceData DATEUSER3 {*}[split $D(DateUser3)]
   ResourceData THEME $D(Theme)
-  ResourceData CS $D(CS)
+  ResourceData CS {*}$D(CS)
   ResourceData HUE $D(Hue)
   ResourceData FILEBAK $D(FILEBAK)
   ResourceData AUTOBAK $D(AUTOBAK)
@@ -2213,6 +2230,7 @@ proc EG::SwitchLock {} {
   fetchVars
   if {$TestMode || [IsLockedBase]} {
     LockedChanges
+    bell
   } else {
     set D(lockdata) [expr {!$D(lockdata)}]
     ConfigLock
@@ -2250,7 +2268,10 @@ proc EG::ConfigLock {} {
 proc EG::LockedChanges {} {
   # Checks if changes are locked & shows message if so.
 
-  if {[IsLockedBase] || $::EG::D(lockdata)} {
+  if {[IsLockedBase]} {
+    Message "Changes to [file tail $::EG::D(FILE)] are locked"
+    return 1
+  } elseif {$::EG::D(lockdata)} {
     MessageState 1
     return 1
   }
@@ -2535,6 +2556,7 @@ proc EG::OpenDataFile {fname} {
   # Filling main settings
   if {[set _ [CommonData BYWEEK]] in {0 1}} {set byWeek $_}
   if {[set _ [CommonData CUMULATE]] in {0 1}} {set cumulate $_}
+  if {[set _ [CommonData SHOWTIP]] in {0 1}} {set showtip $_}
   if {[set _ [CommonData COLOR0]] ne {}} {set Colors(fgsel) $_}
   if {[set _ [CommonData COLOR3]] ne {}} {set Colors(bgtex) $_}
   if {[set _ [CommonData COLORRED]] ne {}} {set Colors(Red) $_}
@@ -2546,7 +2568,7 @@ proc EG::OpenDataFile {fname} {
   set D(egdDate1) [CommonData EGDDATE1]
   set D(egdDate2) [CommonData EGDDATE2]
   CheckEgdDates
-  if {[IsLockedBase]} {set D(Date1) [Date1Seconds]}
+  if {[IsLockedBase]} {set D(Date1) [FormatDate]}
   readPolyFlags
   for {set iit 1} {$iit<=$D(MAXITEMS)} {incr iit} {
     if {[set _ [CommonData COLORMY$iit]] ne {}} {set Colors(my$iit) $_}
@@ -2577,6 +2599,7 @@ proc EG::SaveDataFile {{fname ""} {newfile no} {updfile no}} {
   CommonData ITEMSTYPES $D(ItemsTypes)
   CommonData BYWEEK $byWeek
   CommonData CUMULATE $cumulate
+  CommonData SHOWTIP $showtip
   CommonData COLOR0 $Colors(fgsel)
   CommonData COLOR3 $Colors(bgtex)
   CommonData COLORRED $Colors(Red)
@@ -3204,23 +3227,24 @@ proc EG::Init {} {
   set D(Zoom) [ResourceData Zoom]
   if {$D(Zoom)<0 || $D(Zoom)>16} {set D(Zoom) 3}
   set fs [expr {8+$D(Zoom)}]
-  if {[set D(DefFont) [ResourceData DefFont]] ne {}} {
-    catch {dict set D(DefFont) -size $fs}
-    foreach font {TkDefaultFont TkMenuFont TkHeadingFont TkCaptionFont} {
-      if {[catch {font configure $font {*}$D(DefFont)}]} {
-        set D(DefFont) [font actual TkDefaultFont]
-        font configure $font {*}$D(DefFont)
-      }
+  if {[set D(DefFont) [ResourceData DefFont]] eq {}} {
+    set D(DefFont) [obj basicDefFont]
+  }
+  catch {dict set D(DefFont) -size $fs}
+  foreach font {TkDefaultFont TkMenuFont TkHeadingFont TkCaptionFont} {
+    if {[catch {font configure $font {*}$D(DefFont)}]} {
+      set D(DefFont) [font actual TkDefaultFont]
+      font configure $font {*}$D(DefFont)
     }
-    if {$D(DefFont) ne {}} {
-      obj basicDefFont $D(DefFont)
-      set smallfont $D(DefFont)
-      if {![catch {dict set smallfont -size [expr {$fs-2}]}]} {
-        ::baltip::configure -font $smallfont
-        foreach font {TkSmallCaptionFont TkIconFont TkTooltipFont} {
-          if {[catch {font configure $font {*}$smallfont}]} {
-            set smallfont {}
-          }
+  }
+  if {$D(DefFont) ne {}} {
+    obj basicDefFont $D(DefFont)
+    set smallfont $D(DefFont)
+    if {![catch {dict set smallfont -size [expr {$fs-2}]}]} {
+      ::baltip::configure -font $smallfont
+      foreach font {TkSmallCaptionFont TkIconFont TkTooltipFont} {
+        if {[catch {font configure $font {*}$smallfont}]} {
+          set smallfont {}
         }
       }
     }
@@ -3433,6 +3457,7 @@ proc EG::_create {} {
       -com EG::diagr::Draw -takefocus 0}}
     {.frar2.chb + L 1 1 {-st w -padx 20} {-t cumulate
       -var ::EG::cumulate -takefocus 0 -com EG::diagr::Draw}}
+    {.frar2.chbt + L 1 1 {-st w} {-t tips -var ::EG::showtip -takefocus 0}}
     #####-comments-on-diagram-and-all
     {Lfr2 frar1 T 1 1 {-st nswe -cw 1 -rw 99 -pady 4} {-t Weekly -labelanchor n}}
     {.TextR1W - - - - {pack -side left -expand 1 -fill both}
