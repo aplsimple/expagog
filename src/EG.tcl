@@ -1384,7 +1384,7 @@ proc EG::SaveRC {} {
     lappend noteopen [winfo exists [note::NoteWin $n]]
   }
   ResourceData Geometry [wm geometry $WIN]
-  ResourceData NoteOpen {*}$noteopen {}
+  ResourceData NoteOpen {*}$noteopen
   ResourceData Zoom $D(Zoom)
   ResourceData NoteOnTop $D(NoteOnTop)
   ResourceData DefFont {*}$D(DefFont) {}
@@ -1893,6 +1893,9 @@ proc EG::ShowTextW {} {
 
   fetchVars
   set val [DataValue $D(WeeklyKEY) {*}$D(WeeklyITEM)]
+  if {[IsTestMode] && [llength $val]<12} {
+    set val "Testing mode\n123456789012"
+  }
   $EGOBJ displayText [$EGOBJ TextR1W] $val
   [$EGOBJ Lfr2] configure -text " Weekly [WeekNumber] "
 
@@ -3520,7 +3523,7 @@ proc EG::_create {} {
   after 100 EG::note::OpenNotes
   if {[IsTestMode]} {
     after 1000 [list EG::Balloon \
-      "Test mode.\n\nClose this EG application\nafter testing it."]
+      "Testing mode.\n\nClose this EG application\nafter testing it."]
   }
   $EGOBJ showModal $WIN -onclose EG::Exit -escape no {*}$geo
 }

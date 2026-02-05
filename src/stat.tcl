@@ -770,8 +770,12 @@ proc stat::Legend2 {} {
 
   variable aggrdata
   variable maxdiff
-  set perweek [expr {$aggrdata(totAggrEG) / $aggrdata(weeksCnt)}]
-  set perday [expr {$aggrdata(totAggrEG) / $aggrdata(daysCnt)}]
+  if {[catch {set perweek [expr {$aggrdata(totAggrEG) / $aggrdata(weeksCnt)}]}]} {
+    set perweek 0
+  }
+  if {[catch {set perday [expr {$aggrdata(totAggrEG) / $aggrdata(daysCnt)}]}]} {
+    set perday 0
+  }
   return " <t>AggrEG : Total </t>[EG::Round $aggrdata(totAggrEG) 1]  \
     <t>Per week </t>[EG::Round $perweek 1]  \
     <t>Per day </t>[EG::Round $perday 1]\n\n\
