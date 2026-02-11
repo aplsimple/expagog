@@ -3256,7 +3256,7 @@ proc EG::Init {} {
   || [catch {dict set D(TexFont) -size $fs}]} {
     set D(TexFont) [obj basicTextFont]
   }
-  obj basicTextFont $D(TexFont)
+  obj basicTextFont [list {*}$D(TexFont) -size $fs]
   if {[catch {obj basicFontSize $fs}]} {
     # incorrect font settings may lead to EG crash
     set D(TexFont) [font actual TkFixedFont]
