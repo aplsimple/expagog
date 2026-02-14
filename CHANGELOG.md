@@ -1,7 +1,7 @@
 # Last changes:
 
 
-Version `v1.8.0b5 (11 Feb'26)`
+Version `v1.8.0b6 (14 Feb'26)`
 
   - BUGFIX: some issues of HNY
   - BUGFIX: some issues of switching data files
@@ -15,7 +15,7 @@ Version `v1.8.0b5 (11 Feb'26)`
   - NEW   : Open report: item in menu + button in Report
   - NEW   : maximum sum in diagram's left top corner
   - NEW   : tips checkbox for diagram's tooltips
-  - CHANGE: processing font settings
+  - CHANGE: read/write settings
   - CHANGE: same .rc at switching .egd file
   - CHANGE: note.tcl: bind "FocusOut" event to entry & text
   - CHANGE: packages: apave 4.8.4, baltip 1.6.7

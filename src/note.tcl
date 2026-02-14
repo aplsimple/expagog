@@ -258,7 +258,6 @@ method noteColor {} {
 proc note::OpenNotes {} {
   # Opens notes at starting EG.
 
-  EG::Resource
   set noteopen [EG::ResourceData NoteOpen]
   foreach n $::EG::NOTESN {
     set isopen [lindex $noteopen $n-1]

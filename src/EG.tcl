@@ -75,6 +75,7 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   variable QUESVAL 0
   variable TAGOPCLEN 16
   variable NAMEWIDTH 15
+  variable SNOOP `?#>
   variable comm_port 51137
   variable TipUnderLine "\n_______________ \n"
 
@@ -1387,8 +1388,8 @@ proc EG::SaveRC {} {
   ResourceData NoteOpen {*}$noteopen
   ResourceData Zoom $D(Zoom)
   ResourceData NoteOnTop $D(NoteOnTop)
-  ResourceData DefFont {*}$D(DefFont) {}
-  ResourceData TexFont {*}$D(TexFont) {}
+  ResourceData DefFont {*}$D(DefFont) $::EG::SNOOP
+  ResourceData TexFont {*}$D(TexFont) $::EG::SNOOP
   TabFilesArray
   ResourceData TabFiles {*}$D(TabFiles)
   ResourceData DATEUSER {*}[split $D(DateUser)]
@@ -2474,17 +2475,19 @@ proc EG::Resource {args} {
   set ::EG::contRC [apave::readTextFile $fname]
   if {[llength $args]} {
     foreach {opt val} $args {
-      if {$val ne {} && $val ne "{}"} {
-        dict set ::EG::contRC $opt $val
-      } else {
-        catch {dict unset ::EG::contRC $opt}
+      catch {
+        if {$val ne {} && $val ne "{}"} {
+          dict set ::EG::contRC $opt $val
+        } else {
+          dict unset ::EG::contRC $opt
+        }
       }
     }
-    set contRC {}
-    foreach key [dict keys $::EG::contRC] {
-      append contRC "$key {[dict get $::EG::contRC $key]}\n"
+    set TMP {}
+    foreach {key val} $::EG::contRC {
+      append TMP "$key [list $val]\n"
     }
-    WriteTextFile $fname contRC yes
+    WriteTextFile $fname TMP yes
   }
   return $::EG::contRC
 }
@@ -2493,14 +2496,14 @@ proc EG::Resource {args} {
 proc EG::ResourceData {key args} {
   # Sets/gets data of .rc file by a key.
   #   key - the key
-  #   args - the list of pairs "name value" (if set), the flag "-noread" or {}
-  # If args is "-noread" or {}, returns value of data.
+  #   args - the list of pairs "name value"
+  # If args is {}, returns value of data.
 
-  if {$args ne "-noread"} {
-    if {[llength $args]} {
-      return [Resource $key $args]
+  if {[llength $args]} {
+    if {[lindex $args end] eq $::EG::SNOOP} {
+      set args [lreplace $args end end] ;# SNOOP in empty value
     }
-    Resource
+    return [Resource $key $args]
   }
   set res {}
   catch {set res [dict get $::EG::contRC $key]}
@@ -3209,6 +3212,7 @@ proc EG::Init {} {
   } else {
     set USERDIR [file dirname $fname]
   }
+  Resource
   OpenDataFile $fname
   FileToResource $fname
   if {[obj csDark]} {
