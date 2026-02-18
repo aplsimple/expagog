@@ -1246,14 +1246,16 @@ proc EG::DatesKeys {{date1 ""} {date2 ""} {incsort 1} {egdvar ""}} {
   }
   if {$date2 ne {}} {
     set date2 [FormatDatePG [ScanDate $date2]]
-  } else {
-    set date2 [CurrentYear]/99/99 ;# used for comparison
+  } elseif {$egdvar eq {}} {
+    set date2 [CurrentYear]/99/99
   }
   if {$egdvar eq {}} {set egdvar EGD}
   set keys [lsort $sord [dict keys [set $egdvar] */*/*]]
   set res [list]
   foreach dt $keys {
-    if {$date1 <= $dt && $dt < $date2} {lappend res $dt}
+    if {($date1 eq {} || $date1 <= $dt) && ($date2 eq {} || $dt < $date2)} {
+      lappend res $dt
+    }
   }
   return $res
 }

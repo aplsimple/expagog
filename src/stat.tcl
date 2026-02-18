@@ -749,7 +749,7 @@ proc stat::AggregateValue {ic} {
     lappend data $aggrdata($ir,$ic)
     incr ir
   }
-  CalculateByFormula $::EG::D(AggrEG) $data
+  CalculateByFormula $::EG::D(AggrEG) $data 0.0
 }
 #_______________________
 

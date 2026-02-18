@@ -1,12 +1,13 @@
 # Last changes:
 
 
-Version `v1.8.0b6 (14 Feb'26)`
+Version `v1.8.0 (18 Feb'26)`
 
   - BUGFIX: some issues of HNY
   - BUGFIX: some issues of switching data files
   - BUGFIX: unnecessary theming texts and tools at opening data file
   - BUGFIX: duplicate lines in Find results for "Weekly"
+  - BUGFIX: Statistics: calculation errors counted
   - DELETE: pref::IsChangedMainSettings & pref::UpdateAppearance (too tricky)
   - NEW   : text tags allow quoting a word group
   - NEW   : Ctrl-hotkeys for texts
