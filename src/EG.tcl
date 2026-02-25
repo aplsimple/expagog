@@ -132,6 +132,7 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   set D(TabFiles) {}  ;# file names of tab bar
   set D(AggrEG) EG    ;# aggregate formula
   set D(FindStrs) {}  ;# list of strings to find
+  set D(atStart) 1    ;# flag "at starting EG"
   variable C          ;# canvas' path
   variable Opcvar     ;# option cascade var
   variable OpcItems   ;# option cascade list
@@ -1739,10 +1740,12 @@ proc EG::IsMoveWeek {} {
   set isBad1 [expr {$D1<$D(egdDate1)}]
   set isBad2 [expr {$D1>=$D(egdDate2)}]
   if {$isBad1 || $isBad2} {
-    msg ok warn "\n\
-      Cannot move to [string trim $D(Date1)]!\n\n\
-      In \"Preferences\", the week range is \[$D(egdDate1) - $D(egdDate2)\).\n" \
-      -timeout {9 ButOK}
+    if {!$D(atStart)} {
+      msg ok warn "\n\
+        Cannot move to [string trim $D(Date1)]!\n\n\
+        In \"Preferences\", the week range is \[$D(egdDate1) - $D(egdDate2)\).\n" \
+        -timeout {9 ButOK}
+    }
     if {$isBad1} {
       set date [ScanDatePG $D(egdDate1)]
       set D(currwday) 0
@@ -1813,6 +1816,7 @@ proc EG::ShowTable {{atStart 0}} {
   #   atStart - 1 if run at starting EG
 
   fetchVars
+  set D(atStart) $atStart
   if {$atStart} {
     if {![IsTabFiles]} UpdateBAR
     if {$InpItem ne {} && $InpDate ne {}} {

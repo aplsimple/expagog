@@ -402,10 +402,11 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
       ::baltip::tip $C $tip -ctag $tag -per10 4000
       $C bind $tag <Button-1> [list EG::diagr::MoveToDay $day1]
     }
-    set maxsum [expr {round($maxsum)}]
-    set tip "Maximum sum: $maxsum"
+    set maxsum1 [EG::Round $maxsum 2]
+    set maxsum2 [expr {round($maxsum)}]
+    set tip "Maximum sum: $maxsum1"
     set tag maxsum
-    set id [$C create text $BarHeight $X0 -text \n$maxsum -tag $tag \
+    set id [$C create text $BarHeight $X0 -text \n$maxsum2 -tag $tag \
       -font $Font -fill $FontColor -activefill $HotColor]
     ::baltip::tip $C $tip -ctag $tag -per10 4000
     $C bind $tag <Button-1> [list ::baltip::showTip $C $tip -ctag $tag]

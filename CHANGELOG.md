@@ -1,7 +1,7 @@
 # Last changes:
 
 
-Version `v1.8.0 (18 Feb'26)`
+Version `v1.8.0 (25 Feb'26)`
 
   - BUGFIX: some issues of HNY
   - BUGFIX: some issues of switching data files
@@ -16,6 +16,8 @@ Version `v1.8.0 (18 Feb'26)`
   - NEW   : Open report: item in menu + button in Report
   - NEW   : maximum sum in diagram's left top corner
   - NEW   : tips checkbox for diagram's tooltips
+  - CHANGE: Preferences: no Test & OK buttons for locked base
+  - CHANGE: no range error message at opening base with incorrect dates
   - CHANGE: read/write settings
   - CHANGE: same .rc at switching .egd file
   - CHANGE: note.tcl: bind "FocusOut" event to entry & text

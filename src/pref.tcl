@@ -184,6 +184,7 @@ proc pref::MainFrame {} {
   # Creates a main frame of the dialogue.
 
   fetchVars
+  if [EG::IsLockedBase] {set DP(_F) forget} {set DP(_F) {}}
   return {
     {fraR - - 1 1 {-st nsew -cw 1}}
     {fraR.nbk - - - - {pack -side top -expand 1 -fill both} {
@@ -194,10 +195,11 @@ proc pref::MainFrame {} {
     {fraB + T 1 2 {-st nsew} {-padding {2 2}}}
     {.ButHelp - - - - {pack -side left}
       {-t Help -tip F1 -com ::EG::pref::Help -takefocus 0}}
-    {.butRun - - - - {pack -side left -padx 2} {-t Test -com {::EG::pref::Save 1}
-      -takefocus 0}}
+    {.butRun - - - - {pack $::EG::pref::DP(_F) -side left -padx 2} {-t Test
+      -com {::EG::pref::Save 1} -takefocus 0}}
     {.LabMess - - - - {pack -side left -expand 1 -fill both -padx 8}}
-    {.butOK - - - - {pack -side left -padx 2} {-t OK -com ::EG::pref::Save}}
+    {.butOK - - - - {pack $::EG::pref::DP(_F) -side left -padx 2} {-t OK
+      -com ::EG::pref::Save}}
     {.butCancel - - - - {pack -side left} {-t Cancel -com ::EG::pref::Cancel}}
   }
 }
@@ -715,12 +717,6 @@ proc pref::_run {} {
   # Returns yes, if settings were saved.
 
   fetchVars
-  if {[EG::IsTestMode]} return
-  if {[EG::IsLockedBase]} {
-    EG::LockedChanges
-    bell
-    return
-  }
   EG::SaveAllData
   set itemOrder [origItemOrder]
   foreach k $DPars {set DP($k) $::EG::D($k)}
