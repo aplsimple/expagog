@@ -114,7 +114,7 @@ proc file::Backup {auto} {
     lassign [$EGOBJ input {} Backup [list \
       lab "{} {-pady 8} {-t {Backup file name:}}" {} \
       fis "{} {} {-w 60 -filetypes {$types} -defaultextension $BAKEXT \
-        -title {Backup file}}" "$D(FILEBAK)" \
+        -title {Backup file}}" "\"$D(FILEBAK)\"" \
       chb "{} {-pady 10} {-t {Auto backup at exit} -tabnext *OK}" $D(AUTOBAK)] \
       -help EG::file::BackupHelp -resizable no] auto fname chauto
     if {$auto} {

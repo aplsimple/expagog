@@ -1,7 +1,7 @@
 # Last changes:
 
 
-Version `v1.8.1 (1 Apr'26)`
+Version `v1.8.1 (1st Apr'26)`
 
   - BUGFIX: backuping locked (old) base
   - NEW   : backup.txt, help on Backup dialogue

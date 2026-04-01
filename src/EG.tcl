@@ -1401,7 +1401,7 @@ proc EG::SaveRC {} {
   ResourceData THEME $D(Theme)
   ResourceData CS {*}$D(CS)
   ResourceData HUE $D(Hue)
-  ResourceData FILEBAK $D(FILEBAK)
+  ResourceData FILEBAK {*}[split $D(FILEBAK)]
   ResourceData AUTOBAK $D(AUTOBAK)
 }
 #_______________________
