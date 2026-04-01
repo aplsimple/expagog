@@ -1,6 +1,17 @@
 # Last changes:
 
 
+Version `v1.8.1 (1 Apr'26)`
+
+  - BUGFIX: backuping locked (old) base
+  - NEW   : backup.txt, help on Backup dialogue
+  - RENAME: merge.tcl to file.tcl
+  - CHANGE: Backup: at errors, while message stays, chance to fix problems
+  - CHANGE: Backup: copy .rc to the same directory as .egd
+  - CHANGE: Backup: change archives' extension (.egbak i/o .bak)
+  - CHANGE: if some .egd files open, closing their tabs doesn't shift current tab
+
+
 Version `v1.8.0 (25 Feb'26)`
 
   - BUGFIX: some issues of HNY

@@ -1,0 +1,13 @@
+ The <r>Backup</r> dialogue is used to get archives of
+ <b>.egd</b> (data) and <b>.rc</b> (resource) files. The backup
+ files have <b>.egbak</b> extension, independent on what
+ extension is set in the dialogue.
+ ________________________________________________
+
+ Copies of the files are created in <b>per week day</b>
+ manner. So, at need you can always restore data
+ from the archives of the last 7 days.
+ ________________________________________________
+
+ The <b>Auto backup</b> option allows the archivizing at
+ EG application's exit.

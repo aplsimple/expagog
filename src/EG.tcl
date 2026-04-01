@@ -1431,7 +1431,6 @@ proc EG::SaveAll {args} {
 
   fetchVars
   if {[IsTestMode]} return
-  FocusedIt
   SaveAllData {*}$args
   Message "Data saved to $USERDIR" 5
 }
@@ -2130,6 +2129,12 @@ proc EG::OnTabSelection {TID} {
 
   fetchVars
   if {[IsTestMode]} return
+  if {[info exists D(tab-cdel)]} {
+    set tabcur $D(tab-cdel)
+    unset D(tab-cdel)
+    BAR $tabcur show yes
+    return
+  }
   set fname [TIDfname $TID]
   if {$fname ne $D(FILE)} {OpenFile $fname} UpdateBAR
 
@@ -2147,9 +2152,11 @@ proc EG::OnTabDeletion {TID args} {
         return yes  ;# run with Close of context menu
       }
     }
+    bell
     Message {Only "Close" of context menu closes the current file!} 20
     return 2
   }
+  set D(tab-cdel) [BAR cget -tabcurrent]
   return yes
 }
 #_______________________
@@ -2376,7 +2383,7 @@ proc EG::StatusBar {item wday} {
 }
 #_______________________
 
-proc MessageTags {} {
+proc EG::MessageTags {} {
   # Gets tags for texts shown with messages.
   # Returns "-tags option" for messages.
 
@@ -2805,49 +2812,8 @@ proc EG::Backup {{auto no}} {
   # Saves data file (sort of backup).
   #   auto - "no" to run dialogue, "yes" - to check "auto-backup" and backup
 
-  fetchVars
-  after idle EG::SaveAllData
-  if {$D(FILEBAK) eq {}} {
-    set D(FILEBAK) [file join $USERDIR [string map {. _} [file tail $D(FILE)]].bak]
-  }
-  if {!$auto} {
-    set types {{{EG Backup Files} .bak}}
-    lassign [$EGOBJ input {} Backup [list \
-      lab "{} {-pady 8} {-t {Backup file name:}}" {} \
-      fis "{} {} {-w 60 -filetypes {$types} -defaultextension .bak \
-        -title {Backup file}}" "$D(FILEBAK)" \
-      chb "{} {-pady 10} {-t {Auto backup at exit}}" $D(AUTOBAK)]] \
-      auto fname chauto
-    if {$auto} {
-      if {$fname eq {}} {
-        set auto 0
-        Message {No file name supplied}
-        after idle EG::Backup
-      } else {
-        set D(FILEBAK) $fname
-        set D(AUTOBAK) $chauto
-      }
-    }
-  }
-  if {$auto} {
-    set globalOK 1
-    set fsave $D(FILEBAK)
-    SaveDataFile $fsave
-    if {$globalOK} {
-      # additional save of "week day" version
-      set wd [clock format [Date1Seconds] -format %u]
-      set bak _$wd.bak
-      set fsave [file root $D(FILEBAK)]$bak
-      SaveDataFile $fsave
-      set fname [ResourceFileName]
-      set fback [file rootname $fname]_rc$bak
-      catch {file copy $fname $fback}
-    }
-    if {!$globalOK} {
-      msg ok warn "Cannot save (backup) the file\n<b>$fsave</b>\n\n[::apave::error]" \
-        -w {50 80}
-    }
-  }
+  Source file
+  file::Backup $auto
 }
 #_______________________
 
@@ -2938,7 +2904,7 @@ proc EG::Help {{fhelp EG} args} {
     }
     set fhelp [file join $DATADIR hlp $fhelp.txt]
     set helpcont [string trimright [apave::readTextFile $fhelp]]
-    catch {set helpcont [subst $helpcont]} e
+    catch {set helpcont [subst $helpcont]}
     msg ok info $helpcont -title Help {*}$args
   }
 }
@@ -2949,7 +2915,7 @@ proc EG::Merge {{doadd no} args} {
   #   doadd - if yes, add selected tabs to merged file list
 
   fetchVars
-  Source merge
+  Source file
   set selfiles [list]
   if {$doadd} {
     set tabs [BAR cget -select]
@@ -2967,7 +2933,7 @@ proc EG::Merge {{doadd no} args} {
       Message "To select a tab, press Ctrl & click it. Or right click it." 15
     }
   }
-  merge::_run $selfiles
+  file::_run $selfiles
 }
 #_______________________
 
@@ -3405,7 +3371,8 @@ proc EG::_create {} {
     {.tool - - - - {pack -side top} {-relief flat -borderwidth 0 -array {
       Tool_hamburger {EG::Actions -tip "Actions\nF10@@ -under 5"}
       sev 4
-      Tool_SaveFile {{after idle EG::SaveAll} -tip "Save data\nCtrl+S@@ -under 5"}
+      Tool_SaveFile {{after idle {EG::FocusedIt; EG::SaveAll}}
+        -tip "Save data\nCtrl+S@@ -under 5"}
       Tool_info {EG::stat::_run -tip "Statistical info\nF6@@ -under 5"}
       Tool_print {EG::Report -tip "Report\nF7@@ -under 5"}
       sev 4

@@ -1,15 +1,15 @@
 ###########################################################
-# Name:    merge.tcl
+# Name:    file.tcl
 # Author:  Alex Plotnikov  (aplsimple@gmail.com)
 # Date:    Mar 09, 2025
-# Brief:   Handles merging data files.
+# Brief:   Handles file operations (backup, merge etc).
 # License: MIT.
 ###########################################################
 
-# _________________________ Variables of merge ________________________ #
+# _________________________ Variables of file ________________________ #
 
-namespace eval merge {
-  variable pobj ::merge::mergeObj
+namespace eval file {
+  variable pobj ::file::mergeObj
   variable win $::EG::WIN.merge
   variable fileToMerge {}
   variable listToMerge [list]
@@ -21,11 +21,12 @@ namespace eval merge {
   variable reWrite 0
   variable backupFile {}
   variable listLog [list]
+  variable BAKEXT .egbak
 }
 
 # ________________________ Common procs _________________________ #
 
-proc merge::Message {msg} {
+proc file::Message {msg} {
   # Show message in message field.
   #   msg - message
 
@@ -36,12 +37,13 @@ proc merge::Message {msg} {
 }
 #_______________________
 
-proc merge::Log {msg {mode 0}} {
+proc file::Log {msg {mode 0}} {
   # Show message(s) in log.
   #   msg - message
   #   mode - 1 init log list, 0 save $msg in log list, 2 output log list
 
   variable listLog
+  if {[string first ERROR $msg]==0} {set msg <b>$msg</b>}
   if {$mode==2} { ;# sort and output the log list
     foreach msg [lsort -dictionary $listLog] {
       Log1 $msg
@@ -57,7 +59,7 @@ proc merge::Log {msg {mode 0}} {
 }
 #_______________________
 
-proc merge::Log1 {msg {doadd yes}} {
+proc file::Log1 {msg {doadd yes}} {
   # Show a message in log.
   #   msg - message
   #   doadd - if yes adds to existing text
@@ -65,14 +67,87 @@ proc merge::Log1 {msg {doadd yes}} {
   variable pobj
   set tex [$pobj TexLog]
   $pobj readonlyWidget $tex no
-  if {!$doadd} {$tex replace 1.0 end {}}
-  $tex insert end \n$msg
+  set msg \n$msg
+  EG::MessageTags
+  $pobj displayTaggedText $tex msg $::EG::textTags
   $pobj readonlyWidget $tex yes
 }
 
-# ________________________ Merging _________________________ #
+# ________________________ Backup _________________________ #
 
-proc merge::Merge {} {
+proc file::DoBackup {} {
+  # Does backup.
+
+  namespace upvar ::EG D D globalOK globalOK
+  variable BAKEXT
+  set D(FILEBAK) [file rootname $D(FILEBAK)]$BAKEXT
+  set fbak $D(FILEBAK)
+  if {![catch {file copy -force $D(FILE) $fbak} err]} {
+    set err {}
+    # per week day too (no checks)
+    set wd _[clock format [clock seconds] -format %u]$BAKEXT
+    catch {file copy -force $fbak [file rootname $fbak]$wd}
+    set rc [EG::ResourceFileName]
+    set rbak [file rootname [file tail $rc]]
+    set rbak [file join [file dirname $fbak] $rbak]_rc$wd
+    catch {file copy -force $rc $rbak}
+  }
+  list $fbak $err
+}
+#_______________________
+
+proc file::Backup {auto} {
+  # Saves data file (sort of backup).
+  #   auto - "no" to run dialogue, "yes" - to check "auto-backup" and backup
+
+  namespace upvar ::EG D D EGOBJ EGOBJ
+  variable BAKEXT
+  after idle EG::SaveAllData
+  if {$D(FILEBAK) eq {}} {
+    set D(FILEBAK) [file join $USERDIR [string map {. _} [file tail $D(FILE)]]$BAKEXT]
+  } else {
+    set D(FILEBAK) [file rootname $D(FILEBAK)]$BAKEXT
+  }
+  if {!$auto} {
+    set types [list [list {EG Backup Files} $BAKEXT]]
+    lassign [$EGOBJ input {} Backup [list \
+      lab "{} {-pady 8} {-t {Backup file name:}}" {} \
+      fis "{} {} {-w 60 -filetypes {$types} -defaultextension $BAKEXT \
+        -title {Backup file}}" "$D(FILEBAK)" \
+      chb "{} {-pady 10} {-t {Auto backup at exit} -tabnext *OK}" $D(AUTOBAK)] \
+      -help EG::file::BackupHelp -resizable no] auto fname chauto
+    if {$auto} {
+      if {$fname eq {}} {
+        set auto 0
+        EG::Message {No file name supplied}
+        after idle EG::Backup
+      } else {
+        set D(FILEBAK) $fname
+        set D(AUTOBAK) $chauto
+      }
+    }
+  }
+  if {$auto} {
+    lassign [DoBackup] fbak err
+    if {$err ne {}} {
+      EG::msg ok warn "Cannot save (backup)\n<b>$fbak</b>\n\n$err\
+        \n\nYou can fix the problem and press OK to repeat saving." -w {50 80} -h {7 9}
+      DoBackup  ;# here problems might be fixed
+    }
+  }
+}
+#_______________________
+
+proc file::BackupHelp {} {
+  # Shows help on Merge dialog.
+
+  variable win
+  EG::Help backup -width 50 -height 17 -parent $win
+}
+
+# ________________________ Merge _________________________ #
+
+proc file::Merge {} {
   # Does merge.
 
   variable listToMerge
@@ -81,7 +156,7 @@ proc merge::Merge {} {
   Log {} 1
   foreach fname $listToMerge {
     Log {} 2
-    EG::ReadEGDFile $fname ::EG::merge::EGDtmp
+    EG::ReadEGDFile $fname ::EG::file::EGDtmp
     Log1 [string repeat _ 80]
     Log1 \n$fname:\n
     if {[catch {
@@ -118,7 +193,7 @@ proc merge::Merge {} {
 }
 #_______________________
 
-proc merge::AddItemData {item} {
+proc file::AddItemData {item} {
   # Adds item data from EGDtmp to EGD dictionary.
   #   item - item name
 
@@ -150,13 +225,13 @@ proc merge::AddItemData {item} {
 }
 #_______________________
 
-proc merge::DisplayTexLog {} {
+proc file::DisplayTexLog {} {
   # Initializes log messages as for file list to merge.
 
   variable listToMerge
   variable pobj
   set listToMerge [lsort -dictionary $listToMerge]
-  set outlog "File(s) to merge:\n"
+  set outlog "<b>File(s) to merge:</b>\n"
   foreach fn $listToMerge {
     append outlog \n$fn
   }
@@ -171,7 +246,7 @@ proc merge::DisplayTexLog {} {
 }
 #_______________________
 
-proc merge::GetFileToMerge {} {
+proc file::GetFileToMerge {} {
   # Gets name of file to merge.
 
   variable fileToMerge
@@ -191,7 +266,7 @@ proc merge::GetFileToMerge {} {
 }
 #_______________________
 
-proc merge::AddTabs {selfiles} {
+proc file::AddTabs {selfiles} {
   # Add merged files selected in tab bar.
   #   selfiles - selected files
 
@@ -201,7 +276,7 @@ proc merge::AddTabs {selfiles} {
 }
 #_______________________
 
-proc merge::CommonTmpData {dkey} {
+proc file::CommonTmpData {dkey} {
   # Gets common data from EGDtmp.
   #   dkey - data key
 
@@ -209,9 +284,9 @@ proc merge::CommonTmpData {dkey} {
   dict get $EGDtmp $::EG::COMMONTYPE $dkey
 }
 
-# ________________________ Actions _________________________ #
+## ________________________ Merge actions _________________________ ##
 
-proc merge::Undo {} {
+proc file::Undo {} {
   # Undoes all changes.
 
   variable EGDSav
@@ -228,7 +303,7 @@ proc merge::Undo {} {
 }
 #_______________________
 
-proc merge::Close {args} {
+proc file::Close {args} {
   # Closes Merge dialog.
 
   variable win
@@ -237,34 +312,47 @@ proc merge::Close {args} {
 }
 #_______________________
 
-proc merge::Help {} {
+proc file::MergeHelp {} {
   # Shows help on Merge dialog.
 
   variable win
-  EG::Help merge -width 56 -height 32 -parent $win
+  EG::Help merge -w 56 -h {27 29} -parent $win
 }
 
 # ________________________ GUI _________________________ #
 
-proc merge::_create  {selfiles} {
+proc file::_create  {selfiles} {
   # Creates Merge dialogue.
   #   selfiles - merged file list
 
   variable pobj
   variable win
   variable reWrite
+  variable fileToMerge
   catch {$pobj destroy}
   ::apave::APave create $pobj $win
+  if {$fileToMerge eq {}} {
+    foreach fn [glob -nocomplain [file join $::EG::USERDIR *]] {
+      if {[file extension $fn] eq {.egd} &&
+      [file normalize $fn] ne [file normalize $::EG::D(FILE)]} {
+        set fileToMerge $fn
+      }
+    }
+  }
+  if {$fileToMerge ne {}} {
+    set indir [file dirname $fileToMerge]
+  } else {
+    set indir $::EG::USERDIR
+  }
   $pobj makeWindow $win.fra Merge
   $pobj paveWindow $win.fra {
     {fra1 - - - - {-st nsew -cw 1}}
     {.v_ - - - - {-pady 8}}
     {.lab1 + T 1 1 {-st es -padx 4} {-t {File to merge:} -anchor e}}
-    {.filIn + L 1 1 {-st swe -cw 1} {-w 60 -tvar ::EG::merge::fileToMerge
-      -initialdir $::EG::USERDIR
-      -filetypes {{{EG Data Files} {.egd} }} -defaultextension .egd}}
+    {.filIn + L 1 1 {-st swe -cw 1} {-w 60 -tvar ::EG::file::fileToMerge
+      -initialdir $indir -filetypes {{{EG Data Files} {.egd} }} -defaultextension .egd}}
     {.lab2 .lab1 T 1 1 {-st es -padx 4 -pady 8} {-t {Rewrite data:} -anchor e}}
-    {.chb + L 1 1 {-st w -pady 8} {-var ::EG::merge::reWrite}}
+    {.chb + L 1 1 {-st w -pady 8} {-var ::EG::file::reWrite}}
     {lfr fra1 T 1 2 {-st nswe -rw 1 -cw 1} {-t {Log messages:} -labelanchor n}}
     {.TexLog - - - - {pack -side left -expand 1 -fill both}
       {-w 10 -h 16 -ro 1 -wrap none}}
@@ -272,27 +360,27 @@ proc merge::_create  {selfiles} {
     {seh lfr T 1 2 {-pady 8 -st ew}}
     {frabot + T 1 2 {-st ew} {}}
     {.ButHelp - - - - {pack -side left}
-      {-text Help -com EG::merge::Help -takefocus 0}}
+      {-text Help -com EG::file::MergeHelp -takefocus 0}}
     {.LaBMess + L 1 1 {pack -side left -expand 1 -fill x}}
     {.ButMerge + L 1 1 {pack -side left} {-text Merge -state disabled
-      -image mnu_download -compound left -com EG::merge::Merge}}
+      -image mnu_download -compound left -com EG::file::Merge}}
     {.ButUndo + L 1 1 {pack -side left} {-text Undo -state disabled
-      -image mnu_undo -compound left -com EG::merge::Undo}}
-    {.butClose + L 1 1 {pack -side left -padx 4} {-text Close -com EG::merge::Close}}
+      -image mnu_undo -compound left -com EG::file::Undo}}
+    {.butClose + L 1 1 {pack -side left -padx 4} {-text Close -com EG::file::Close}}
   }
   foreach ev {FocusIn FocusOut} {
-    bind .eg.merge.fra.fra1.entfilIn <$ev> EG::merge::GetFileToMerge
+    bind .eg.merge.fra.fra1.entfilIn <$ev> EG::file::GetFileToMerge
   }
   AddTabs $selfiles
   bind $win <F1> "[$pobj ButHelp] invoke"
   set res [$pobj showModal $win -parent $::EG::WIN -focus Tab \
-    -minsize {300 200} -onclose EG::merge::Close]
+    -minsize {300 200} -onclose EG::file::Close]
   catch {destroy $win}
   catch {$pobj destroy}
 }
 #_______________________
 
-proc merge::_run  {selfiles} {
+proc file::_run  {selfiles} {
   # Runs Merge dialogue.
   #   selfiles - merged file list
 
@@ -301,13 +389,11 @@ proc merge::_run  {selfiles} {
   variable ItemsItemsTypesSav
   variable reWrite
   variable backupFile
-  variable fileToMerge
   variable listToMerge
   set EGDSav $::EG::EGD
   set ItemsSav $::EG::D(Items)
   set ItemsItemsTypesSav $::EG::D(ItemsTypes)
   set reWrite 0
-  set fileToMerge {}
   set listToMerge [list]
   if {$backupFile eq {}} {
     set backupFile $::EG::D(FILEBAK)
