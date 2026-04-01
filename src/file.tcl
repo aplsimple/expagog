@@ -104,7 +104,8 @@ proc file::Backup {auto} {
   variable BAKEXT
   after idle EG::SaveAllData
   if {$D(FILEBAK) eq {}} {
-    set D(FILEBAK) [file join $USERDIR [string map {. _} [file tail $D(FILE)]]$BAKEXT]
+    set D(FILEBAK) [file join $::EG::USERDIR \
+      [string map {. _} [file tail $D(FILE)]]$BAKEXT]
   } else {
     set D(FILEBAK) [file rootname $D(FILEBAK)]$BAKEXT
   }
