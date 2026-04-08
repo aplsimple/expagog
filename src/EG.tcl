@@ -453,10 +453,12 @@ proc EG::FormatValue {w type typ P} {
       set P $n1.$n2
     }
     time {
-      if {$n2==60} {
+      if {$n2 eq {60}} {
         incr n1; set n2 {00}
+      } elseif {$n2 in {{6} {7} {8} {9}}} {
+        set n2 0$n2
       } else {
-        set n2 [string range 00$n2 end-1 end]
+        set n2 [string range ${n2}00 0 1]
       }
       set P $n1:$n2
     }

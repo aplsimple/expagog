@@ -1,11 +1,12 @@
 # Last changes:
 
 
-Version `v1.8.1 (1st Apr'26)`
+Version `v1.8.2 (8 Apr'26)`
 
   - BUGFIX: backuping locked (old) base
   - NEW   : backup.txt, help on Backup dialogue
   - RENAME: merge.tcl to file.tcl
+  - CHANGE: at entering time: .1, .2 ... become 0:10, 0:20 ...
   - CHANGE: Backup: at errors, while message stays, chance to fix problems
   - CHANGE: Backup: copy .rc to the same directory as .egd
   - CHANGE: Backup: change archives' extension (.egbak i/o .bak)
