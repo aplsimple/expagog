@@ -969,7 +969,7 @@ proc EG::PopupOnItem {wit X Y {doit 0}} {
   fetchVars
   apave::focusByForce $wit
   if {!$doit} {
-    after idle after 100 "EG::PopupOnItem $wit $X $Y 1"
+    after idle after 200 "EG::PopupOnItem $wit $X $Y 1"
     return
   }
   set wpop $WIN.popupitem
@@ -1264,11 +1264,12 @@ proc EG::DatesKeys {{date1 ""} {date2 ""} {incsort 1} {egdvar ""}} {
 }
 #_______________________
 
-proc EG::WeekValue {{date1 ""}} {
+proc EG::WeekValue {{date1 ""} {dolast yes}} {
   # Gets value of week (value of EGD week item).
   #   date1 - date of week (1st week day's)
+  #   dolast - flag "get last values if there is no value for date1"
 
-  if {$date1 eq {} || ![dict exists $::EG::EGD $date1]} {
+  if {$date1 eq {} || ($dolast && ![dict exists $::EG::EGD $date1])} {
     set date1 [lindex [DatesKeys] end]
   }
   if {[dict exists $::EG::EGD $date1]} {
@@ -1382,17 +1383,12 @@ proc EG::CommonData {args} {
 #_______________________
 
 proc EG::SaveRC {} {
-  # Saves resource data except for notes' contents.
+  # Saves resource data.
 
   if {[IsTestMode]} return
   fetchVars
-  foreach n $NOTESN {
-    lappend noteopen [winfo exists [note::NoteWin $n]]
-  }
   ResourceData Geometry [wm geometry $WIN]
-  ResourceData NoteOpen {*}$noteopen
   ResourceData Zoom $D(Zoom)
-  ResourceData NoteOnTop $D(NoteOnTop)
   ResourceData DefFont {*}$D(DefFont) $::EG::SNOOP
   ResourceData TexFont {*}$D(TexFont) $::EG::SNOOP
   TabFilesArray
@@ -1405,6 +1401,19 @@ proc EG::SaveRC {} {
   ResourceData HUE $D(Hue)
   ResourceData FILEBAK {*}[split $D(FILEBAK)]
   ResourceData AUTOBAK $D(AUTOBAK)
+  SaveNoteRC
+}
+#_______________________
+
+proc EG::SaveNoteRC {} {
+  # Saves resource data for notes.
+
+  fetchVars
+  foreach n $NOTESN {
+    lappend noteopen [winfo exists [note::NoteWin $n]]
+  }
+  ResourceData NoteOpen {*}$noteopen
+  ResourceData NoteOnTop $D(NoteOnTop)
 }
 #_______________________
 
@@ -1423,7 +1432,7 @@ proc EG::SaveAllData {args} {
   SaveRC
   foreach n $NOTESN {
     set isopen [winfo exists [note::NoteWin $n]]
-    if {$isopen} {note::SaveNoteData $n}
+    if {$isopen} {note::SaveNoteData $n no}
   }
 }
 #_______________________

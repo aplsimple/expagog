@@ -22,6 +22,8 @@
  <b>Empty days</b>       - planned days that weren't checked at all
 
  <b>Week table</b>       - current week table (on <b>Date1</b>)
+
+ Accumulated data from the current week to <b>Date2</b>:
  <b>Cells</b>            - number of cells to be checked
  <b>Cells0</b>           - number of cells that weren't checked ("?")
  <b>Total</b>            - total sum of values

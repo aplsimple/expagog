@@ -450,7 +450,7 @@ proc stat::TableValue {itemtype val {len 0}} {
 }
 #_______________________
 
-proc stat::Table2Value {nrow ncol nsum nprevsum nitemtype nchprev nrlen nres} {
+proc stat::Table2Value {nrow ncol nsum nprevsum nitemtype nchprev nrlen nres {dtyp ""}} {
   # Gets value for Table2.
   #   nrow - row of table
   #   ncol - column of table
@@ -460,6 +460,7 @@ proc stat::Table2Value {nrow ncol nsum nprevsum nitemtype nchprev nrlen nres} {
   #   nchprev - flag "check previous sum"
   #   nrlen - width of table line
   #   nres - result part in the table line
+  #   dtyp - displayed type of item
 
   upvar $nrow row $ncol col $nsum sum $nprevsum prevsum \
     $nitemtype itemtype $nchprev chprev $nrlen rlen $nres res
@@ -492,7 +493,12 @@ proc stat::Table2Value {nrow ncol nsum nprevsum nitemtype nchprev nrlen nres} {
     set ittype $itemtype
     set prevsum $sum
   }
-  append res { } $t1[TableValue $ittype $sum]$t2
+  if {$dtyp ne {}} {
+    set dval [DisplayedAverage $dtyp $prevsum $itemtype 10]
+  } else {
+    set dval [TableValue $ittype $sum]
+  }
+  append res { } $t1 $dval $t2
   incr rlen [string length $t1$t2]
   set aggrdata($row,$col) $prevsum
   incr col
@@ -518,18 +524,34 @@ proc stat::Table1LinePart2 {resfill item namlen} {
 }
 #_______________________
 
-proc stat::Table1LinePart3 {itemtype cnt cnt0 sum avg fmt2} {
-  #   # Gets part 3 of table-1 line.
+proc stat::Table1LinePart3 {itemtype cnt cnt0 sum avg fmt} {
+  # Gets part 3 of table-1 line.
   #   itemtype - item type
   #   cnt - Count value
   #   cnt0 - Count0 value
   #   sum - sum value
   #   avg - average value
-  #   fmt2 - format for average value
+  #   fmt - format for average value
 
   set sum [TableValue $itemtype $sum 7]
-  set avg [TableValue $fmt2 $avg 9]
+  set avg [DisplayedAverage $itemtype $avg $fmt]
   return "[FmtCnt $cnt]   [FmtCnt $cnt0]$sum$avg"
+}
+#_______________________
+
+proc stat::DisplayedAverage {itemtype avg fmt {vlen 9}} {
+  # Gets displayed average of tables 1 and 2, depending on its type.
+  #   itemtype - item type
+  #   avg - average value
+  #   fmt - format for average value
+  #   vlen - length of displayed value
+
+  variable fmtX
+  if {$itemtype eq {time}} {
+    set avg [EG::TimeSym $avg]
+    set fmt $fmtX
+  }
+  TableValue $fmt $avg $vlen
 }
 #_______________________
 
@@ -556,7 +578,7 @@ proc stat::DoTable1 {} {
   PutLine Table1 $title t
   PutLine Table1 $under t
   set weekdata [WeekData $d1 $d2]
-  set lastweek [EG::WeekValue $d1]
+  set lastweek [EG::WeekValue $d1 no]
   array set wddata {}
   foreach item $::EG::D(Items) itemtype $::EG::D(ItemsTypes) result $weekdata {
     set res [Table1LinePart1 $resfill $item]
@@ -705,7 +727,12 @@ proc stat::DoTable2 {} {
     foreach wd {prev current next total} {
       lassign $weekdata($wd) data chprev
       lassign [lindex $data $irow] cnt cnt0 sum avg
-      Table2Value irow icol avg prevsum fmt2 chprev rlen res
+      if {![string is double -strict $avg] || $avg==0} {
+        set dtyp {}
+      } else {
+        set dtyp $itemtype
+      }
+      Table2Value irow icol avg prevsum fmt2 chprev rlen res $dtyp
     }
     append res $resfill
     append line [string range $res 0 $rlen]
@@ -757,8 +784,9 @@ proc stat::Legend1 {} {
   # Gets Table1's legend.
 
   return "<s>\
+    Accumulated data from the current week to Date2:\n\
     Cells   - all cells to be checked\n\
-    Cells0  - cells non-checked (\"?\") or failed (value<=0) \n\
+    Cells0  - cells non-checked (\"?\") or failed (value<=0)\n\
     Total   - total sum of values\n\
     Average - Total / Cells\n\
     The marks \"?\" stand for cells to be checked on Date1.\n</s>"
@@ -817,9 +845,36 @@ proc stat::ChooseWeek {dtvar ent} {
     set ::EG::stat::$dtvar [EG::FormatDate [EG::FirstWDay $dt]]
     set dt1 [EG::ScanDate $date1]
     set dt2 [EG::ScanDate $date2]
-    if {$dt1>$dt2} {
-      if {$dtvar eq {date1}} {set date2 $date1} {set date1 $date2}
+    if {$dt1>=$dt2} {
+      if {$dtvar eq {date1}} {
+        set dt2 [clock add $dt1 1 week]
+        set date2 [EG::FormatDate $dt2]
+      } {
+        set dt1 [clock add $dt2 -1 week]
+        set date1 [EG::FormatDate $dt1]
+      }
     }
+    update
+    OK
+  }
+}
+#_______________________
+
+proc stat::ToWeek {where} {
+  # Moves to prev/next week.
+  #   where - -1 for previous, +1 for next week
+
+  variable date1
+  variable date2
+  set dt1 [EG::ScanDate $date1]
+  set dt2 [EG::ScanDate $date2]
+  set dt1 [clock add $dt1 $where week]
+  if {$dt1>=$dt2} {
+    bell
+  } else {
+    set date1 [EG::FormatDate $dt1]
+    update
+    OK
   }
 }
 #_______________________
@@ -923,16 +978,22 @@ proc stat::_create {} {
   $pobj paveWindow $win.fra {
     {fra1 - - - - {-st nsew -cw 1}}
     {.v_ - - - - {-pady 8}}
-    {.lab1 + T 1 1 {-st es} {-t "Current: \[" -anchor e}}
-    {.entDat1 + L 1 1 {-st ws -padx 4} {-w 11 -justify center
+    {.lab1 + T 1 1 {-st es} {-t "Current:" -anchor e}}
+    {.h_ + L 1 1}
+    {.lab2 + L 1 1 {-st ens} {-t \[}}
+    {.btT1 + L 1 1 {-st ens} {-image $::EG::img_arrleft
+      -com {EG::stat::ToWeek -1} -tip "Previous week"}}
+    {.entDat1 + L 1 1 {-st s -padx 0} {-w 11 -justify center
       -tvar ::EG::stat::date1 -tip "Click to choose a week@@ -under 5"
       -state readonly -takefocus 0 -onevent {<Button> {EG::stat::ChooseWeek date1 %w}}}}
+    {.btT2 + L 1 1 {-st wns} {-image $::EG::img_arrright
+      -com {EG::stat::ToWeek +1} -tip "Next week"}}
     {.fradat2 + L 1 99 {-st ws -padx 0}}
     {.fradat2.lab1 - - - - {-st ws} {-t to -anchor e}}
-    {.fradat2.entDat2 + L 1 1 {-st ws -padx 4} {-w 11 -justify center
+    {.fradat2.entDat2 + L 1 1 {-st ws -padx 6} {-w 11 -justify center
       -tvar ::EG::stat::date2 -tip "Click to choose a week@@ -under 5"
       -state readonly -takefocus 0 -onevent {<Button> {EG::stat::ChooseWeek date2 %w}}}}
-    {.fradat2.lab2 + L 1 1 {-st ws} {-t \) -anchor e}}
+    {.fradat2.lab2 + L 1 1 {-st wns} {-t \)}}
     {.v_2 .lab1 T 1 1 {-pady 8}}
     {.lab3 + T 1 1 {-st es} {-t AggrEG -anchor e}}
     {.TexAggr + L 2 99 {-st nswe} {-w 70 -h 2 -tabnext *.entfs}}
@@ -948,18 +1009,17 @@ proc stat::_create {} {
     {.sbh .text T 1 1 {pack -side left -before %w}}
     {seh lfrtex T 1 5 {-pady 8 -st ew -cw 1}}
     {frabot + T 1 5 {-st ew} {}}
-    {.ButHelp - - - - {pack -side left}
+    {.butHelp - - - - {pack -side left}
       {-text Help -com EG::stat::Help -takefocus 0}}
     {.h_ + L 1 1 {pack -side left -expand 1 -fill x}}
-    {.ButOK + L 1 1 {pack -side left} {-text Calculate -com EG::stat::OK}}
     {.ButExpo + L 1 1 {pack -side left} {-text Report -state disabled
       -image mnu_print -compound left -com EG::stat::Report}}
     {.butCancel + L 1 1 {pack -side left -padx 4} {-text Cancel
       -com EG::stat::Cancel -tabnext *.texAggr}}
   }
-  bind $win <F1> "[$pobj ButHelp] invoke"
-  bind $win <F6> "[$pobj ButOK] invoke"
-  bind $win <F7> "[$pobj ButExpo] invoke"
+  bind $win <F1> EG::stat::Help
+  bind $win <F6> EG::stat::OK
+  bind $win <F7> EG::stat::Report
   set fontsize [EG::ResourceData StatFS]
   set geo [EG::ResourceData StatGeom]
   AggregateFormula

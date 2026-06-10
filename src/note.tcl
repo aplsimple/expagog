@@ -111,12 +111,13 @@ method SetNoteData {} {
 }
 #_______________________
 
-method saveNoteData {} {
+method saveNoteData {{saverc yes}} {
   # Saves a note's data.
+  #   saverc - flag "also do save .rc"
 
   catch {
     my SetNoteData
-    EG::SaveRC  ;# for a company
+    if {$saverc} EG::SaveNoteRC
   }
   return 1
 }
@@ -325,11 +326,12 @@ proc note::OpenNoteText {idx} {
 }
 #_______________________
 
-proc note::SaveNoteData {idx} {
+proc note::SaveNoteData {idx {saverc yes}} {
   # Saves a note's data.
   #   idx - index of note
+  #   saverc - flag "also do save .rc"
 
-  catch {[NoteObj $idx] saveNoteData}
+  catch {[NoteObj $idx] saveNoteData $saverc}
 }
 #_______________________
 
