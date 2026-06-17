@@ -1018,7 +1018,6 @@ proc stat::_create {} {
       -com EG::stat::Cancel -tabnext *.texAggr}}
   }
   bind $win <F1> EG::stat::Help
-  bind $win <F6> EG::stat::OK
   bind $win <F7> EG::stat::Report
   set fontsize [EG::ResourceData StatFS]
   set geo [EG::ResourceData StatGeom]
