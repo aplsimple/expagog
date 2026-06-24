@@ -1,0 +1,24 @@
+ The <r>Expression</r> dialogue is used to evaluate the math
+ expressions.
+
+ The result is shown after pressing Enter / Return key.
+ It is rounded up to 8th digit after the decimal point.
+
+ For integer operands, the arithmetical results will be
+ integer too.
+
+ To get the floating-point results, the floating-point
+ operands are used:
+
+   <b>45/60</b>   => 0
+   <b>45/60.</b>  => 0.75
+
+ The expression can include the math functions:
+
+   <b>sqrt(2)</b>    => 1.41421356
+   <b>asin(1)*2</b>  => 3.14159265
+   <b>rand()</b>     => 0.50542748
+ ______________________________________________________
+
+ The <r>Expression</r> dialogue is available everywhere in EG
+ with <b>Ctrl+E</b> keys.
