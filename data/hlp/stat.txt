@@ -10,6 +10,8 @@
     <b>EG+PG/2+$10*2</b>
 
  <b>Font size</b> - size of text font
+
+ <r>Note</r>: press <b>F6</b> key to test the options.
  ______________________________________________________________
 
  <r>The statistics data are:</r>

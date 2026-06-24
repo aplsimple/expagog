@@ -352,6 +352,14 @@ proc EG::WriteTextFile {fname contVar {doit no}} {
     set globalOK [apave::writeTextFile $fname tmpcont]
   }
 }
+#_______________________
+
+proc EG::SetupCalculator {} {
+  # Sets calling the calculator.
+
+  Source calc
+  calc::_run
+}
 
 # ________________________ EOL _________________________ #
 
@@ -1973,7 +1981,7 @@ proc EG::CellTip {item wday typ} {
     append tip $textcomment  ;# text comments added
   }
   set tip [string trim $tip]
-  if {$tip eq {} && [incr ::EG::_MAXTIP]<64} {
+  if {$tip eq {} && [incr ::EG::_MAXTIP]<9} {
     # for empty tips: annoying reminders (pointer moves disable them)
     set tip "After change\npress Enter to save"
   }
@@ -2715,15 +2723,17 @@ proc EG::Actions {} {
       -command EG::Open -accelerator Ctrl+O
     $pmenu add command -label {Save data} -image mnu_SaveFile -compound left \
       -command EG::Save -accelerator Ctrl+S
-    $pmenu add command -label Backup... -image mnu_double -compound left \
+    $pmenu add command -label Backup... -image mnu_none -compound left \
       -command EG::Backup
-    $pmenu add command -label Merge... -image mnu_download -compound left \
+    $pmenu add command -label Merge... -image mnu_none -compound left \
       -command EG::Merge
     $pmenu add separator
     $pmenu add command -label Find... -image mnu_find -compound left \
       -command EG::Find -accelerator Ctrl+F
     $pmenu add command -label $locklab -image mnu_lock -compound left \
       -command EG::SwitchLock -accelerator Ctrl+L
+    $pmenu add command -label Expression... -image mnu_none -compound left \
+      -command EG::calc::Calculator -accelerator Ctrl+E
     $pmenu add separator
     $pmenu add command -label Diagram -image mnu_diagram -compound left \
       -command {EG::diagr::Draw yes} -accelerator F5
@@ -2741,7 +2751,7 @@ proc EG::Actions {} {
     $pmenu add separator
     $pmenu add command -label Help -image mnu_help -compound left \
       -command EG::Help -accelerator F1
-    $pmenu add command -label About... -image mnu_more -compound left \
+    $pmenu add command -label About... -image mnu_none -compound left \
       -command EG::About
     $pmenu add separator
     $pmenu add command -label Exit -image mnu_exit -compound left \
@@ -3481,6 +3491,7 @@ proc EG::_create {} {
   after idle after 400 \
     "EG::ScheduleWeek; EG::diagr::Title;\
     EG::ShowTable 1; EG::AfterWeekSwitch; after 300 {EG::diagr::Draw 1}"
+  after idle after 1000 EG::SetupCalculator
   bind $WIN <F1> EG::Help
   bind $WIN <F5> {EG::diagr::Draw yes}
   bind $WIN <F6> EG::stat::_run

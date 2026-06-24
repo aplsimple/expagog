@@ -1,14 +1,14 @@
 # Last changes:
 
 
-Version `v1.8.3 (17 Jun'26)`
+Version `v1.8.3 (24 Jun'26)`
 
   - BUGFIX: calling popup menu on items (sporadic miss)
   - BUGFIX: Statistics: passing data of previous non-empty week to next empty week
   - BUGFIX: Statistics: time item values formatted as floats
   - NEW   : Statistics: prev/next buttons for "Date1"
   - NEW   : Statistics: immediate calculation after choosing dates
-  - DELETE: Statistics: "Calculate" button & F6 key as superfluous
+  - NEW   : calculator (Ctrl+E hot keys)
   - CHANGE: Statistics: better check for ranges after choosing dates
   - CHANGE: Statistics: help & legend of table 1 (week data)
   - CHANGE: EG::SaveAllData: eliminating unnecessary saves of .rc

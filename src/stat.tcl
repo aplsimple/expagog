@@ -1012,12 +1012,14 @@ proc stat::_create {} {
     {.butHelp - - - - {pack -side left}
       {-text Help -com EG::stat::Help -takefocus 0}}
     {.h_ + L 1 1 {pack -side left -expand 1 -fill x}}
+    {.ButOK + L 1 1 {pack -side left} {-text Calculate -com EG::stat::OK}}
     {.ButExpo + L 1 1 {pack -side left} {-text Report -state disabled
       -image mnu_print -compound left -com EG::stat::Report}}
     {.butCancel + L 1 1 {pack -side left -padx 4} {-text Cancel
       -com EG::stat::Cancel -tabnext *.texAggr}}
   }
   bind $win <F1> EG::stat::Help
+  bind $win <F6> EG::stat::OK
   bind $win <F7> EG::stat::Report
   set fontsize [EG::ResourceData StatFS]
   set geo [EG::ResourceData StatGeom]
