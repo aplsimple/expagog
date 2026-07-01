@@ -313,7 +313,9 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
   #  ispoly - true for drawing polygon
 
   fetchVars
+  set minsum 999999999
   set maxsum -999999999
+  set minsumdate [set maxsumdate {}]
   set cumulatedsum 0
   set tipslist [set coldata [list]]
   # collect data
@@ -335,7 +337,16 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
       set cumulatedsum [expr {$cumulatedsum + $sum}]
       set sum $cumulatedsum
     }
-    if {$sum > $maxsum} {set maxsum $sum}
+    if {$sum > 0} {
+      if {$sum > $maxsum} {
+        set maxsum $sum
+        set maxsumdate $date
+      }
+      if {$sum < $minsum} {
+        set minsum $sum
+        set minsumdate $date
+      }
+    }
   }
   # ready to show data in diagram
   set colWidth [expr {$byWeek ? $WeekColWidth : $DayColWidth}]
@@ -402,15 +413,27 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
       ::baltip::tip $C $tip -ctag $tag -per10 4000
       $C bind $tag <Button-1> [list EG::diagr::MoveToDay $day1]
     }
-    set maxsum1 [EG::Round $maxsum 2]
-    set maxsum2 [expr {round($maxsum)}]
-    set tip "Maximum sum: $maxsum1"
-    set tag maxsum
-    set id [$C create text $BarHeight $X0 -text \n$maxsum2 -tag $tag \
-      -font $Font -fill $FontColor -activefill $HotColor]
-    ::baltip::tip $C $tip -ctag $tag -per10 4000
-    $C bind $tag <Button-1> [list ::baltip::showTip $C $tip -ctag $tag]
-    lappend idlist $id
+    if {$maxsum < 0} {set maxsum [set minsum 0]}
+    set font $Font
+    set fs [apave::getOption -size {*}$font]
+    if {$fs>0} {set font [apave::putOption -size [incr fs 2] {*}$font]}
+    foreach {ttl cr color} [list max \n $FontColor min \n\n\n $::EG::Colors(fgsel)] {
+      set sum [set ${ttl}sum]
+      set sum1 [EG::Round $sum 2]
+      set sum2 [expr {round($sum)}]
+      set tip "[string totitle ${ttl}imum] sum: $sum1"
+      if {[set ondate [set ${ttl}sumdate]] ne {}} {
+        append tip "\non [EG::FormatDate $ondate]"
+      }
+      set tag sum$ttl
+      set id [$C create text $BarHeight 0 -text "$cr   $sum2   " \
+        -tag $tag -font $font -fill $color -activefill $HotColor]
+      ::baltip::tip $C $tip -ctag $tag -per10 4000
+      if {$ondate ne {}} {
+        $C bind $tag <Button-1> [list EG::diagr::MoveToDay $ondate]
+      }
+      lappend idlist $id
+    }
   }
 }
 #_______________________

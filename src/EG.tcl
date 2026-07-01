@@ -708,10 +708,13 @@ proc EG::ValidIt {wid type item wday P V} {
   #   V - %V wildcard of entry command
 
   if {$V ni {key %V}} {return 1}
-  if {[LockedChanges]} {return 0}
   fetchVars
   Message ""
   set w [$EGOBJ $wid]
+  if {[LockedChanges]} {
+    focus $w
+    return 0
+  }
   set typ $type
   set P [string trimleft $P]
   if {$P ne $EMPTY} {
@@ -1605,8 +1608,7 @@ proc EG::FirstWDay {{dt ""}} {
 
   fetchVars
   if {$dt eq {}} {set dt [Date1Seconds]}
-  set wd [clock format $dt -format %u]
-  clock add $dt -[incr wd -1] day
+  apave::firstWeekDay $dt
 }
 #_______________________
 
@@ -1658,11 +1660,8 @@ proc EG::IsLockedBase {} {
   # Checks if the whole base isn't for today (i.e. it's past or future).
 
   fetchVars
-  set currDate [FormatDatePG [clock seconds]]
-  if {$currDate < $D(egdDate1) || $currDate >= $D(egdDate2) || $TestMode} {
-    return yes
-  }
-  return no
+  set dt [FormatDatePG [clock seconds]]
+  expr {!$::EG::DebugMode && ($dt<$D(egdDate1) || $dt>=$D(egdDate2) || $TestMode)}
 }
 #_______________________
 
@@ -3480,8 +3479,17 @@ proc EG::_create {} {
   apave::setAppIcon $WIN $::EG::EGICON
   CurrentItemDay $InpItem $InpDate
   ColorItemLabels
-  [$EGOBJ LabWeekRange] configure -foreground $Colors(fgit) \
-    -text "\[ $D(egdDate1)  -  $D(egdDate2) \)"
+  set lab [$EGOBJ LabWeekRange]
+  if {$::EG::TestMode} {
+    set fg $Colors(fgsel)
+    $lab configure -font [obj boldDefFont]
+    set labtext {T E S T I N G    M O D E}
+    after 1000 after idle "apave::blinkWidget $lab $fg $Colors(bg) white red 100 7"
+  } else {
+    set fg $Colors(fgit)
+    set labtext "\[ $D(egdDate1)  -  $D(egdDate2) \)"
+  }
+  $lab configure -foreground $fg -text $labtext
   ::baltip tip [$EGOBJ TextR1] Comments -command EG::TextTip
   set C [$EGOBJ Can]
   set W [winfo reqwidth $WIN]
@@ -3491,7 +3499,7 @@ proc EG::_create {} {
   after idle after 400 \
     "EG::ScheduleWeek; EG::diagr::Title;\
     EG::ShowTable 1; EG::AfterWeekSwitch; after 300 {EG::diagr::Draw 1}"
-  after idle after 1000 EG::SetupCalculator
+  after idle after 2000 EG::SetupCalculator
   bind $WIN <F1> EG::Help
   bind $WIN <F5> {EG::diagr::Draw yes}
   bind $WIN <F6> EG::stat::_run
@@ -3521,7 +3529,7 @@ proc EG::_create {} {
   }
   after 100 EG::note::OpenNotes
   if {[IsTestMode]} {
-    after 1000 [list EG::Balloon \
+    after 3000 [list EG::Balloon \
       "Testing mode.\n\nClose this EG application\nafter testing it."]
   }
   $EGOBJ showModal $WIN -onclose EG::Exit -escape no {*}$geo

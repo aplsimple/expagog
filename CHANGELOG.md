@@ -1,6 +1,18 @@
 # Last changes:
 
 
+Version `v1.8.4 (1 Jul'26)`
+
+  - BUGFIX: with data locked, button cells aren't focused at clicking
+  - BUGFIX: calendar: highlighting week numbers at weeks shared by years
+  - NEW   : left top corner of diagram: minimum sum added
+  - NEW   : left top corner of diagram: clicking sums moves to days
+  - NEW   : -debug option allows unlocking data
+  - DELETE: sframe.tcl (still not used)
+  - CHANGE: Preferences/Test: heading "TESTING MODE"
+  - CHANGE: packages: apave 4.9.0
+
+
 Version `v1.8.3 (24 Jun'26)`
 
   - BUGFIX: calling popup menu on items (sporadic miss)
