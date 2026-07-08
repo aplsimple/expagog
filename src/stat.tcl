@@ -202,10 +202,10 @@ proc stat::StatData {} {
   set aggrdata(daysCnt1) 0
   set aggrdata(daysCnt0) 0
   set aggrdata(Date1st) {}
-  set aggrdata(DateLast) {}
+  set aggrdata(Date2st) {}
   set aggrdata(totAggrEG) 0.0
   foreach day $dkeys {
-    if {$aggrdata(DateLast) eq {}} {set aggrdata(DateLast) $day}
+    if {$aggrdata(Date2st) eq {}} {set aggrdata(Date2st) $day}
     set itv {0 0 0 0 0 0 0}
     catch {
       foreach {it val} [dict get $::EG::EGD $day] {
@@ -221,11 +221,11 @@ proc stat::StatData {} {
   set aggrdata(daysAll) 0
   catch {
     set sec1 [EG::ScanDatePG $aggrdata(Date1st)]
-    set sec2 [EG::ScanDatePG $aggrdata(DateLast)]
+    set sec2 [EG::ScanDatePG $aggrdata(Date2st)]
     set sec2 [clock add [EG::FirstWDay $sec2] +7 days]
     set aggrdata(daysAll) [expr {($sec2-$sec1)/86400}]
     set aggrdata(Date1st) [EG::FormatDatePG $sec1]
-    set aggrdata(DateLast) [EG::FormatDatePG $sec2]
+    set aggrdata(Date2st) [EG::FormatDatePG $sec2]
   }
 }
 #_______________________
@@ -361,7 +361,7 @@ proc stat::DoHeading {} {
   PutLine Table1 "<t>Current      : from Date1 \[</t> $date1 <t>to Date2</t> $date2\
     <t>\)</t>\n"
   PutLine Table1 "<t>Data range   : \[</t> $aggrdata(Date1st) <t>-</t>\
-    $aggrdata(DateLast) <t>\)</t>"
+    $aggrdata(Date2st) <t>\)</t>"
   PutLine Table1 "<t>Data days    :</t> $aggrdata(daysAll)\n"
   set aggrdata(weeksCnt) [expr {($aggrdata(daysCnt)+6)/7}]
   PutLine Table1 "<t>Planned days :</t> $aggrdata(daysCnt)\
@@ -837,11 +837,21 @@ proc stat::ChooseWeek {dtvar ent} {
   #   dtvar - date variable name
   #   ent - date entry's path
 
+  variable aggrdata
   variable date1
   variable date2
   variable win
   set dt [EG::ChooseDay ::EG::stat::$dtvar -entry $ent -parent $win]
   if {$dt ne {}} {
+    set dt1st [EG::ScanDatePG $aggrdata(Date1st)]
+    set dt2st [EG::ScanDatePG $aggrdata(Date2st)]
+    if {$dt<$dt1st} {set dt $dt1st}
+    if {$dt>=$dt2st} {
+      set dt $dt2st
+      if {$dtvar eq {date1}} {
+        set dt [clock add $dt -1 week]
+      }
+    }
     set ::EG::stat::$dtvar [EG::FormatDate [EG::FirstWDay $dt]]
     set dt1 [EG::ScanDate $date1]
     set dt2 [EG::ScanDate $date2]
@@ -864,15 +874,21 @@ proc stat::ToWeek {where} {
   # Moves to prev/next week.
   #   where - -1 for previous, +1 for next week
 
+  variable aggrdata
   variable date1
   variable date2
-  set dt1 [EG::ScanDate $date1]
-  set dt2 [EG::ScanDate $date2]
-  set dt1 [clock add $dt1 $where week]
-  if {$dt1>=$dt2} {
+  set dt1 [EG::ScanDatePG $aggrdata(Date1st)]
+  set dt2 [EG::ScanDatePG $aggrdata(Date2st)]
+  set dt [clock add [EG::ScanDate $date1] $where week]
+  if {$dt<$dt1 || $dt>=$dt2} {
     bell
   } else {
-    set date1 [EG::FormatDate $dt1]
+    set date1 [EG::FormatDate $dt]
+    set dt2 [EG::ScanDate $date2]
+    if {$dt>=$dt2} {
+      set dt2 [clock add $dt 1 week]
+      set date2 [EG::FormatDate $dt2]
+    }
     update
     OK
   }

@@ -1,6 +1,13 @@
 # Last changes:
 
 
+Version `v1.8.5 (8 Jul'26)`
+
+  - BUGFIX: Statistics: quick changing Date1, then exit => error
+  - CHANGE: Statistics: better checks for data range
+  - CHANGE: packages: apave 4.9.1
+
+
 Version `v1.8.4 (1 Jul'26)`
 
   - BUGFIX: with data locked, button cells aren't focused at clicking
