@@ -2872,15 +2872,8 @@ proc EG::Report {} {
 
 proc EG::OpenReport {} {
 
-  fetchVars
   Source repo
-  EG::repo::ReadPreferences
-  set dir [file dirname $::EG::repo::outRepo]
-  set D(filetmp) $::EG::repo::outRepo
-  set types {{{EG Reports} .html} {All *}}
-  set fname [$EGOBJ chooser tk_getOpenFile ::EG::D(filetmp) -initialdir $dir \
-    -title {View reports} -defaultextension .html -filetypes $types -parent $WIN]
-  if {$fname ne {}} {openDoc $fname}
+  repo::DoOpenReport
 }
 #_______________________
 
@@ -3441,7 +3434,7 @@ proc EG::_create {} {
     {frar1 fraTtl T 1 7 {-st nwe}}
     {.Can - - - - {pack -expand 1 -fill both -side top} {-w 70 -h 360 -closeenough 0.0}}
     {.frar2 - - - - {pack -side bottom -fill x -pady 2}}
-    {.frar2.btT - - - - {-st w}
+    {.frar2.BtTD - - - - {-st w}
       {-image $::EG::img_diagram -com {EG::diagr::Draw yes} -tip "Redraw diagram\nF5"}}
     {.frar2.btT0 + L 1 1 {-st w} {-image $::EG::img_arrleft2
       -com {EG::diagr::Scroll -8 pages} -tip "To beginning"}}
@@ -3496,9 +3489,10 @@ proc EG::_create {} {
   set H [winfo reqheight $WIN]
   after idle EG::FillBar
   after idle after 100 "wm minsize $WIN $W $H; EG::HighlightEG"
-  after idle after 400 \
+  after idle after 10 \
     "EG::ScheduleWeek; EG::diagr::Title;\
-    EG::ShowTable 1; EG::AfterWeekSwitch; after 300 {EG::diagr::Draw 1}"
+    EG::ShowTable 1; EG::AfterWeekSwitch"
+  after idle after 10 after idle after 10 after idle after 10 EG::diagr::Draw 1
   after idle after 2000 EG::SetupCalculator
   bind $WIN <F1> EG::Help
   bind $WIN <F5> {EG::diagr::Draw yes}

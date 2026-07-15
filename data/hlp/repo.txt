@@ -1,6 +1,6 @@
  <r>The report settings are:</r>
 
- <b>From template file</b> - one of two default templates:
+ <b>From template file</b> - one of the default templates:
      all data        - <b>repo.html</b>
      statistics only - <b>repo_statistics.html</b>
      tables only     - <b>repo_tables.html</b>

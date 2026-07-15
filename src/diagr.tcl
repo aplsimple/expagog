@@ -413,6 +413,7 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
       ::baltip::tip $C $tip -ctag $tag -per10 4000
       $C bind $tag <Button-1> [list EG::diagr::MoveToDay $day1]
     }
+    if {$ispoly && $item ne {EG}} return
     if {$maxsum < 0} {set maxsum [set minsum 0]}
     set font $Font
     set fs [apave::getOption -size {*}$font]
@@ -421,7 +422,7 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
       set sum [set ${ttl}sum]
       set sum1 [EG::Round $sum 2]
       set sum2 [expr {round($sum)}]
-      set tip "[string totitle ${ttl}imum] sum: $sum1"
+      set tip "[string totitle ${ttl}imum] $item: $sum1"
       if {[set ondate [set ${ttl}sumdate]] ne {}} {
         append tip "\non [EG::FormatDate $ondate]"
       }
@@ -443,7 +444,8 @@ proc diagr::DrawPolygons {} {
 
   set i 0
   foreach item $::EG::D(Items) {
-    if {$::EG::D(poly,$i)} {
+    if {$::EG::D(poly,$i) || $item eq {EG}} {
+      set ::EG::D(poly,$i) 1 ;# EG is mandatory
       DrawDiagram $item 1
       set done 1
     }
@@ -478,11 +480,12 @@ proc diagr::DrawColumn {item idx x1 colWidth colHeight color colorCol ispoly} {
     # polygon
     set x2 [expr {($x1+$x2)/2}]
     set opts [list -outline $colorCol -tag $tag -width 2]
-    if {$xPREV} {
-      lappend idlist [$C create polygon $xPREV $yPREV $x2 $y2 {*}$opts]
-    } else {
-      lappend idlist [$C create polygon $x2 $y2 {*}$opts]
+    if {!$xPREV} {
+      set xPREV $x2
+      set yPREV $Y1
+      set x2 [expr {$X0 + $WeekColWidth}]
     }
+    lappend idlist [$C create polygon $xPREV $yPREV $x2 $y2 {*}$opts]
     set xPREV $x2
     set yPREV $y2
   } else {

@@ -13,7 +13,8 @@ namespace eval repo {
   variable win $::EG::WIN.repo
   variable jsRepo {prntdir = '../../';}
   variable tplRepo [file join $::EG::DATATPL repo.html]
-  variable outRepo [file join $::EG::USERDIR EGrepo.html]
+  variable outList [list [file join $::EG::USERDIR EGrepo.html]]
+  variable outRepo {}
   variable cssRepo {../../zoo/style.css}
   variable icoRepo {../../../zoo/favicon.jpg}
   variable file1Repo {../../../zoo/funcs.js}
@@ -38,6 +39,7 @@ namespace eval repo {
   variable YellowColor #6b6b00
   variable GreenColor #115111
   variable doDiagr 1 doNotes 1
+  variable reptypes {{{EG reports} .html} {All *}}
 }
 
 # ________________________ Common _________________________ #
@@ -50,6 +52,7 @@ proc repo::fetchVars {} {
     variable pobj
     variable jsRepo
     variable tplRepo
+    variable outList
     variable outRepo
     variable cssRepo
     variable icoRepo
@@ -75,6 +78,7 @@ proc repo::fetchVars {} {
     variable GreenColor
     variable doDiagr
     variable doNotes
+    variable reptypes
   }
 }
 
@@ -84,19 +88,25 @@ proc repo::ReadPreferences {} {
   # Reads stand-alone fields from .rc file.
 
   fetchVars
+  set savRepo $outRepo
   if {[llength [set values [EG::ResourceData $settingsKey]]]} {
     lassign $values {*}$settingVars
     foreach sv $settingVars {
       set $sv [EG::fromEOL [set $sv]]
     }
   }
+  # outList is a list of paths to reports (originally "outRepo")
+  if {$savRepo eq {}} {
+    set outList [split $outRepo \n]
+  }
+  set outRepo $savRepo
   set Year [file root [file tail $::EG::D(FILE)]]
   set doDiagr [string is true $doDiagr]
   set doNotes [string is true $doNotes]
 }
 #_______________________
 
-proc repo::SavePreferences {} {
+proc repo::DoSavePreferences {} {
   # Saves stand-alone fields to .rc file.
 
   fetchVars
@@ -107,6 +117,30 @@ proc repo::SavePreferences {} {
     lappend fieldValues [EG::toEOL [set $fld]]
   }
   EG::ResourceData $settingsKey {*}$fieldValues
+}
+#_______________________
+
+proc repo::SavePreferences {} {
+  # Saves settings, counting the old "outRepo" setting.
+
+  fetchVars
+  set outRepo [string trim $outRepo]
+  set savRepo $outRepo
+  if {$outRepo ne {}} {
+    if {[set i [lsearch -exact $outList $outRepo]] >= 0} {
+      set outList [lreplace $outList $i $i]
+    }
+    set outList [lreplace [linsert $outList 0 $outRepo] 16 end]
+  }
+  catch {
+    set cbx [string map {fiSOut cbxfiSOut} [$pobj FiSOut]]
+    $cbx configure -values $outList
+  }
+  set outRepo {}
+  foreach out $outList {append outRepo $out\n}
+  set outRepo [string trim $outRepo]
+  DoSavePreferences
+  set outRepo $savRepo
 }
 #_______________________
 
@@ -329,6 +363,29 @@ proc repo::CheckNotes {} {
   }
   $pobj themeNonThemed $win
 }
+#_______________________
+
+proc repo::ClearFiSOut {} {
+  # Clears combobox of FiSOut field (output report path).
+
+  fetchVars
+  if {[file exists $outRepo]} {
+    set msg "Delete the file\n\n  $outRepo\n\ntogether?"
+    set ans [EG::msg yesnocancel warn $msg YES -centerme $win]
+    switch $ans {
+      0 {
+        after idle [list set ::EG::repo::outRepo $outRepo]
+        return
+      }
+      1 {file delete $outRepo}
+    }
+  }
+  if {[set i [lsearch -exact $outList $outRepo]] >= 0} {
+    set outList [lreplace $outList $i $i]
+  }
+  set outRepo {}
+  SavePreferences
+}
 
 # ________________________ Processing data _________________________ #
 
@@ -536,10 +593,27 @@ proc repo::FillFields {} {
     }
   }
   lappend pairs Notes $Notes
+  set diagram {}
   if {$doDiagr} {
-    set diagram "<br><br><img src=\"$diagrRepo\"><br><br><br>"
-  } else {
-    set diagram {}
+    if {$::EG::Opcvar ne {Polygon}} {
+      set diagram $::EG::Opcvar
+    } else {
+      set i 0
+      foreach item $::EG::D(Items) {
+        catch {
+          if {$::EG::D(poly,$i)} {
+            if {$item eq {EG}} {
+              append diagram "<font color=$::EG::Colors(fgsel)> $item</font>"
+            } else {
+              set color [EG::ItemColor $item]
+              append diagram "<font color=$color> $item</font>,"
+            }
+          }
+        }
+        incr i
+      }
+    }
+    set diagram "<br><b>$diagram</b><br><img src=\"$diagrRepo\"><br><br><br>"
   }
   lappend pairs Diagram $diagram
   set Html [PutValue $Html {*}$pairs]
@@ -595,6 +669,34 @@ proc repo::Report {} {
 }
 #_______________________
 
+proc repo::DoOpenReport {} {
+  # Selects and opens an old report.
+
+  fetchVars
+  if {$outRepo eq {}} {
+    ReadPreferences
+    set outRepo [lindex $outList 0]
+  }
+  set dir [file dirname $outRepo]
+  set ::EG::D(filetmp) $outRepo
+  set fname [obj chooser tk_getOpenFile ::EG::D(filetmp) -initialdir $dir \
+    -title {View reports} -defaultextension .html -filetypes $reptypes \
+    -parent $::EG::WIN]
+  if {$fname ne {}} {openDoc $fname}
+  return $fname
+}
+#_______________________
+
+proc repo::OpenReport {} {
+  # Opens chosen report and sets outRepo variable.
+
+  if {[set out [DoOpenReport]] ne {}} {
+    set ::EG::repo::outRepo $out
+    SavePreferences
+  }
+}
+#_______________________
+
 proc repo::Help {} {
   # Shows help on report.
 
@@ -624,6 +726,7 @@ proc repo::_create {parent} {
   } else {
     set diagrst normal
   }
+  set outRepo [lindex $outList 0]
   ::apave::APave create $pobj $win
   $pobj makeWindow $win.fra Report
   $pobj paveWindow $win.fra {
@@ -633,8 +736,9 @@ proc repo::_create {parent} {
     {.FilIn + L 1 2 {-st swe} {-w 63 -tvar ::EG::repo::tplRepo
       -tip "expagog/data/tpl/repo.html\nby default"}}
     {.lab1 .lab0 T 1 1 {-st es -padx 4} {-t {To resulting .html:} -anchor e}}
-    {.fisOut + L 1 1 {-st swe} {-w 63 -tvar ::EG::repo::outRepo}}
-    {.btTOpen + L 1 1 {-st sne} {-relief flat -takefocus 0 -com EG::OpenReport -tip {View reports}}}
+    {.FiSOut + L 1 1 {-st swe} {-w 63 -tvar ::EG::repo::outRepo -values "$outList"
+      -clearcom EG::repo::ClearFiSOut -filetypes "$reptypes"}}
+    {.btTOpen + L 1 1 {-st sne} {-relief flat -takefocus 0 -com EG::repo::OpenReport -tip {View reports}}}
     {.v_1 .lab1 T 1 1 {-pady 8}}
     {.lab2 + T 1 1 {-st en} {-t {Include diagram:} -anchor e}}
     {.chbDiagr + L 2 2 {-st nw} {-var ::EG::repo::doDiagr -state $diagrst}}

@@ -1,6 +1,19 @@
 # Last changes:
 
 
+Version `v1.8.6 (15 Jul'26)`
+
+  - BUGFIX: Diagram/Polygons: displaying week #1
+  - BUGFIX: Diagram/Polygons: overlapping max/min sums (wanted EG's only)
+  - NEW   : Report: item names for image heading
+  - NEW   : Report: combobox for report paths (up to 16)
+  - CHANGE: Report: resetting report path at viewing an old report
+  - CHANGE: Report: EG report type (html) for file chooser
+  - CHANGE: Diagram/Polygons: EG item is mandatory
+  - CHANGE: Diagram: tips on max/min include item name
+  - CHANGE: Merge: initializing fields at start
+
+
 Version `v1.8.5 (8 Jul'26)`
 
   - BUGFIX: Statistics: quick changing Date1, then exit => error

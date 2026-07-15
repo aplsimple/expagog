@@ -317,7 +317,7 @@ proc file::MergeHelp {} {
   # Shows help on Merge dialog.
 
   variable win
-  EG::Help merge -w 56 -h {27 29} -parent $win
+  EG::Help merge -w 56 -h {25 27} -parent $win
 }
 
 # ________________________ GUI _________________________ #
@@ -328,30 +328,15 @@ proc file::_create  {selfiles} {
 
   variable pobj
   variable win
-  variable reWrite
-  variable fileToMerge
   catch {$pobj destroy}
   ::apave::APave create $pobj $win
-  if {$fileToMerge eq {}} {
-    foreach fn [glob -nocomplain [file join $::EG::USERDIR *]] {
-      if {[file extension $fn] eq {.egd} &&
-      [file normalize $fn] ne [file normalize $::EG::D(FILE)]} {
-        set fileToMerge $fn
-      }
-    }
-  }
-  if {$fileToMerge ne {}} {
-    set indir [file dirname $fileToMerge]
-  } else {
-    set indir $::EG::USERDIR
-  }
   $pobj makeWindow $win.fra Merge
   $pobj paveWindow $win.fra {
     {fra1 - - - - {-st nsew -cw 1}}
     {.v_ - - - - {-pady 8}}
     {.lab1 + T 1 1 {-st es -padx 4} {-t {File to merge:} -anchor e}}
     {.filIn + L 1 1 {-st swe -cw 1} {-w 60 -tvar ::EG::file::fileToMerge
-      -initialdir $indir -filetypes {{{EG Data Files} {.egd} }} -defaultextension .egd}}
+      -initialdir $::EG::USERDIR -filetypes {{{EG Data Files} {.egd} }} -defaultextension .egd}}
     {.lab2 .lab1 T 1 1 {-st es -padx 4 -pady 8} {-t {Rewrite data:} -anchor e}}
     {.chb + L 1 1 {-st w -pady 8} {-var ::EG::file::reWrite}}
     {lfr fra1 T 1 2 {-st nswe -rw 1 -cw 1} {-t {Log messages:} -labelanchor n}}
@@ -391,11 +376,13 @@ proc file::_run  {selfiles} {
   variable reWrite
   variable backupFile
   variable listToMerge
+  variable fileToMerge
   set EGDSav $::EG::EGD
   set ItemsSav $::EG::D(Items)
   set ItemsItemsTypesSav $::EG::D(ItemsTypes)
   set reWrite 0
   set listToMerge [list]
+  set fileToMerge [lindex $selfiles 0]
   if {$backupFile eq {}} {
     set backupFile $::EG::D(FILEBAK)
     set ::EG::D(FILEBAK) $::EG::D(FILE)-beforeMerge
