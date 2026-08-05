@@ -1,6 +1,13 @@
 # Last changes:
 
 
+Version `v1.8.7a1 (5 Aug'26)`
+
+  - BUGFIX: Find: if not by words, duplicate tooltips on found items
+  - CHANGE: Diagram: 0.0 for min: count if earlier than current date
+  - CHANGE: status messages on auto-saving data
+
+
 Version `v1.8.6 (15 Jul'26)`
 
   - BUGFIX: Diagram/Polygons: displaying week #1

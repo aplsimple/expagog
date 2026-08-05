@@ -75,11 +75,14 @@ proc file::Log1 {msg {doadd yes}} {
 
 # ________________________ Backup _________________________ #
 
-proc file::DoBackup {} {
+proc file::DoBackup {{timo 0}} {
   # Does backup.
+  #  timo - timeout to wait after error
 
   namespace upvar ::EG D D globalOK globalOK
   variable BAKEXT
+  EG::Message {}
+  update
   set D(FILEBAK) [file rootname $D(FILEBAK)]$BAKEXT
   set fbak $D(FILEBAK)
   if {![catch {file copy -force $D(FILE) $fbak} err]} {
@@ -90,7 +93,15 @@ proc file::DoBackup {} {
     set rc [EG::ResourceFileName]
     set rbak [file rootname [file tail $rc]]
     set rbak [file join [file dirname $fbak] $rbak]_rc$wd
-    catch {file copy -force $rc $rbak}
+    if {![catch {file copy -force $rc $rbak} err]} {
+      set err {}
+    }
+  }
+  if {$err ne {}} { ;# alas, no save -> noting it a bit
+    bell
+    EG::MessageInLab $err
+    update
+    if {$timo} {after $timo}
   }
   list $fbak $err
 }
@@ -132,8 +143,8 @@ proc file::Backup {auto} {
     lassign [DoBackup] fbak err
     if {$err ne {}} {
       EG::msg ok warn "Cannot save (backup)\n<b>$fbak</b>\n\n$err\
-        \n\nYou can fix the problem and press OK to repeat saving." -w {50 80} -h {7 9}
-      DoBackup  ;# here problems might be fixed
+        \n\n<b>You can fix the problem and press OK to repeat saving.</b>" -w {50 80} -h {7 9}
+      DoBackup 2000 ;# here problems might be fixed
     }
   }
 }

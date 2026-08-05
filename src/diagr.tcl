@@ -318,6 +318,7 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
   set minsumdate [set maxsumdate {}]
   set cumulatedsum 0
   set tipslist [set coldata [list]]
+  set curdate [EG::Date1Seconds]
   # collect data
   foreach {dk data} $::EG::LS {
     set date [EG::ScanDatePG $dk]
@@ -337,7 +338,7 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
       set cumulatedsum [expr {$cumulatedsum + $sum}]
       set sum $cumulatedsum
     }
-    if {$sum > 0} {
+    if {$sum > 0 || $date < $curdate} {
       if {$sum > $maxsum} {
         set maxsum $sum
         set maxsumdate $date

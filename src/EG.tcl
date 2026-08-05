@@ -2315,12 +2315,23 @@ proc EG::LockedChanges {} {
 
 # ________________________ Messages _________________________ #
 
+proc EG::MessageInLab {msg {lab ""}} {
+  # Shows a message in a label.
+  #   msg - message
+  #   lab - label's path
+
+  fetchVars
+  if {$lab eq {}} {set lab [$EGOBJ Labstat3]}
+  $lab configure -text $msg {*}$D(MsgFont)
+}
+#_______________________
+
 proc EG::Message {msg {wait 0} {lab ""} {doit 0}} {
   # Shows a message.
   #   msg - message's text
   #   wait - time to wait in sec.
   #   doit - internally used by itself
-  #   lab - label of message
+  #   lab - label's path
 
   fetchVars
   if {$lab eq {}} {set lab [$EGOBJ Labstat3]}
@@ -2339,7 +2350,7 @@ proc EG::Message {msg {wait 0} {lab ""} {doit 0}} {
       return
     }
     set D(msg) $msg
-    $lab configure -text $msg {*}$::EG::D(MsgFont)
+    MessageInLab $msg $lab
     if {$wait<=0} {set wait [expr {[string length $msg]/4}]}
     set D(idafter) [after [expr {$wait*1000}] "EG::CheckMessage $lab"]
   }

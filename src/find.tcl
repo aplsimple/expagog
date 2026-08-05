@@ -93,7 +93,10 @@ proc find::treTip {ID col} {
       set res [EG::FormatDate [EG::ScanDatePG $date]]
     }
     default {
-      set res \"$word\"\n\n$where
+      set res $where
+      if {$word ne $where} {
+        set res \"$word\"\n\n$res  ;# at searching by words
+      }
     }
   }
   return $res
@@ -178,7 +181,7 @@ proc find::Found {item date where what fname} {
   variable chkList
   if {$chkCase} {set opt {}} {set opt -nocase}
   if {$findString eq {}} {
-    AddFoundInfo $item $date $where $fname $where ;# empty find value => show all texts
+    AddFoundInfo $item $date $where $fname $where ;# empty find => show all texts
   } elseif {$chkList} {
     set what [string trim $what]
     foreach word1 [split $where] {
