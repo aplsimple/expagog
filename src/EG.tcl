@@ -2595,7 +2595,7 @@ proc EG::OpenDataFile {fname} {
     catch {file mkdir $dir}
     close [open $fname w]
   }
-  set D(FILE) $fname
+  set D(FILE) [set D(FILEORIG) $fname]
   ReadEGDFile $fname ::EG::EGD
   set D(TabFiles) [ResourceData TabFiles]
   if {[lsearch -exact $D(TabFiles) $fname]<0} {
@@ -2820,8 +2820,7 @@ proc EG::OpenFile {fname} {
   # Opens data file.
   #   fname - file name
 
-  fetchVars
-  if {$fname ni [list {} $D(FILE)]} {
+  if {$fname ni [list {} $::EG::D(FILE)] && ![IsTestMode]} {
     if {[file exists $fname]} {
       OpenData $fname -openfile
     } else {
@@ -2978,6 +2977,7 @@ proc EG::Exit {args} {
   } else {
     set args2 {}
   }
+  if {$::EG::DebugMode} {lappend args2 -debug}
   SaveAll {*}$args
   if {$D(AUTOBAK)} {Backup yes}
   catch {$EGOBJ destroy}

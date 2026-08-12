@@ -2,6 +2,9 @@
  <b>.egd</b> (data) and <b>.rc</b> (resource) files. The backup
  files have <b>.egbak</b> extension, independent on what
  extension is set in the dialogue.
+
+ Also, <b>%f</b> wildcard can be used in the file name
+ meaning the root name of the current data file.
  ________________________________________________
 
  Copies of the files are created in <b>per week day</b>
@@ -9,5 +12,5 @@
  from the archives of the last 7 days.
  ________________________________________________
 
- The <b>Auto backup</b> option allows the archivizing at
- EG application's exit.
+ The <b>Auto backup</b> option allows the backup at EG
+ application's exit.

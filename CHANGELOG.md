@@ -1,9 +1,13 @@
 # Last changes:
 
 
-Version `v1.8.7a1 (5 Aug'26)`
+Version `v1.8.7b1 (12 Aug'26)`
 
+  - BUGFIX: Backup: original data file at switching to other
+  - BUGFIX: -debug option at moving to other data file
   - BUGFIX: Find: if not by words, duplicate tooltips on found items
+  - NEW   : Backup: %f wildcard in backup file name
+  - NEW   : Diagram: "Week #" in tooltip of max/min
   - CHANGE: Diagram: 0.0 for min: count if earlier than current date
   - CHANGE: status messages on auto-saving data
 

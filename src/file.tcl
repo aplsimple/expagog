@@ -75,17 +75,16 @@ proc file::Log1 {msg {doadd yes}} {
 
 # ________________________ Backup _________________________ #
 
-proc file::DoBackup {{timo 0}} {
+proc file::DoBackup {fbak {timo 0}} {
   # Does backup.
+  #  fbak - backup file name
   #  timo - timeout to wait after error
 
   namespace upvar ::EG D D globalOK globalOK
   variable BAKEXT
   EG::Message {}
   update
-  set D(FILEBAK) [file rootname $D(FILEBAK)]$BAKEXT
-  set fbak $D(FILEBAK)
-  if {![catch {file copy -force $D(FILE) $fbak} err]} {
+  if {![catch {file copy -force $D(FILEORIG) $fbak} err]} {
     set err {}
     # per week day too (no checks)
     set wd _[clock format [clock seconds] -format %u]$BAKEXT
@@ -103,7 +102,7 @@ proc file::DoBackup {{timo 0}} {
     update
     if {$timo} {after $timo}
   }
-  list $fbak $err
+  return $err
 }
 #_______________________
 
@@ -113,7 +112,6 @@ proc file::Backup {auto} {
 
   namespace upvar ::EG D D EGOBJ EGOBJ
   variable BAKEXT
-  after idle EG::SaveAllData
   if {$D(FILEBAK) eq {}} {
     set D(FILEBAK) [file join $::EG::USERDIR \
       [string map {. _} [file tail $D(FILE)]]$BAKEXT]
@@ -139,12 +137,15 @@ proc file::Backup {auto} {
       }
     }
   }
+  set D(FILEBAK) [file rootname $D(FILEBAK)]$BAKEXT
+  set fwcd [file rootname [file tail $D(FILEORIG)]]
+  set fbak [string map [list %f $fwcd] $D(FILEBAK)]
   if {$auto} {
-    lassign [DoBackup] fbak err
+    set err [DoBackup $fbak]
     if {$err ne {}} {
-      EG::msg ok warn "Cannot save (backup)\n<b>$fbak</b>\n\n$err\
+      EG::msg ok warn "Cannot backup to\n<b>$fbak</b>\n\n$err\
         \n\n<b>You can fix the problem and press OK to repeat saving.</b>" -w {50 80} -h {7 9}
-      DoBackup 2000 ;# here problems might be fixed
+      DoBackup $fbak 2000 ;# here problems might be fixed
     }
   }
 }
@@ -154,7 +155,7 @@ proc file::BackupHelp {} {
   # Shows help on Merge dialog.
 
   variable win
-  EG::Help backup -width 50 -height 17 -parent $win
+  EG::Help backup -width 50 -height 20 -parent $win
 }
 
 # ________________________ Merge _________________________ #

@@ -118,12 +118,13 @@ proc diagr::initVars {} {
 }
 #_______________________
 
-proc diagr::MoveToDay {day1} {
+proc diagr::MoveToDay {day1 {doit no}} {
   # Moves to a day at clicking diagram, storing current cell at that
   #   day1 - day to go on
+  #   doit - yes, if update diagram
 
   EG::StoreItem
-  EG::MoveToDay $day1 no
+  EG::MoveToDay $day1 $doit
 }
 
 # ________________________ Lay out _________________________ #
@@ -425,14 +426,17 @@ proc diagr::DrawDiagram {item {ispoly 0}} {
       set sum2 [expr {round($sum)}]
       set tip "[string totitle ${ttl}imum] $item: $sum1"
       if {[set ondate [set ${ttl}sumdate]] ne {}} {
-        append tip "\non [EG::FormatDate $ondate]"
+        set dt [EG::FormatDate $ondate]
+        append tip "\n[string repeat _ [string length $tip]]_\n"
+        if {$byWeek} {append tip "\nWeek [EG::WeekNumber $dt]"}
+        append tip "\n$dt"
       }
       set tag sum$ttl
       set id [$C create text $BarHeight 0 -text "$cr   $sum2   " \
         -tag $tag -font $font -fill $color -activefill $HotColor]
       ::baltip::tip $C $tip -ctag $tag -per10 4000
       if {$ondate ne {}} {
-        $C bind $tag <Button-1> [list EG::diagr::MoveToDay $ondate]
+        $C bind $tag <Button-1> [list EG::diagr::MoveToDay $ondate yes]
       }
       lappend idlist $id
     }
