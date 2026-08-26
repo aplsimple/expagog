@@ -158,7 +158,7 @@ Probably, at first you should not overload the schedule too much with *?* signs,
 
 Now that the initial setup is completed, the actual use of *expagog* program may start.
 
-And it boils down to the fact that at the end of day you just enter data instead of *?*, i.e. time spent (distance, etc.) or icons of switchable topics.
+And it boils down to the fact that at the end of day you just enter data instead of *?*, i.e. time spent (distance, etc.) or icons of switchable topics. The "text" topics allow to put any information, but initial number with minuses/pluses define the estimate, e.g.: "3+ okay", "-2 bad", "+++", "-5 (5th level of hell)".
 
 Pay special attention to the topic **EG** - this is a general estimate of the day you have lived. Define a scale for **EG** once and for all, for example, 5, 10 or 100 point scale. You can put the evaluation criteria in a sticker, leaving it open in a screen position convenient for you.
 
@@ -175,7 +175,19 @@ An example of such a scale:
     - 8 : almost perfect experimentation
     - 9 : I am a real experimenter, at that being modest and in harmony with people
 
-You can comment on any cell, in the text box below the table. You can also mark cells with colors and tags by selecting them from the cell context menu.
+You can comment on any cell, in the text box below the table. You can also mark cells (and so weeks on the diagram) with colors and tags by selecting them from the cell context menu.
+
+Also, there is `Weekly` text field where the aggregate comments on the current week can be written. The comments can be set as preliminary tasks to be completed, with initial minuses or question marks (the more the harder) which are turned into pluses or exclamation marks after completion of tasks. For example:
+
+    --  plant trees
+    ??? visit my sick friend!
+
+to be turned into
+
+    ++  plant trees
+    !!! visit my sick friend!
+
+In the report the initial minuses/questions are highlighted red, the pluses/exclamations green.
 
 Basically, that's it. Then, at the end of week / month / year you will only have to analyze the data with charts and statistics. They will tell you what has succeeded, what has not been very successful, where failures have occurred, what can be fixed, accelerated or slowed down.
 

@@ -1615,7 +1615,7 @@ proc EG::FirstWDay {{dt ""}} {
 proc EG::WeekNumber {{dt ""}} {
   # Gets current week's number.
 
-  return #[clock format [ScanDate $dt] -format %V]\ :
+  return #[clock format [ScanDate $dt] -format %V]
 }
 #_______________________
 

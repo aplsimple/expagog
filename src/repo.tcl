@@ -509,8 +509,13 @@ proc repo::PutItemData {date1 tplweek itemdata} {
   incr idxAEG
   set aeg <$font>$aeg</font>
   if {[set weeklyKeyVal $weekly] ne {}} {
-    if {$textval eq {}} {set weekly {}} {set weekly \n<hr>}
-    append weekly [EG::fromEOL [lindex $weeklyKeyVal 1]]
+    if {$textval eq {}} {set weekly {}} {set weekly \n\n}
+    append weekly "<b>Weekly [EG::WeekNumber [EG::FormatDate $dt1]]</b>\n "
+    append weekly [string map [list \n "\n "] [EG::fromEOL [lindex $weeklyKeyVal 1]]]
+    foreach {pm clr} {-? red +! green} {
+      set weekly [regsub -all -line (^\\s*)(\[$pm\]+)(.*) $weekly \
+        "\\1<b><font color=$clr>\\2</font></b>\\3"]
+    }
   }
   set outweek [PutValue $outweek Weekly $weekly]
   set outweek [PutValue $outweek AggrEGvalue $aeg]
