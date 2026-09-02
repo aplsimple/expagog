@@ -578,7 +578,7 @@ proc stat::DoTable1 {} {
   PutLine Table1 $title t
   PutLine Table1 $under t
   set weekdata [WeekData $d1 $d2]
-  set lastweek [EG::WeekValue $d1 no]
+  set lastweek [EG::WeekValue $d1]
   array set wddata {}
   foreach item $::EG::D(Items) itemtype $::EG::D(ItemsTypes) result $weekdata {
     set res [Table1LinePart1 $resfill $item]

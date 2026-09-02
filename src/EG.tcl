@@ -133,6 +133,7 @@ um2x6A3TPI+k8jDLSHWjhMEYUf58Nmp1p1xhX7EjlYxiNT517QfiEN3VuQAAAABJRU5ErkJggg==}
   set D(AggrEG) EG    ;# aggregate formula
   set D(FindStrs) {}  ;# list of strings to find
   set D(atStart) 1    ;# flag "at starting EG"
+  set D(AnsCpMv) 0    ;# answer for "Copy or Move Weekly"
   variable C          ;# canvas' path
   variable Opcvar     ;# option cascade var
   variable OpcItems   ;# option cascade list
@@ -1275,7 +1276,7 @@ proc EG::DatesKeys {{date1 ""} {date2 ""} {incsort 1} {egdvar ""}} {
 }
 #_______________________
 
-proc EG::WeekValue {{date1 ""} {dolast yes}} {
+proc EG::WeekValue {{date1 ""} {dolast no}} {
   # Gets value of week (value of EGD week item).
   #   date1 - date of week (1st week day's)
   #   dolast - flag "get last values if there is no value for date1"
@@ -1290,17 +1291,18 @@ proc EG::WeekValue {{date1 ""} {dolast yes}} {
 }
 #_______________________
 
-proc EG::DataKey {styp {item ""} {wday ""}} {
+proc EG::DataKey {styp {item ""} {wday ""} {dt ""}} {
   # Gets a key for EGD dictionary.
   #   styp - store type (v - cell value, t - text, and others)
   #   item - item
   #   wday - week day
+  #   dt - date of week
 
   fetchVars
   if {[string length $styp]==1} {
     if {$item eq {}} {set item $D(curritem)}
     if {$wday eq {}} {set wday $D(currwday)}
-    set dt [ScanDate]
+    if {$dt eq {}} {set dt [ScanDate]}
     set dt [FormatDatePG [FirstWDay $dt]]
     return [list $dt $item $styp$wday]
   }
@@ -1353,17 +1355,18 @@ proc EG::StoreData {styp val {item ""} {wday ""}} {
 }
 #_______________________
 
-proc EG::StoreValue {styp val {item ""} {wday ""}} {
+proc EG::StoreValue {styp val {item ""} {wday ""} {dt ""}} {
   # Remembers value.
   #   styp - store type (v - cell value, t - text, and others)
   #   val - data
   #   item  - item name
   #   wday - week day
+  #   dt - date of week
 
   fetchVars
   set val [string trimright $val]
   # save text
-  set key [DataKey $styp $item $wday]
+  set key [DataKey $styp $item $wday $dt]
   if {$val ne {} && ($styp ne {v} || $item in $D(Items))} {
     dict set EGD {*}$key $val
   } else {
@@ -1612,10 +1615,10 @@ proc EG::FirstWDay {{dt ""}} {
 }
 #_______________________
 
-proc EG::WeekNumber {{dt ""}} {
-  # Gets current week's number.
+proc EG::WeekNumber {{dt ""} {PG ""}} {
+  # Gets week's number.
 
-  return #[clock format [ScanDate $dt] -format %V]
+  return #[clock format [ScanDate$PG $dt] -format %V]
 }
 #_______________________
 
@@ -1684,42 +1687,77 @@ proc EG::ScheduleWeek {} {
   fetchVars
   ConfigLock
   if {[IsLockedBase]} return
-  # current week's 1st day
-  set datec [FirstWDay]
-  # next week's 1st day
-  set daten [FirstWDay [clock add $datec 1 week]]
-  # current displayed week's 1st day
+  set dcurr [FirstWDay]
+  set dnext [FirstWDay [clock add $dcurr 1 week]]
   set date1 [FirstWDay [clock scan $D(Date1) -format $D(DateUser)]]
-  set fdc [FormatDatePG $datec]
-  set fdn [FormatDatePG $daten]
-  set fd1 [FormatDatePG $date1]
-  if {$fd1 ne $fdc && $fd1 ne $fdn} return
+  set fdcurr [FormatDatePG $dcurr]
+  set fdnext [FormatDatePG $dnext]
+  set fdate1 [FormatDatePG $date1]
+  if {$fdate1 eq $fdcurr} {
+    set fdprev [FormatDatePG [FirstWDay [clock add $dcurr -1 week]]]
+  } elseif {$fdate1 eq $fdnext} {
+    set fdprev $fdcurr
+    set fdcurr $fdnext
+  } else {
+    return
+  }
+  if {[EG::WeekValue $fdcurr] ne {}} return
   set found no
-  foreach week {0 1 2 3 4} {
-    # try to find 1st "non-empty" week among previous ones
-    set dt [clock add $date1 -$week week]
-    set dt [FormatDatePG [FirstWDay $dt]]
-    set pendlist [list]
-    ForEach $dt [list] {
-      set typ [string range %t 0 3]
-      set k [string index %k 0]
-      if {{%v} ne {} && $typ ne {calc} && $k ne {t}} {
-        set found yes
-        lappend pendlist [list %i %t %k]
+  set pendlist [list]
+  ForEach $fdprev [list] {
+    set typ [string range %t 0 3]
+    set k [string index %k 0]
+    if {{%v} ne {} && $typ ne {calc} && $k ne {t}} {
+      set found yes
+      lappend pendlist [list %i %t %k %v]
+    }
+  }
+  foreach i {0 1 2 3 4 5 6} {
+    lappend pendlist [list EG - v$i] ;# all EG should be checked
+  }
+  if {$found} {
+    foreach data $pendlist {
+      lassign $data it typ key val
+      lassign [split $key {}] k wday
+      if {$k eq $D(WeeklyKEY)} {
+        CopyMoveWeekly $fdprev $fdcurr [fromEOL $val]
+      } else {
+        StoreValue $k $EMPTY $it $wday
       }
     }
-    foreach i {0 1 2 3 4 5 6} {
-      lappend pendlist [list EG - v$i] ;# all EG should be checked
+  }
+}
+#_______________________
+
+proc EG::CopyMoveWeekly {fdprev fdcurr weekly} {
+  # Copies or moves weekly lines with initial "-" or "?"
+  # from previous to current week.
+  #   fdprev - date of previous week
+  #   fdcurr - date of current week
+  #   weekly - previous weekly's text
+
+  fetchVars
+  set texcurr [set texprev {}]
+  foreach wline [split $weekly \n] {
+    if {[regexp (^\\s*)(\[-?\]+)(.*) $wline]} {
+      append texcurr $wline \n
+    } else {
+      append texprev $wline \n
     }
-    if {$found} {
-      if {$week} {
-        foreach data $pendlist {
-          lassign $data it typ key
-          lassign [split $key {}] k wday
-          StoreValue $k $EMPTY $it $wday
-        }
+  }
+  if {$texcurr ne {}} {
+    if {![string match *10 $D(AnsCpMv)]} {
+      set D(AnsCpMv) [$EGOBJ misc ques "Week's pending tasks" \
+        "\nCopy or move the pending tasks (with initial -/?) \
+        \nof Weekly from [WeekNumber $fdprev PG]\
+        to [WeekNumber $fdcurr PG] ?\n" \
+        {Copy copy Move cut { None} cancel} copy -ch {Don't ever ask}]
+    }
+    if {$D(AnsCpMv) ni {cancel cancel10 0}} {
+      StoreValue $D(WeeklyKEY) $texcurr {*}$D(WeeklyITEM)
+      if {[string match cut* $D(AnsCpMv)]} {
+        StoreValue $D(WeeklyKEY) $texprev {*}$D(WeeklyITEM) [ScanDatePG $fdprev]
       }
-      return
     }
   }
 }
@@ -2613,6 +2651,7 @@ proc EG::OpenDataFile {fname} {
   if {[set _ [CommonData TEXTTAGS]] ne {}} {set D(TextTags) $_}
   if {[set _ [CommonData POLYFLAGS]] ne {}} {set D(poly) $_}
   if {[set _ [CommonData AGGREG]] ne {}} {set D(AggrEG) $_}
+  if {[set _ [CommonData ANSCPMV]] ne {}} {set D(AnsCpMv) $_}
   set D(egdDate1) [CommonData EGDDATE1]
   set D(egdDate2) [CommonData EGDDATE2]
   CheckEgdDates
@@ -2658,6 +2697,7 @@ proc EG::SaveDataFile {{fname ""} {newfile no} {updfile no}} {
   CommonData EGDDATE1 $D(egdDate1)
   CommonData EGDDATE2 $D(egdDate2)
   CommonData AGGREG $D(AggrEG)
+  CommonData ANSCPMV $D(AnsCpMv)
   savePolyFlags
   for {set iit 1} {$iit<=$D(MAXITEMS)} {incr iit} {
     CommonData COLORMY$iit $Colors(my$iit)
@@ -2971,6 +3011,7 @@ proc EG::Exit {args} {
   #   args - additional arguments, incl. provided by apave
 
   fetchVars
+  wm withdraw $WIN
   if {[set i [lsearch -exact $args -openfile]]>=0} {
     set args2 [lrange $args $i+1 end]
     set args [lrange $args 0 $i]
@@ -3343,7 +3384,7 @@ proc EG::PaveTableCells {wpar lwidgets ilw} {
       ".LaBIh$i + L 1 1 {-st ews} {-t [lindex $D(WeekDays) $i]\
       -anchor center -fg $Colors(fghot) -bg $Colors(bg)\
       -onevent {<ButtonPress-3> {EG::PopupOnWeekTitle $i %X %Y}}\
-      -tip {Right click to clear}}"]
+      -tip {-BALTIP {Right click to clear} -MAXEXP 1}}"]
   }
   set wn .laBIh
   # cells of items
