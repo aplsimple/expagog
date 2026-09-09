@@ -2280,20 +2280,6 @@ proc EG::opcPre {args} {
   }
   return [list]
 }
-#_______________________
-
-proc EG::Diagram {} {
-  # Draws diagram & item labels.
-
-  if {[diagr::Draw]} {
-    diagr::Title
-    ColorItemLabels
-  } else {
-    diagr::Title Polygons
-    ColorItemLabels yes
-  }
-  FocusedIt
-}
 
 # ________________________ Locks _________________________ #
 
@@ -2786,7 +2772,7 @@ proc EG::Actions {} {
       -command EG::calc::Calculator -accelerator Ctrl+E
     $pmenu add separator
     $pmenu add command -label Diagram -image mnu_diagram -compound left \
-      -command {EG::diagr::Draw yes} -accelerator F5
+      -command EG::diagr::Redraw -accelerator F5
     $pmenu add command -label Statistics... -image mnu_info -compound left \
       -command EG::stat::_run -accelerator F6
     $pmenu add command -label Report... -image mnu_print -compound left \
@@ -3487,7 +3473,7 @@ proc EG::_create {} {
     {.Can - - - - {pack -expand 1 -fill both -side top} {-w 70 -h 360 -closeenough 0.0}}
     {.frar2 - - - - {pack -side bottom -fill x -pady 2}}
     {.frar2.BtTD - - - - {-st w}
-      {-image $::EG::img_diagram -com {EG::diagr::Draw yes} -tip "Redraw diagram\nF5"}}
+      {-image $::EG::img_diagram -com EG::diagr::Redraw -tip "Redraw diagram\nF5"}}
     {.frar2.btT0 + L 1 1 {-st w} {-image $::EG::img_arrleft2
       -com {EG::diagr::Scroll -8 pages} -tip "To beginning"}}
     {.frar2.BtT1 + L 1 1 {-st w} {-image $::EG::img_arrleft
@@ -3497,7 +3483,7 @@ proc EG::_create {} {
     {.frar2.BtT3 + L 1 1 {-st w} {-image $::EG::img_arrright2
       -com {EG::diagr::Scroll 8 pages} -tip "To end"}}
     {.frar2.opc1 + L 1 1 {-st w -padx 20} {::EG::Opcvar ::EG::OpcItems {-width -4
-      -takefocus 0} {EG::opcPre {%a}} -command EG::Diagram}}
+      -takefocus 0} {EG::opcPre {%a}} -command EG::diagr::Diagram}}
     {.frar2.chbW + L 1 1 {-st w} {-t weeks -var ::EG::byWeek
       -com EG::diagr::Draw -takefocus 0}}
     {.frar2.chb + L 1 1 {-st w -padx 20} {-t cumulate
@@ -3547,7 +3533,7 @@ proc EG::_create {} {
   after idle after 10 after idle after 10 after idle after 10 EG::diagr::Draw 1
   after idle after 2000 EG::SetupCalculator
   bind $WIN <F1> EG::Help
-  bind $WIN <F5> {EG::diagr::Draw yes}
+  bind $WIN <F5> EG::diagr::Redraw
   bind $WIN <F6> EG::stat::_run
   bind $WIN <F7> EG::Report
   bind $WIN <F10> EG::Actions

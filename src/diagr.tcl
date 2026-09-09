@@ -533,7 +533,7 @@ proc diagr::Drawing {atStart} {
   initVars
   fetchVars
   EG::StoreItem
-  if {!$atStart} EG::SaveAllData
+  if {!$atStart} {after 2000 after idle EG::SaveAllData;}
   Title
   Layout
   EG::AllWeekData
@@ -587,4 +587,30 @@ proc diagr::Draw {{atStart no}} {
   set res [Drawing $atStart]
   DrawWeekNN
   return $res
+}
+#_______________________
+
+proc diagr::Redraw {} {
+  # Redraws diagrams with special handling polygons
+
+  fetchVars
+  if {$::EG::Opcvar eq {Polygon}} {
+    Diagram yes
+  } else {
+    Draw yes
+  }
+}
+#_______________________
+
+proc diagr::Diagram {{atStart no}} {
+  # Draws diagram & item labels.
+
+  if {[Draw $atStart]} {
+    Title
+    EG::ColorItemLabels
+  } else {
+    Title Polygons
+    EG::ColorItemLabels yes
+  }
+  EG::FocusedIt
 }

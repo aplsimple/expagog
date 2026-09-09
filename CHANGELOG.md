@@ -1,16 +1,18 @@
 # Last changes:
 
 
-Version `v1.8.7 (2 Sep'26)`
+Version `v1.8.7 (9 Sep'26)`
 
   - BUGFIX: Backup: original data file at switching to other
   - BUGFIX: -debug option at moving to other data file
   - BUGFIX: Find: if not by words, duplicate tooltips on found items
+  - BUGFIX: Diagram: redrawing polygons (F5 etc.) doesn't update item colors
   - NEW   : Backup: %f wildcard in backup file name
   - NEW   : Diagram: "Week #" in tooltip of max/min
   - NEW   : Report: Weekly bold title
   - NEW   : Report: initial "+-!?" of Weekly lines: highlighted by green/red
   - NEW   : Weekly lines with initial "-?": copied/moved to new week
+  - CHANGE: delay of saving data at updating diagram
   - CHANGE: tooltips on week days: expositions are reduced to 1
   - CHANGE: Diagram: 0.0 for min: count if earlier than current week date
   - CHANGE: status messages on auto-saving data
